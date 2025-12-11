@@ -1,0 +1,438 @@
+import 'package:flutter/material.dart';
+import 'cart_screen.dart';
+import '../widgets/bottom_navigation_bar.dart';
+
+class ShopScreen extends StatefulWidget {
+  final int currentIndex;
+  final Function(int) onNavTap;
+  
+  const ShopScreen({
+    super.key,
+    required this.currentIndex,
+    required this.onNavTap,
+  });
+
+  @override
+  State<ShopScreen> createState() => _ShopScreenState();
+}
+
+class _ShopScreenState extends State<ShopScreen> {
+  String _selectedCategory = 'Все';
+  final List<String> _categories = ['Все', 'Электроника', 'Аксессуары', 'Одежда'];
+  final List<Product> _products = [
+    Product(
+      id: '1',
+      name: 'Смартфон iPhone 15 Pro',
+      price: 999,
+      image: 'iphone',
+      isFavorite: true,
+      category: 'Электроника',
+    ),
+    Product(
+      id: '2',
+      name: 'Дизайнерская куртка',
+      price: 299,
+      image: 'jacket',
+      isFavorite: false,
+      category: 'Одежда',
+    ),
+    Product(
+      id: '3',
+      name: 'Беспроводные наушники',
+      price: 199,
+      image: 'headphones',
+      isFavorite: false,
+      category: 'Аксессуары',
+    ),
+    Product(
+      id: '4',
+      name: 'MacBook Pro 16',
+      price: 2499,
+      image: 'macbook',
+      isFavorite: false,
+      category: 'Электроника',
+    ),
+    Product(
+      id: '5',
+      name: 'Apple Watch Series 9',
+      price: 399,
+      image: 'watch',
+      isFavorite: false,
+      category: 'Электроника',
+    ),
+    Product(
+      id: '6',
+      name: 'Кроссовки Nike Air Max',
+      price: 149,
+      image: 'shoes',
+      isFavorite: true,
+      category: 'Одежда',
+    ),
+    Product(
+      id: '7',
+      name: 'Солнечные очки Ray-Ban',
+      price: 179,
+      image: 'glasses',
+      isFavorite: false,
+      category: 'Аксессуары',
+    ),
+    Product(
+      id: '8',
+      name: 'Рюкзак The North Face',
+      price: 129,
+      image: 'backpack',
+      isFavorite: false,
+      category: 'Аксессуары',
+    ),
+  ];
+
+  int _cartItemsCount = 2;
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredProducts = _selectedCategory == 'Все'
+        ? _products
+        : _products.where((p) => p.category == _selectedCategory).toList();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0E27),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Магазин',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CartScreen(),
+                        ),
+                      );
+                    },
+                    child: Stack(
+                      children: [
+                        const Icon(
+                          Icons.shopping_cart_outlined,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        if (_cartItemsCount > 0)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              width: 18,
+                              height: 18,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFFD700),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  _cartItemsCount.toString(),
+                                  style: const TextStyle(
+                                    color: Color(0xFF0A0E27),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1F3A),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Поиск товаров...',
+                    hintStyle: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Category filters
+            SizedBox(
+              height: 40,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final category = _categories[index];
+                  final isSelected = category == _selectedCategory;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedCategory = category;
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFFFFD700)
+                            : const Color(0xFF1A1F3A),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Center(
+                        child: Text(
+                          category,
+                          style: TextStyle(
+                            color: isSelected
+                                ? const Color(0xFF0A0E27)
+                                : Colors.white,
+                            fontSize: 14,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Products grid
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.68,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: filteredProducts.length,
+                itemBuilder: (context, index) {
+                  return _buildProductCard(filteredProducts[index]);
+                },
+              ),
+            ),
+            // Spacer для навигации
+            // const SizedBox(height: 80),
+          ],
+        ),
+      ),
+      // Навигация прикреплена к низу
+      CustomBottomNavigationBar(
+        currentIndex: widget.currentIndex,
+        onTap: widget.onNavTap,
+      ),
+    ],
+    ),
+    );
+  }
+
+  Widget _buildProductCard(Product product) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1F3A),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Product image
+          Expanded(
+            child: Stack(
+              children: [
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2F4A),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      _getProductIcon(product.image),
+                      size: 80,
+                      color: Colors.white.withOpacity(0.3),
+                    ),
+                  ),
+                ),
+                // Favorite icon
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        product.isFavorite = !product.isFavorite;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        product.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: product.isFavorite
+                            ? const Color(0xFFFFD700)
+                            : Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Product info
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  product.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '\$${product.price % 1 == 0 ? product.price.toInt() : product.price.toStringAsFixed(1)}',
+                  style: const TextStyle(
+                    color: Color(0xFFFFD700), // Желтый цвет цены
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  height: 36,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _cartItemsCount++;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${product.name} добавлен в корзину'),
+                          backgroundColor: const Color(0xFFFFD700),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFD700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Text(
+                      'В корзину',
+                      style: TextStyle(
+                        color: Color(0xFF0A0E27),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getProductIcon(String image) {
+    switch (image) {
+      case 'iphone':
+        return Icons.smartphone;
+      case 'jacket':
+        return Icons.checkroom;
+      case 'headphones':
+        return Icons.headphones;
+      case 'macbook':
+        return Icons.laptop;
+      case 'watch':
+        return Icons.watch;
+      case 'shoes':
+        return Icons.shopping_bag;
+      case 'glasses':
+        return Icons.remove_red_eye;
+      case 'backpack':
+        return Icons.backpack;
+      default:
+        return Icons.shopping_bag;
+    }
+  }
+}
+
+class Product {
+  final String id;
+  final String name;
+  final double price;
+  final String image;
+  bool isFavorite;
+  final String category;
+
+  Product({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.image,
+    required this.isFavorite,
+    required this.category,
+  });
+}
+
