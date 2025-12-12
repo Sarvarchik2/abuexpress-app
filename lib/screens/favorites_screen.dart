@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'cart_screen.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import '../providers/theme_provider.dart';
+import '../utils/theme_helper.dart';
+import '../utils/theme.dart';
 
 class FavoritesScreen extends StatefulWidget {
   final int currentIndex;
@@ -17,7 +21,7 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  List<Product> _favoriteProducts = [
+  final List<Product> _favoriteProducts = [
     Product(
       id: '1',
       name: 'Смартфон iPhone 15 Pro',
@@ -56,9 +60,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
-      body: Stack(
+    final backgroundColor = ThemeHelper.getBackgroundColor(context);
+    
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return Scaffold(
+          backgroundColor: backgroundColor,
+          body: Stack(
         children: [
           SafeArea(
             child: Column(
@@ -69,10 +77,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Избранное',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: ThemeHelper.getTextColor(context),
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                         ),
@@ -88,9 +96,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         },
                         child: Stack(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.shopping_cart_outlined,
-                              color: Colors.white,
+                              color: ThemeHelper.getTextColor(context),
                               size: 28,
                             ),
                             if (_cartItemsCount > 0)
@@ -107,8 +115,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                   child: Center(
                                     child: Text(
                                       _cartItemsCount.toString(),
-                                      style: const TextStyle(
-                                        color: Color(0xFF0A0E27),
+                                      style: TextStyle(
+                                        color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -152,6 +160,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ],
       ),
     );
+      },
+    );
   }
 
   Widget _buildEmptyState() {
@@ -161,40 +171,40 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1F3A),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.favorite_border,
-                color: Colors.white54,
-                size: 60,
-              ),
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: ThemeHelper.getCardColor(context),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'У вас пока нет избранных товаров',
+            child: Icon(
+              Icons.favorite_border,
+              color: ThemeHelper.getTextSecondaryColor(context),
+              size: 60,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'У вас пока нет избранных товаров',
+            style: TextStyle(
+              color: ThemeHelper.getTextColor(context),
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Добавьте товары в избранное, чтобы они появились здесь',
+              textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+                color: ThemeHelper.getTextSecondaryColor(context),
+                fontSize: 14,
               ),
             ),
-            const SizedBox(height: 8),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
-              child: Text(
-                'Добавьте товары в избранное, чтобы они появились здесь',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 14,
-                ),
-              ),
-            ),
+          ),
           ],
         ),
       ),
@@ -202,9 +212,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildProductCard(Product product) {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final secondaryColor = ThemeHelper.getSecondaryColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -218,7 +233,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A2F4A),
+                    color: secondaryColor,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
@@ -228,7 +243,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     child: Icon(
                       _getProductIcon(product.image),
                       size: 80,
-                      color: Colors.white.withOpacity(0.3),
+                      color: textSecondaryColor,
                     ),
                   ),
                 ),
@@ -245,12 +260,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.favorite,
-                        color: Color(0xFFFFD700),
+                        color: AppTheme.gold,
                         size: 20,
                       ),
                     ),
@@ -268,8 +283,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               children: [
                 Text(
                   product.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -310,10 +325,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       elevation: 0,
                       padding: EdgeInsets.zero,
                     ),
-                    child: const Text(
+                    child: Text(
                       'В корзину',
                       style: TextStyle(
-                        color: Color(0xFF0A0E27),
+                        color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),

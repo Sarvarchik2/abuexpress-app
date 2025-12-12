@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../utils/theme_helper.dart';
+import '../utils/theme.dart' show AppTheme;
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -8,7 +10,7 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  List<CartItem> _cartItems = [
+  final List<CartItem> _cartItems = [
     CartItem(
       id: '1',
       name: 'MacBook Pro 16"',
@@ -31,18 +33,21 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = ThemeHelper.getBackgroundColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Корзина',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: textColor),
         ),
         centerTitle: true,
       ),
@@ -69,6 +74,10 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildEmptyState() {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -77,32 +86,32 @@ class _CartScreenState extends State<CartScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1F3A),
+              color: cardColor,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.shopping_cart_outlined,
-              color: Colors.white54,
+              color: textSecondaryColor,
               size: 60,
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Корзина пуста',
             style: TextStyle(
-              color: Colors.white,
+              color: textColor,
               fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
               'Добавьте товары в корзину, чтобы они появились здесь',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white54,
+                color: textSecondaryColor,
                 fontSize: 14,
               ),
             ),
@@ -113,11 +122,16 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildCartItemCard(CartItem item) {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final secondaryColor = ThemeHelper.getSecondaryColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -128,14 +142,14 @@ class _CartScreenState extends State<CartScreen> {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: const Color(0xFF2A2F4A),
+              color: secondaryColor,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Icon(
                 _getProductIcon(item.image),
                 size: 50,
-                color: Colors.white.withOpacity(0.3),
+                color: textSecondaryColor,
               ),
             ),
           ),
@@ -148,8 +162,8 @@ class _CartScreenState extends State<CartScreen> {
                 // Product name
                 Text(
                   item.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -180,12 +194,12 @@ class _CartScreenState extends State<CartScreen> {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: textSecondaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.remove,
-                          color: Colors.white,
+                          color: textColor,
                           size: 20,
                         ),
                       ),
@@ -193,8 +207,8 @@ class _CartScreenState extends State<CartScreen> {
                     const SizedBox(width: 16),
                     Text(
                       item.quantity.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: textColor,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -210,12 +224,12 @@ class _CartScreenState extends State<CartScreen> {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: textSecondaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.add,
-                          color: Colors.white,
+                          color: textColor,
                           size: 20,
                         ),
                       ),
@@ -245,10 +259,13 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildOrderSummary() {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -260,18 +277,18 @@ class _CartScreenState extends State<CartScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Итого:',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   '\$${_totalPrice % 1 == 0 ? _totalPrice.toInt() : _totalPrice.toStringAsFixed(1)}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -294,17 +311,17 @@ class _CartScreenState extends State<CartScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFD700),
+                backgroundColor: AppTheme.gold,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text(
+              child: Text(
                 'Оформить заказ',
                 style: TextStyle(
-                  color: Color(0xFF0A0E27),
+                  color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -317,35 +334,39 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   void _removeItem(CartItem item) {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F3A),
+        backgroundColor: cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
+        title: Text(
           'Удалить товар?',
           style: TextStyle(
-            color: Colors.white,
+            color: textColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
           'Вы уверены, что хотите удалить "${item.name}" из корзины?',
-          style: const TextStyle(
-            color: Colors.white70,
+          style: TextStyle(
+            color: textSecondaryColor,
             fontSize: 14,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Отмена',
               style: TextStyle(
-                color: Colors.white70,
+                color: textSecondaryColor,
                 fontSize: 16,
               ),
             ),

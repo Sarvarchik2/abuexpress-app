@@ -95,7 +95,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentItem = _onboardingItems[_currentPage];
     final isLastPage = _currentPage == _onboardingItems.length - 1;
 
     return Scaffold(
@@ -234,7 +233,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFD700).withOpacity(0.4),
+            color: const Color(0xFFFFD700).withValues(alpha: 0.4),
             blurRadius: 20,
             spreadRadius: 0,
             offset: const Offset(0, 8),

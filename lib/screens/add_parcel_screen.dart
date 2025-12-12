@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/parcel.dart';
+import '../utils/theme_helper.dart';
+import '../utils/theme.dart' show AppTheme;
 
 class AddParcelScreen extends StatefulWidget {
   const AddParcelScreen({super.key});
@@ -38,18 +40,21 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = ThemeHelper.getBackgroundColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Добавить посылку',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: textColor),
         ),
         centerTitle: true,
       ),
@@ -132,13 +137,17 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
     IconData? icon,
     int maxLines = 1,
   }) {
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    final cardColor = ThemeHelper.getCardColor(context);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: textColor,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -146,23 +155,23 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: textColor),
           maxLines: maxLines,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Colors.white.withOpacity(0.3),
+              color: textSecondaryColor,
               fontSize: 14,
             ),
             prefixIcon: icon != null
                 ? Icon(
                     icon,
-                    color: Colors.white.withOpacity(0.5),
+                    color: textSecondaryColor,
                     size: 20,
                   )
                 : null,
             filled: true,
-            fillColor: const Color(0xFF1A1F3A),
+            fillColor: cardColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -218,16 +227,16 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFD700),
+          backgroundColor: AppTheme.gold,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 0,
         ),
-        child: const Text(
+        child: Text(
           'Добавить посылку',
           style: TextStyle(
-            color: Color(0xFF0A0E27),
+            color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),

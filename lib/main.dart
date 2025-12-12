@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'providers/theme_provider.dart';
+import 'utils/theme.dart';
 import 'screens/onboarding_screen.dart';
 
 void main() {
@@ -11,17 +13,20 @@ class AbuExpressApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AbuExpress',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: const Color(0xFFFFD700),
-        scaffoldBackgroundColor: const Color(0xFF0A0E27),
-        textTheme: GoogleFonts.manropeTextTheme(),
-        fontFamily: GoogleFonts.manrope().fontFamily,
+    return ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'AbuExpress',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.getLightTheme(),
+            darkTheme: AppTheme.getDarkTheme(),
+            themeMode: themeProvider.themeMode,
+            home: const OnboardingScreen(),
+          );
+        },
       ),
-      home: const OnboardingScreen(),
     );
   }
 }

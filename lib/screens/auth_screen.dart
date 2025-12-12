@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/onboarding_icon.dart';
 import '../models/onboarding_item.dart';
-import 'main_screen.dart';
+import 'login_screen.dart';
+import 'registration_choice_screen.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -67,9 +68,9 @@ class AuthScreen extends StatelessWidget {
       height: 56,
       child: ElevatedButton(
         onPressed: () {
-          Navigator.of(context).pushReplacement(
+          Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const MainScreen(),
+              builder: (context) => const LoginScreen(),
             ),
           );
         },
@@ -80,16 +81,16 @@ class AuthScreen extends StatelessWidget {
           ),
           elevation: 0,
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.arrow_forward,
               color: Color(0xFF0A0E27),
               size: 20,
             ),
-            const SizedBox(width: 8),
-            const Text(
+            SizedBox(width: 8),
+            Text(
               'Вход',
               style: TextStyle(
                 color: Color(0xFF0A0E27),
@@ -109,7 +110,11 @@ class AuthScreen extends StatelessWidget {
       height: 56,
       child: OutlinedButton(
         onPressed: () {
-          // TODO: Navigate to register screen
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const RegistrationChoiceScreen(),
+            ),
+          );
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.transparent,

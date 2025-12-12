@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import '../utils/theme_helper.dart';
+import '../utils/theme.dart' show AppTheme;
 
 class AddressesScreen extends StatefulWidget {
   final int currentIndex;
@@ -46,9 +48,11 @@ class _AddressesScreenState extends State<AddressesScreen> {
   @override
   Widget build(BuildContext context) {
     final address = _addresses[_selectedCountry]!;
-
+    final backgroundColor = ThemeHelper.getBackgroundColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+      backgroundColor: backgroundColor,
       body: Stack(
         children: [
           SafeArea(
@@ -61,10 +65,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Header
-                        const Text(
+                        Text(
                           'Адреса офисов',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: textColor,
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                           ),
@@ -73,7 +77,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                         const Text(
                           'Используйте эти адреса при заказе товаров в интернет-магазинах',
                           style: TextStyle(
-                            color: Color(0xFFFFD700),
+                            color: AppTheme.gold,
                             fontSize: 14,
                           ),
                         ),
@@ -128,6 +132,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
     IconData icon,
     bool isSelected,
   ) {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -138,12 +146,12 @@ class _AddressesScreenState extends State<AddressesScreen> {
         height: 100,
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFFD700).withOpacity(0.3)
-              : const Color(0xFF1A1F3A),
+              ? AppTheme.gold.withValues(alpha: 0.3)
+              : cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFFFD700)
+                ? AppTheme.gold
                 : Colors.transparent,
             width: 2,
           ),
@@ -156,7 +164,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: textSecondaryColor.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -171,8 +179,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
               countryName,
               style: TextStyle(
                 color: isSelected
-                    ? const Color(0xFFFFD700)
-                    : Colors.white,
+                    ? AppTheme.gold
+                    : textColor,
                 fontSize: 16,
                 fontWeight: isSelected
                     ? FontWeight.w600
@@ -186,10 +194,14 @@ class _AddressesScreenState extends State<AddressesScreen> {
   }
 
   Widget _buildAddressCard(OfficeAddress address) {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -206,8 +218,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   children: [
                     Text(
                       address.country,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: textColor,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
@@ -216,7 +228,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                     Text(
                       address.state,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: textSecondaryColor,
                         fontSize: 14,
                       ),
                     ),
@@ -271,7 +283,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
           Divider(
             height: 1,
             thickness: 1,
-            color: Colors.white.withOpacity(0.15),
+            color: textSecondaryColor.withValues(alpha: 0.15),
           ),
           const SizedBox(height: 16),
           // Phone line
@@ -291,20 +303,23 @@ class _AddressesScreenState extends State<AddressesScreen> {
   }
 
   Widget _buildAddressLine(IconData icon, String text) {
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(
           icon,
-          color: Colors.white70,
+          color: textSecondaryColor,
           size: 20,
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: textColor,
               fontSize: 14,
               height: 1.4,
             ),
@@ -317,7 +332,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Скопировано в буфер обмена'),
-                backgroundColor: Color(0xFFFFD700),
+                backgroundColor: AppTheme.gold,
                 duration: Duration(seconds: 1),
               ),
             );
@@ -329,7 +344,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
             child: SvgPicture.asset(
               'assets/icon/Copy.svg',
               colorFilter: ColorFilter.mode(
-                Colors.white.withOpacity(0.6),
+                textSecondaryColor,
                 BlendMode.srcIn,
               ),
             ),

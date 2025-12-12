@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../utils/theme_helper.dart';
+import '../utils/theme.dart' show AppTheme;
 
 class DeliveryAddressesScreen extends StatefulWidget {
   const DeliveryAddressesScreen({super.key});
@@ -8,7 +10,7 @@ class DeliveryAddressesScreen extends StatefulWidget {
 }
 
 class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
-  List<DeliveryAddress> _addresses = [
+  final List<DeliveryAddress> _addresses = [
     DeliveryAddress(
       id: '1',
       type: 'Дом',
@@ -31,18 +33,21 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = ThemeHelper.getBackgroundColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Адреса доставки',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: textColor),
         ),
         centerTitle: true,
       ),
@@ -70,6 +75,10 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
   }
 
   Widget _buildEmptyState() {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -78,32 +87,32 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1F3A),
+              color: cardColor,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.location_on_outlined,
-              color: Colors.white54,
+              color: textSecondaryColor,
               size: 60,
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'У вас пока нет адресов доставки',
             style: TextStyle(
-              color: Colors.white,
+              color: textColor,
               fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
               'Добавьте адрес доставки, чтобы начать заказывать товары',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white54,
+                color: textSecondaryColor,
                 fontSize: 14,
               ),
             ),
@@ -114,11 +123,15 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
   }
 
   Widget _buildAddressCard(DeliveryAddress address) {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -137,7 +150,7 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
                 ),
                 child: Icon(
                   address.icon,
-                  color: const Color(0xFF0A0E27),
+                  color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                   size: 24,
                 ),
               ),
@@ -149,8 +162,8 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
                   children: [
                     Text(
                       address.type,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: textColor,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -160,7 +173,7 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
                       const Text(
                         'По умолчанию',
                         style: TextStyle(
-                          color: Color(0xFFFFD700),
+                          color: AppTheme.gold,
                           fontSize: 12,
                         ),
                       ),
@@ -173,9 +186,9 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
                 onTap: () => _editAddress(address),
                 child: Container(
                   padding: const EdgeInsets.all(8),
-                  child: const Icon(
+                  child: Icon(
                     Icons.edit_outlined,
-                    color: Colors.white54,
+                    color: textSecondaryColor,
                     size: 20,
                   ),
                 ),
@@ -185,9 +198,9 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
                 onTap: () => _deleteAddress(address),
                 child: Container(
                   padding: const EdgeInsets.all(8),
-                  child: const Icon(
+                  child: Icon(
                     Icons.delete_outline,
-                    color: Colors.white54,
+                    color: textSecondaryColor,
                     size: 20,
                   ),
                 ),
@@ -199,17 +212,17 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
+              Icon(
                 Icons.location_on_outlined,
-                color: Colors.white54,
+                color: textSecondaryColor,
                 size: 18,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   address.address,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 14,
                   ),
                 ),
@@ -220,8 +233,8 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
           // Recipient name
           Text(
             address.recipientName,
-            style: const TextStyle(
-              color: Colors.white70,
+            style: TextStyle(
+              color: textSecondaryColor,
               fontSize: 14,
             ),
           ),
@@ -229,16 +242,16 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
           // Phone number
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.phone_outlined,
-                color: Colors.white54,
+                color: textSecondaryColor,
                 size: 16,
               ),
               const SizedBox(width: 8),
               Text(
                 address.phone,
-                style: const TextStyle(
-                  color: Colors.white70,
+                style: TextStyle(
+                  color: textSecondaryColor,
                   fontSize: 14,
                 ),
               ),
@@ -256,7 +269,7 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
       child: ElevatedButton(
         onPressed: () => _addAddress(),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFD700),
+          backgroundColor: AppTheme.gold,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -264,17 +277,17 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(
               Icons.add,
-              color: Color(0xFF0A0E27),
+              color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
               size: 24,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
               'Добавить адрес',
               style: TextStyle(
-                color: Color(0xFF0A0E27),
+                color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -290,7 +303,7 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Форма добавления адреса будет реализована'),
-        backgroundColor: Color(0xFFFFD700),
+        backgroundColor: AppTheme.gold,
       ),
     );
   }
@@ -300,41 +313,45 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Редактирование адреса: ${address.type}'),
-        backgroundColor: const Color(0xFFFFD700),
+        backgroundColor: AppTheme.gold,
       ),
     );
   }
 
   void _deleteAddress(DeliveryAddress address) {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F3A),
+        backgroundColor: cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
+        title: Text(
           'Удалить адрес?',
           style: TextStyle(
-            color: Colors.white,
+            color: textColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
           'Вы уверены, что хотите удалить адрес "${address.type}"?',
-          style: const TextStyle(
-            color: Colors.white70,
+          style: TextStyle(
+            color: textSecondaryColor,
             fontSize: 14,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Отмена',
               style: TextStyle(
-                color: Colors.white70,
+                color: textSecondaryColor,
                 fontSize: 16,
               ),
             ),
@@ -348,7 +365,7 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Адрес "${address.type}" удален'),
-                  backgroundColor: const Color(0xFFFFD700),
+                  backgroundColor: AppTheme.gold,
                 ),
               );
             },

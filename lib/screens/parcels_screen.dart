@@ -3,6 +3,8 @@ import 'add_parcel_screen.dart';
 import 'settings_screen.dart';
 import '../models/parcel.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import '../utils/theme_helper.dart';
+import '../utils/theme.dart';
 
 class ParcelsScreen extends StatefulWidget {
   final int currentIndex;
@@ -20,14 +22,16 @@ class ParcelsScreen extends StatefulWidget {
 
 class _ParcelsScreenState extends State<ParcelsScreen> {
   String _selectedFilter = 'Все';
-  List<Parcel> _parcels = [];
+  final List<Parcel> _parcels = [];
 
   final List<String> _filters = ['Все', 'На складе', 'В пути', 'В таможне', 'Доставлен'];
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = ThemeHelper.getBackgroundColor(context);
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+      backgroundColor: backgroundColor,
       body: Stack(
         children: [
           SafeArea(
@@ -64,6 +68,9 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
   }
 
   Widget _buildHeader() {
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -74,15 +81,15 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
               Container(
                 width: 60,
                 height: 60,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFD700),
+                decoration: const BoxDecoration(
+                  color: AppTheme.gold,
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'АЖ',
                     style: TextStyle(
-                      color: Color(0xFF0A0E27),
+                      color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -99,7 +106,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                     color: Colors.green,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFF0A0E27),
+                      color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : Colors.white,
                       width: 2,
                     ),
                   ),
@@ -114,23 +121,23 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
           ),
           const SizedBox(width: 12),
           // User info
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Журабаев Асадбек',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   'ID: 12345678',
                   style: TextStyle(
-                    color: Colors.white54,
+                    color: textSecondaryColor,
                     fontSize: 14,
                   ),
                 ),
@@ -140,9 +147,9 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
           // Notification icon
           Stack(
             children: [
-              const Icon(
+              Icon(
                 Icons.notifications_outlined,
-                color: Colors.white,
+                color: textColor,
                 size: 28,
               ),
               Positioned(
@@ -151,15 +158,15 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 child: Container(
                   width: 16,
                   height: 16,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFD700),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.gold,
                     shape: BoxShape.circle,
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       '2',
                       style: TextStyle(
-                        color: Color(0xFF0A0E27),
+                        color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -180,9 +187,9 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 ),
               );
             },
-            child: const Icon(
+            child: Icon(
               Icons.settings_outlined,
-              color: Colors.white,
+              color: textColor,
               size: 28,
             ),
           ),
@@ -192,6 +199,9 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
   }
 
   Widget _buildFilters() {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    
     return SizedBox(
       height: 40,
       child: ListView.builder(
@@ -212,8 +222,8 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFFFFD700)
-                    : const Color(0xFF1A1F3A),
+                    ? AppTheme.gold
+                    : cardColor,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Center(
@@ -221,8 +231,8 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                   filter,
                   style: TextStyle(
                     color: isSelected
-                        ? const Color(0xFF0A0E27)
-                        : Colors.white,
+                        ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
+                        : textColor,
                     fontSize: 14,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   ),
@@ -236,15 +246,17 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
   }
 
   Widget _buildMyParcelsHeader() {
+    final textColor = ThemeHelper.getTextColor(context);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             'Мои посылки',
             style: TextStyle(
-              color: Colors.white,
+              color: textColor,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -270,9 +282,9 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 color: const Color(0xFFFFD700),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.add,
-                color: Color(0xFF0A0E27),
+                color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                 size: 24,
               ),
             ),
@@ -283,6 +295,10 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
   }
 
   Widget _buildEmptyState() {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 100),
       child: Center(
@@ -293,32 +309,32 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1F3A),
+              color: cardColor,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.inbox_outlined,
-              color: Colors.white54,
+              color: textSecondaryColor,
               size: 60,
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'У вас пока нет посылок',
             style: TextStyle(
-              color: Colors.white,
+              color: textColor,
               fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
               'Добавьте первую посылку, чтобы начать отслеживать её статус',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white54,
+                color: textSecondaryColor,
                 fontSize: 14,
               ),
             ),
@@ -345,10 +361,10 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text(
+            child: Text(
               'Добавить посылку',
               style: TextStyle(
-                color: Color(0xFF0A0E27),
+                color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -376,6 +392,10 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
   }
 
   Widget _buildParcelCard(Parcel parcel) {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     Color statusColor;
     Color statusTextColor;
     
@@ -385,23 +405,23 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
         statusTextColor = Colors.white;
         break;
       case 'В пути':
-        statusColor = const Color(0xFFFFD700); // Желтый
-        statusTextColor = const Color(0xFF0A0E27);
+        statusColor = AppTheme.gold; // Желтый
+        statusTextColor = ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121);
         break;
       case 'Доставлен':
         statusColor = const Color(0xFF374151); // Темно-серый
         statusTextColor = Colors.white;
         break;
       default:
-        statusColor = const Color(0xFF1A1F3A);
-        statusTextColor = Colors.white;
+        statusColor = cardColor;
+        statusTextColor = textColor;
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -411,7 +431,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFFB8860B).withOpacity(0.3), // Темно-желтый фон
+              color: const Color(0xFFB8860B).withValues(alpha: 0.3), // Темно-желтый фон
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -429,8 +449,8 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
               children: [
                 Text(
                   parcel.productName,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -438,8 +458,8 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'ID: ${parcel.trackNumber}',
-                  style: const TextStyle(
-                    color: Colors.white54,
+                  style: TextStyle(
+                    color: textSecondaryColor,
                     fontSize: 12,
                   ),
                 ),
@@ -448,8 +468,8 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                   children: [
                     Text(
                       parcel.formattedDate,
-                      style: const TextStyle(
-                        color: Colors.white54,
+                      style: TextStyle(
+                        color: textSecondaryColor,
                         fontSize: 12,
                       ),
                     ),
@@ -458,15 +478,15 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                       width: 4,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.white54,
+                        color: textSecondaryColor,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       parcel.formattedWeight,
-                      style: const TextStyle(
-                        color: Colors.white54,
+                      style: TextStyle(
+                        color: textSecondaryColor,
                         fontSize: 12,
                       ),
                     ),

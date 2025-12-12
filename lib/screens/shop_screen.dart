@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'cart_screen.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import '../utils/theme_helper.dart';
+import '../utils/theme.dart';
+import '../providers/theme_provider.dart';
 
 class ShopScreen extends StatefulWidget {
   final int currentIndex;
@@ -94,8 +98,12 @@ class _ShopScreenState extends State<ShopScreen> {
         ? _products
         : _products.where((p) => p.category == _selectedCategory).toList();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        final backgroundColor = ThemeHelper.getBackgroundColor(context);
+        
+        return Scaffold(
+          backgroundColor: backgroundColor,
       body: Stack(
         children: [
           SafeArea(
@@ -107,10 +115,10 @@ class _ShopScreenState extends State<ShopScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Магазин',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: ThemeHelper.getTextColor(context),
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
@@ -126,9 +134,9 @@ class _ShopScreenState extends State<ShopScreen> {
                     },
                     child: Stack(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.shopping_cart_outlined,
-                          color: Colors.white,
+                          color: ThemeHelper.getTextColor(context),
                           size: 28,
                         ),
                         if (_cartItemsCount > 0)
@@ -145,8 +153,8 @@ class _ShopScreenState extends State<ShopScreen> {
                               child: Center(
                                 child: Text(
                                   _cartItemsCount.toString(),
-                                  style: const TextStyle(
-                                    color: Color(0xFF0A0E27),
+                                  style: TextStyle(
+                                    color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -166,19 +174,19 @@ class _ShopScreenState extends State<ShopScreen> {
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A1F3A),
-                  borderRadius: BorderRadius.circular(12),
+                  color: ThemeHelper.getCardColor(context),
+                  borderRadius: BorderRadius.circular(44),
                 ),
                 child: TextField(
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: ThemeHelper.getTextColor(context)),
                   decoration: InputDecoration(
                     hintText: 'Поиск товаров...',
                     hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: ThemeHelper.getTextSecondaryColor(context),
                     ),
                     prefixIcon: Icon(
                       Icons.search,
-                      color: Colors.white.withOpacity(0.5),
+                      color: ThemeHelper.getTextSecondaryColor(context),
                     ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
@@ -210,8 +218,8 @@ class _ShopScreenState extends State<ShopScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFFFFD700)
-                            : const Color(0xFF1A1F3A),
+                            ? AppTheme.gold
+                            : ThemeHelper.getCardColor(context),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Center(
@@ -219,8 +227,8 @@ class _ShopScreenState extends State<ShopScreen> {
                           category,
                           style: TextStyle(
                             color: isSelected
-                                ? const Color(0xFF0A0E27)
-                                : Colors.white,
+                                ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
+                                : ThemeHelper.getTextColor(context),
                             fontSize: 14,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                           ),
@@ -261,12 +269,19 @@ class _ShopScreenState extends State<ShopScreen> {
     ],
     ),
     );
+        },
+      );
   }
 
   Widget _buildProductCard(Product product) {
+    final cardColor = ThemeHelper.getCardColor(context);
+    final secondaryColor = ThemeHelper.getSecondaryColor(context);
+    final textColor = ThemeHelper.getTextColor(context);
+    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -280,7 +295,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A2F4A),
+                    color: secondaryColor,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
@@ -290,7 +305,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     child: Icon(
                       _getProductIcon(product.image),
                       size: 80,
-                      color: Colors.white.withOpacity(0.3),
+                      color: textSecondaryColor,
                     ),
                   ),
                 ),
@@ -307,7 +322,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -315,8 +330,8 @@ class _ShopScreenState extends State<ShopScreen> {
                             ? Icons.favorite
                             : Icons.favorite_border,
                         color: product.isFavorite
-                            ? const Color(0xFFFFD700)
-                            : Colors.white,
+                            ? AppTheme.gold
+                            : textColor,
                         size: 20,
                       ),
                     ),
@@ -334,8 +349,8 @@ class _ShopScreenState extends State<ShopScreen> {
               children: [
                 Text(
                   product.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -376,10 +391,10 @@ class _ShopScreenState extends State<ShopScreen> {
                       elevation: 0,
                       padding: EdgeInsets.zero,
                     ),
-                    child: const Text(
+                    child: Text(
                       'В корзину',
                       style: TextStyle(
-                        color: Color(0xFF0A0E27),
+                        color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
+import '../utils/theme.dart';
 import 'delivery_addresses_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -10,25 +13,28 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedLanguage = 'Русский';
-  String _selectedTheme = 'Тёмная';
 
   final List<String> _languages = ['Русский', 'English', 'O\'zbekcha'];
-  final List<String> _themes = ['Тёмная', 'Светлая'];
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final backgroundColor = isDark ? AppTheme.darkBackground : AppTheme.lightBackground;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.lightText;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Настройки',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: textColor),
         ),
         centerTitle: true,
       ),
@@ -94,18 +100,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSectionHeader(String title, IconData icon) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final textSecondaryColor = isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
+    
     return Row(
       children: [
         Icon(
           icon,
-          color: Colors.white54,
+          color: textSecondaryColor,
           size: 20,
         ),
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
-            color: Colors.white54,
+          style: TextStyle(
+            color: textSecondaryColor,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -115,9 +125,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildLanguageSection() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final cardColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
+    
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -139,35 +153,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildThemeSection() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final cardColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
+    
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        children: _themes.map((theme) {
-          final isSelected = theme == _selectedTheme;
-          return _buildSelectableItem(
-            theme,
-            isSelected,
-            () {
-              setState(() {
-                _selectedTheme = theme;
-              });
-            },
-            showDivider: theme != _themes.last,
-          );
-        }).toList(),
+        children: [
+          _buildThemeSelectableItem(
+            'Тёмная',
+            isDark,
+            () => themeProvider.toggleTheme(true),
+            showDivider: true,
+          ),
+          _buildThemeSelectableItem(
+            'Светлая',
+            !isDark,
+            () => themeProvider.toggleTheme(false),
+            showDivider: false,
+          ),
+        ],
       ),
     );
   }
-
-  Widget _buildSelectableItem(
+  
+  Widget _buildThemeSelectableItem(
     String title,
     bool isSelected,
     VoidCallback onTap, {
     bool showDivider = true,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.lightText;
+    
     return Column(
       children: [
         InkWell(
@@ -180,8 +203,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: textColor,
                       fontSize: 16,
                     ),
                   ),
@@ -191,7 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: 20,
                     height: 20,
                     decoration: const BoxDecoration(
-                      color: Color(0xFFFFD700),
+                      color: AppTheme.gold,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -208,7 +231,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Divider(
             height: 1,
             thickness: 1,
-            color: Colors.white.withOpacity(0.1),
+            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+            indent: 16,
+            endIndent: 16,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSelectableItem(
+    String title,
+    bool isSelected,
+    VoidCallback onTap, {
+    bool showDivider = true,
+  }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.lightText;
+    
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.gold,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      color: Color(0xFF0A0E27),
+                      size: 14,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (showDivider)
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
             indent: 16,
             endIndent: 16,
           ),
@@ -221,9 +302,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required VoidCallback onTap,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final cardColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.lightText;
+    final textSecondaryColor = isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
+    
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
@@ -235,22 +322,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Icon(
                 icon,
-                color: Colors.white,
+                color: textColor,
                 size: 24,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 16,
                   ),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
-                color: Colors.white54,
+                color: textSecondaryColor,
                 size: 24,
               ),
             ],
@@ -333,9 +420,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           elevation: 0,
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(
               Icons.logout,
               color: Colors.white,
@@ -357,35 +444,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLogoutDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final cardColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.lightText;
+    final textSecondaryColor = isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F3A),
+        backgroundColor: cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
+        title: Text(
           'Выйти из аккаунта?',
           style: TextStyle(
-            color: Colors.white,
+            color: textColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        content: const Text(
+        content: Text(
           'Вы уверены, что хотите выйти из аккаунта?',
           style: TextStyle(
-            color: Colors.white70,
+            color: textSecondaryColor,
             fontSize: 14,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Отмена',
               style: TextStyle(
-                color: Colors.white70,
+                color: textSecondaryColor,
                 fontSize: 16,
               ),
             ),
@@ -397,7 +490,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Вы вышли из аккаунта'),
-                  backgroundColor: Color(0xFFFFD700),
+                  backgroundColor: AppTheme.gold,
                 ),
               );
             },

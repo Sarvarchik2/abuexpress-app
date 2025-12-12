@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../utils/theme_helper.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
@@ -18,17 +19,21 @@ class CustomBottomNavigationBar extends StatelessWidget {
       right: 0,
       bottom: 0,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(60),
+                color: ThemeHelper.isDark(context) 
+                    ? Colors.black.withValues(alpha: 0.1)
+                    : Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.15),
+                  color: ThemeHelper.isDark(context)
+                      ? Colors.white.withValues(alpha: 0.15)
+                      : Colors.black.withValues(alpha: 0.1),
                   width: 0.5,
                 ),
               ),
@@ -44,13 +49,13 @@ class CustomBottomNavigationBar extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildNavItem(Icons.inbox_outlined, 'Посылки', 0),
+                        _buildNavItem(context, Icons.inbox_outlined, 'Посылки', 0),
                         const SizedBox(width: 12),
-                        _buildNavItem(Icons.shopping_bag_outlined, 'Магазин', 1),
+                        _buildNavItem(context, Icons.shopping_bag_outlined, 'Магазин', 1),
                         const SizedBox(width: 12),
-                        _buildNavItem(Icons.favorite_outline, 'Избранное', 2),
+                        _buildNavItem(context, Icons.favorite_outline, 'Избранное', 2),
                         const SizedBox(width: 12),
-                        _buildNavItem(Icons.location_on_outlined, 'Адреса', 3),
+                        _buildNavItem(context, Icons.location_on_outlined, 'Адреса', 3),
                       ],
                     ),
                   ),
@@ -64,8 +69,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
+  Widget _buildNavItem(BuildContext context, IconData icon, String label, int index) {
     final isSelected = currentIndex == index;
+    final textColor = ThemeHelper.getTextColor(context);
 
     return GestureDetector(
       onTap: () => onTap(index),
@@ -75,7 +81,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFB8860B).withOpacity(0.9)
+              ? const Color(0xFFB8860B).withValues(alpha: 0.9)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(60),
         ),
@@ -88,7 +94,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
               icon,
               color: isSelected
                   ? const Color(0xFFFFD700)
-                  : Colors.white,
+                  : textColor,
               size: 20,
             ),
             const SizedBox(height: 3),
@@ -97,7 +103,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
               style: TextStyle(
                 color: isSelected
                     ? const Color(0xFFFFD700)
-                    : Colors.white,
+                    : textColor,
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 letterSpacing: -0.2,
