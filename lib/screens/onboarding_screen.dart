@@ -98,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final isLastPage = _currentPage == _onboardingItems.length - 1;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+      backgroundColor: const Color(0xFF030712),
       body: SafeArea(
         child: Column(
           children: [

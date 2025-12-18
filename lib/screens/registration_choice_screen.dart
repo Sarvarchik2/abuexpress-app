@@ -7,7 +7,7 @@ class RegistrationChoiceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+      backgroundColor: const Color(0xFF030712),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -78,11 +78,18 @@ class RegistrationChoiceScreen extends StatelessWidget {
       height: 56,
       child: ElevatedButton(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SelfRegistrationScreen(),
-            ),
-          );
+          // Выполняем навигацию асинхронно
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            try {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SelfRegistrationScreen(),
+                ),
+              );
+            } catch (e) {
+              debugPrint('Navigation error: $e');
+            }
+          });
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1A1F3A),

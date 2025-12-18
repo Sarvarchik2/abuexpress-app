@@ -342,10 +342,15 @@ class _AddressesScreenState extends State<AddressesScreen> {
             height: 24,
             padding: const EdgeInsets.all(4),
             child: SvgPicture.asset(
-              'assets/icon/Copy.svg',
+              'lib/assets/icon/Copy.svg',
               colorFilter: ColorFilter.mode(
                 textSecondaryColor,
                 BlendMode.srcIn,
+              ),
+              placeholderBuilder: (context) => Icon(
+                Icons.copy,
+                color: textSecondaryColor,
+                size: 16,
               ),
             ),
           ),

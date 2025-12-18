@@ -466,11 +466,28 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
               return;
             }
             // TODO: Implement registration logic
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => const MainScreen(),
-              ),
-            );
+            // Выполняем навигацию асинхронно, чтобы не блокировать UI
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                try {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const MainScreen(),
+                    ),
+                  );
+                } catch (e) {
+                  debugPrint('Navigation error: $e');
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Ошибка навигации: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              }
+            });
           }
         },
         style: ElevatedButton.styleFrom(

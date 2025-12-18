@@ -10,7 +10,7 @@ class AuthScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27),
+      backgroundColor: const Color(0xFF030712),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -68,11 +68,18 @@ class AuthScreen extends StatelessWidget {
       height: 56,
       child: ElevatedButton(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const LoginScreen(),
-            ),
-          );
+          // Выполняем навигацию асинхронно
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            try {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const LoginScreen(),
+                ),
+              );
+            } catch (e) {
+              debugPrint('Navigation error: $e');
+            }
+          });
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFFD700),
@@ -110,11 +117,18 @@ class AuthScreen extends StatelessWidget {
       height: 56,
       child: OutlinedButton(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const RegistrationChoiceScreen(),
-            ),
-          );
+          // Выполняем навигацию асинхронно
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            try {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const RegistrationChoiceScreen(),
+                ),
+              );
+            } catch (e) {
+              debugPrint('Navigation error: $e');
+            }
+          });
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.transparent,

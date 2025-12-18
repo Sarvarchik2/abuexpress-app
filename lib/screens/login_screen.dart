@@ -12,7 +12,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -47,11 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
                 const SizedBox(height: 20),
                 // Email field
                 _buildTextField(
@@ -98,11 +95,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const RegistrationChoiceScreen(),
-                          ),
-                        );
+                        // Выполняем навигацию асинхронно
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            try {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const RegistrationChoiceScreen(),
+                                ),
+                              );
+                            } catch (e) {
+                              debugPrint('Navigation error: $e');
+                            }
+                          }
+                        });
                       },
                       child: const Text(
                         'Зарегистрироваться',
@@ -117,7 +123,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
               ],
-            ),
           ),
         ),
       ),
@@ -147,9 +152,10 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        TextFormField(
+        TextField(
           controller: controller,
           keyboardType: keyboardType,
+          enabled: true,
           style: TextStyle(color: textColor),
           decoration: InputDecoration(
             hintText: hint,
@@ -197,9 +203,10 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        TextFormField(
+        TextField(
           controller: _passwordController,
           obscureText: _obscurePassword,
+          enabled: true,
           style: TextStyle(color: textColor),
           decoration: InputDecoration(
             hintText: '••••••••',
@@ -248,25 +255,43 @@ class _LoginScreenState extends State<LoginScreen> {
       height: 56,
       child: ElevatedButton(
         onPressed: () async {
-          // Проверяем, что поля не пустые, но не требуем строгой валидации
-          if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
-            // Добавляем небольшую задержку, чтобы UI успел обновиться
-            await Future.delayed(const Duration(milliseconds: 100));
-            if (mounted) {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => const MainScreen(),
-                ),
-              );
-            }
-          } else {
+          // Проверяем, что поля не пустые
+          if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
             // Показываем сообщение, если поля пустые
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Пожалуйста, заполните все поля'),
                 backgroundColor: AppTheme.gold,
+                duration: Duration(seconds: 2),
               ),
             );
+            return;
+          }
+
+          // Выполняем навигацию с небольшой задержкой для стабильности
+          await Future.delayed(const Duration(milliseconds: 100));
+          
+          if (mounted) {
+            try {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => const MainScreen(),
+                ),
+                (route) => false,
+              );
+            } catch (e, stackTrace) {
+              debugPrint('Navigation error: $e');
+              debugPrint('Stack trace: $stackTrace');
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Ошибка навигации: $e'),
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              }
+            }
           }
         },
         style: ElevatedButton.styleFrom(
@@ -279,7 +304,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Text(
           'Войти',
           style: TextStyle(
-            color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
+            color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF030712),
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),

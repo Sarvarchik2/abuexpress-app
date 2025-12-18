@@ -14,44 +14,60 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  List<Widget> _buildScreens() {
-    // Ленивая инициализация экранов - создаем их только при необходимости
-    return [
-      ParcelsScreen(
-        key: const ValueKey('parcels'),
-        currentIndex: _currentIndex,
-        onNavTap: (index) => _onTabTapped(index),
-      ),
-      ShopScreen(
-        key: const ValueKey('shop'),
-        currentIndex: _currentIndex,
-        onNavTap: (index) => _onTabTapped(index),
-      ),
-      FavoritesScreen(
-        key: const ValueKey('favorites'),
-        currentIndex: _currentIndex,
-        onNavTap: (index) => _onTabTapped(index),
-      ),
-      AddressesScreen(
-        key: const ValueKey('addresses'),
-        currentIndex: _currentIndex,
-        onNavTap: (index) => _onTabTapped(index),
-      ),
-    ];
-  }
-
   void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    if (mounted && index != _currentIndex) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _buildScreens(),
+      body: Builder(
+        builder: (context) {
+          try {
+            return IndexedStack(
+              index: _currentIndex,
+              children: [
+                ParcelsScreen(
+                  key: const ValueKey('parcels'),
+                  currentIndex: _currentIndex,
+                  onNavTap: _onTabTapped,
+                ),
+                ShopScreen(
+                  key: const ValueKey('shop'),
+                  currentIndex: _currentIndex,
+                  onNavTap: _onTabTapped,
+                ),
+                FavoritesScreen(
+                  key: const ValueKey('favorites'),
+                  currentIndex: _currentIndex,
+                  onNavTap: _onTabTapped,
+                ),
+                AddressesScreen(
+                  key: const ValueKey('addresses'),
+                  currentIndex: _currentIndex,
+                  onNavTap: _onTabTapped,
+                ),
+              ],
+            );
+          } catch (e, stackTrace) {
+            debugPrint('Error building MainScreen: $e');
+            debugPrint('Stack trace: $stackTrace');
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('Ошибка загрузки: $e'),
+                ],
+              ),
+            );
+          }
+        },
       ),
     );
   }

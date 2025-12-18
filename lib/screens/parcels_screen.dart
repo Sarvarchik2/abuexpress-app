@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'add_parcel_screen.dart';
 import 'settings_screen.dart';
 import '../models/parcel.dart';
+import '../models/notification.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import '../widgets/notifications_bottom_sheet.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart';
 
@@ -25,6 +27,87 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
   final List<Parcel> _parcels = [];
 
   final List<String> _filters = ['Все', 'На складе', 'В пути', 'В таможне', 'Доставлен'];
+
+  final List<NotificationItem> _notifications = [
+    NotificationItem(
+      id: '1',
+      title: 'Посылка прибыла на склад',
+      description: 'Ваша посылка ABU123456 успешно прибыла на склад',
+      dateTime: DateTime.now().subtract(const Duration(hours: 2)),
+      type: NotificationType.parcelArrived,
+      isRead: false,
+    ),
+    NotificationItem(
+      id: '2',
+      title: 'Посылка в пути',
+      description: 'Посылка ABU789012 находится в пути',
+      dateTime: DateTime.now().subtract(const Duration(hours: 5)),
+      type: NotificationType.parcelInTransit,
+      isRead: false,
+    ),
+    NotificationItem(
+      id: '3',
+      title: 'Специальное предложение!',
+      description: 'Скидка 20% на доставку из США до конца месяца',
+      dateTime: DateTime.now().subtract(const Duration(days: 1)),
+      type: NotificationType.specialOffer,
+      isRead: true,
+    ),
+    NotificationItem(
+      id: '4',
+      title: 'Обновление приложения',
+      description: 'Доступна новая версия приложения с улучшенным интерфейсом',
+      dateTime: DateTime.now().subtract(const Duration(days: 2)),
+      type: NotificationType.appUpdate,
+      isRead: true,
+    ),
+    NotificationItem(
+      id: '5',
+      title: 'Посылка доставлена',
+      description: 'Посылка ABU345678 успешно доставлена в офис',
+      dateTime: DateTime.now().subtract(const Duration(days: 3)),
+      type: NotificationType.parcelDelivered,
+      isRead: true,
+    ),
+    NotificationItem(
+      id: '6',
+      title: 'Новые товары в магазине',
+      description: 'Более 100 новых товаров от популярных брендов теперь доступны',
+      dateTime: DateTime.now().subtract(const Duration(days: 4)),
+      type: NotificationType.newProducts,
+      isRead: true,
+    ),
+  ];
+
+  int get _unreadNotificationsCount => _notifications.where((n) => !n.isRead).length;
+
+  void _showNotificationsBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => NotificationsBottomSheet(
+          notifications: _notifications,
+          scrollController: scrollController,
+          onNotificationTap: (notificationId) {
+            // Обновляем состояние для обновления счетчика
+            if (mounted) {
+              setState(() {});
+            }
+          },
+        ),
+      ),
+    ).then((_) {
+      // Обновляем счетчик после закрытия bottom sheet
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -145,36 +228,40 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
             ),
           ),
           // Notification icon
-          Stack(
-            children: [
-              Icon(
-                Icons.notifications_outlined,
-                color: textColor,
-                size: 28,
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.gold,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '2',
-                      style: TextStyle(
-                        color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+          GestureDetector(
+            onTap: _showNotificationsBottomSheet,
+            child: Stack(
+              children: [
+                Icon(
+                  Icons.notifications_outlined,
+                  color: textColor,
+                  size: 28,
+                ),
+                if (_unreadNotificationsCount > 0)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.gold,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          _unreadNotificationsCount > 9 ? '9+' : _unreadNotificationsCount.toString(),
+                          style: TextStyle(
+                            color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(width: 16),
           // Settings icon

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Цвета для темной темы
-  static const Color darkBackground = Color(0xFF0A0E27);
+  static const Color darkBackground = Color(0xFF030712);
   static const Color darkCard = Color(0xFF1A1F3A);
   static const Color darkSecondary = Color(0xFF2A2F4A);
   static const Color darkText = Colors.white;
