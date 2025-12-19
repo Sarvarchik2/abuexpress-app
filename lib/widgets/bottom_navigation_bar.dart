@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../utils/theme_helper.dart';
+import '../utils/localization_helper.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
@@ -49,13 +50,13 @@ class CustomBottomNavigationBar extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildNavItem(context, Icons.inbox_outlined, 'Посылки', 0),
+                        _buildNavItem(context, Icons.inbox_outlined, context.l10n.translate('parcels'), 0),
                         const SizedBox(width: 12),
-                        _buildNavItem(context, Icons.shopping_bag_outlined, 'Магазин', 1),
+                        _buildNavItem(context, Icons.shopping_bag_outlined, context.l10n.translate('shop'), 1),
                         const SizedBox(width: 12),
-                        _buildNavItem(context, Icons.favorite_outline, 'Избранное', 2),
+                        _buildNavItem(context, Icons.favorite_outline, context.l10n.translate('favorites'), 2),
                         const SizedBox(width: 12),
-                        _buildNavItem(context, Icons.location_on_outlined, 'Адреса', 3),
+                        _buildNavItem(context, Icons.location_on_outlined, context.l10n.translate('addresses'), 3),
                       ],
                     ),
                   ),

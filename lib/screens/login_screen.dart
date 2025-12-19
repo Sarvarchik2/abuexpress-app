@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
+import '../utils/localization_helper.dart';
+import '../widgets/custom_snackbar.dart';
 import 'main_screen.dart';
 import 'registration_choice_screen.dart';
 
@@ -28,102 +30,119 @@ class _LoginScreenState extends State<LoginScreen> {
     final backgroundColor = ThemeHelper.getBackgroundColor(context);
     final textColor = ThemeHelper.getTextColor(context);
     
+    String loginTitle;
+    try {
+      loginTitle = context.l10n.translate('login');
+    } catch (e) {
+      debugPrint('Localization error in LoginScreen: $e');
+      loginTitle = 'Вход';
+    }
+    
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Вход',
-          style: TextStyle(color: textColor),
-        ),
-        centerTitle: true,
-      ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-                const SizedBox(height: 20),
-                // Email field
-                _buildTextField(
-                  label: 'Email',
-                  controller: _emailController,
-                  icon: Icons.email_outlined,
-                  hint: 'example@email.com',
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 24),
-                // Password field
-                _buildPasswordField(),
-                const SizedBox(height: 16),
-                // Forgot password link
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      // TODO: Navigate to forgot password screen
-                    },
-                    child: const Text(
-                      'Забыли пароль?',
+        child: Column(
+          children: [
+            // Custom AppBar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back, color: textColor),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      loginTitle,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Color(0xFF4A90E2),
-                        fontSize: 14,
+                        color: textColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                // Login button
-                _buildLoginButton(),
-                const Spacer(),
-                // Register link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  const SizedBox(width: 48), // Balance for back button
+                ],
+              ),
+            ),
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      'Нет аккаунта? ',
-                      style: TextStyle(
-                        color: ThemeHelper.getTextColor(context),
-                        fontSize: 14,
-                      ),
+                    const SizedBox(height: 20),
+                    // Email field
+                    _buildTextField(
+                      label: context.l10n.translate('email'),
+                      controller: _emailController,
+                      icon: Icons.email_outlined,
+                      hint: 'example@email.com',
+                      keyboardType: TextInputType.emailAddress,
                     ),
-                    TextButton(
-                      onPressed: () {
-                        // Выполняем навигацию асинхронно
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) {
-                            try {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const RegistrationChoiceScreen(),
-                                ),
-                              );
-                            } catch (e) {
-                              debugPrint('Navigation error: $e');
-                            }
-                          }
-                        });
-                      },
-                      child: const Text(
-                        'Зарегистрироваться',
-                        style: TextStyle(
-                          color: Color(0xFF4A90E2),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                    const SizedBox(height: 24),
+                    // Password field
+                    _buildPasswordField(),
+                    const SizedBox(height: 16),
+                    // Forgot password link
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          // TODO: Navigate to forgot password screen
+                        },
+                        child: Text(
+                          context.l10n.translate('forgot_password'),
+                          style: const TextStyle(
+                            color: Color(0xFF4A90E2),
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ),
+                    const SizedBox(height: 32),
+                    // Login button
+                    _buildLoginButton(),
+                    const SizedBox(height: 40),
+                    // Register link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${context.l10n.translate('no_account')} ',
+                          style: TextStyle(
+                            color: ThemeHelper.getTextColor(context),
+                            fontSize: 14,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const RegistrationChoiceScreen(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            context.l10n.translate('register_here'),
+                            style: const TextStyle(
+                              color: Color(0xFF4A90E2),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
-                const SizedBox(height: 20),
-              ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -195,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Пароль',
+          context.l10n.translate('password'),
           style: TextStyle(
             color: textColor,
             fontSize: 14,
@@ -258,12 +277,9 @@ class _LoginScreenState extends State<LoginScreen> {
           // Проверяем, что поля не пустые
           if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
             // Показываем сообщение, если поля пустые
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Пожалуйста, заполните все поля'),
-                backgroundColor: AppTheme.gold,
-                duration: Duration(seconds: 2),
-              ),
+            CustomSnackBar.warning(
+              context: context,
+              message: context.l10n.translate('fill_all_fields'),
             );
             return;
           }
@@ -283,12 +299,9 @@ class _LoginScreenState extends State<LoginScreen> {
               debugPrint('Navigation error: $e');
               debugPrint('Stack trace: $stackTrace');
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Ошибка навигации: $e'),
-                    backgroundColor: Colors.red,
-                    duration: const Duration(seconds: 3),
-                  ),
+                CustomSnackBar.error(
+                  context: context,
+                  message: 'Ошибка навигации: $e',
                 );
               }
             }
@@ -302,7 +315,7 @@ class _LoginScreenState extends State<LoginScreen> {
           elevation: 0,
         ),
         child: Text(
-          'Войти',
+          context.l10n.translate('enter'),
           style: TextStyle(
             color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF030712),
             fontSize: 18,

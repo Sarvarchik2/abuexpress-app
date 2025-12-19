@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/onboarding_item.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/onboarding_icon.dart';
+import '../utils/localization_helper.dart';
 import 'auth_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -13,7 +14,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
-  String _selectedLanguage = 'RU';
   late PageController _pageController;
 
   final List<OnboardingItem> _onboardingItems = [
@@ -110,23 +110,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   GestureDetector(
                     onTap: _skipOnboarding,
-                    child: const Text(
-                      'Пропустить',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.translate('skip'),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
-                  LanguageSelector(
-                    selectedLanguage: _selectedLanguage,
-                    onLanguageChanged: (lang) {
-                      setState(() {
-                        _selectedLanguage = lang;
-                      });
-                    },
-                  ),
+                  const LanguageSelector(),
                 ],
               ),
             ),
@@ -176,7 +169,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           OnboardingIcon(iconType: item.iconType),
           const SizedBox(height: 60),
           Text(
-            item.getTitle(_selectedLanguage),
+            _getOnboardingTitle(item.iconType),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
@@ -187,7 +180,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            item.getDescription(_selectedLanguage),
+            _getOnboardingDescription(item.iconType),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
@@ -212,18 +205,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  String _getOnboardingTitle(OnboardingIconType iconType) {
+    switch (iconType) {
+      case OnboardingIconType.airplane:
+        return context.l10n.translate('onboarding_title_1');
+      case OnboardingIconType.box:
+        return context.l10n.translate('onboarding_title_2');
+      case OnboardingIconType.shoppingBag:
+        return context.l10n.translate('onboarding_title_3');
+      case OnboardingIconType.globe:
+        return context.l10n.translate('onboarding_title_4');
+    }
+  }
+
+  String _getOnboardingDescription(OnboardingIconType iconType) {
+    switch (iconType) {
+      case OnboardingIconType.airplane:
+        return context.l10n.translate('onboarding_description_1');
+      case OnboardingIconType.box:
+        return context.l10n.translate('onboarding_description_2');
+      case OnboardingIconType.shoppingBag:
+        return context.l10n.translate('onboarding_description_3');
+      case OnboardingIconType.globe:
+        return context.l10n.translate('onboarding_description_4');
+    }
+  }
+
   Widget _buildActionButton(bool isLastPage) {
     final buttonText = isLastPage
-        ? (_selectedLanguage == 'RU'
-            ? 'Начать'
-            : _selectedLanguage == 'EN'
-                ? 'Start'
-                : 'Boshlash')
-        : (_selectedLanguage == 'RU'
-            ? 'Далее'
-            : _selectedLanguage == 'EN'
-                ? 'Next'
-                : 'Keyingi');
+        ? context.l10n.translate('start')
+        : context.l10n.translate('next');
 
     return Container(
       width: double.infinity,

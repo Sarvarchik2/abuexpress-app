@@ -4,6 +4,7 @@ import 'cart_screen.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart';
+import '../utils/localization_helper.dart';
 import '../providers/theme_provider.dart';
 
 class ShopScreen extends StatefulWidget {
@@ -21,8 +22,23 @@ class ShopScreen extends StatefulWidget {
 }
 
 class _ShopScreenState extends State<ShopScreen> {
-  String _selectedCategory = 'Все';
-  final List<String> _categories = ['Все', 'Электроника', 'Аксессуары', 'Одежда'];
+  String _selectedCategory = 'all';
+  List<String> get _categories => ['all', 'electronics', 'accessories', 'clothing'];
+  
+  String _getCategoryLabel(String key, BuildContext context) {
+    switch (key) {
+      case 'all':
+        return context.l10n.translate('all');
+      case 'electronics':
+        return context.l10n.translate('electronics');
+      case 'accessories':
+        return context.l10n.translate('accessories');
+      case 'clothing':
+        return context.l10n.translate('clothing');
+      default:
+        return key;
+    }
+  }
   final List<Product> _products = [
     Product(
       id: '1',
@@ -94,9 +110,16 @@ class _ShopScreenState extends State<ShopScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredProducts = _selectedCategory == 'Все'
+    final filteredProducts = _selectedCategory == 'all'
         ? _products
-        : _products.where((p) => p.category == _selectedCategory).toList();
+        : _products.where((p) {
+            final categoryMap = {
+              'Электроника': 'electronics',
+              'Аксессуары': 'accessories',
+              'Одежда': 'clothing',
+            };
+            return categoryMap[p.category] == _selectedCategory;
+          }).toList();
 
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, _) {
@@ -116,7 +139,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Магазин',
+                    context.l10n.translate('shop'),
                     style: TextStyle(
                       color: ThemeHelper.getTextColor(context),
                       fontSize: 28,
@@ -180,7 +203,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 child: TextField(
                   style: TextStyle(color: ThemeHelper.getTextColor(context)),
                   decoration: InputDecoration(
-                    hintText: 'Поиск товаров...',
+                    hintText: context.l10n.translate('search_products'),
                     hintStyle: TextStyle(
                       color: ThemeHelper.getTextSecondaryColor(context),
                     ),
@@ -224,7 +247,7 @@ class _ShopScreenState extends State<ShopScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          category,
+                          _getCategoryLabel(category, context),
                           style: TextStyle(
                             color: isSelected
                                 ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
@@ -377,7 +400,7 @@ class _ShopScreenState extends State<ShopScreen> {
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${product.name} добавлен в корзину'),
+                          content: Text('${product.name} ${context.l10n.translate('added_to_cart')}'),
                           backgroundColor: const Color(0xFFFFD700),
                           duration: const Duration(seconds: 1),
                         ),
@@ -392,7 +415,7 @@ class _ShopScreenState extends State<ShopScreen> {
                       padding: EdgeInsets.zero,
                     ),
                     child: Text(
-                      'В корзину',
+                      context.l10n.translate('add_to_cart'),
                       style: TextStyle(
                         color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                         fontSize: 12,

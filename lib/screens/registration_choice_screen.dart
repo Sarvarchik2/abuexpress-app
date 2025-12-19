@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/localization_helper.dart';
 import 'self_registration_screen.dart';
 
 class RegistrationChoiceScreen extends StatelessWidget {
@@ -15,9 +16,9 @@ class RegistrationChoiceScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Регистрация',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          context.l10n.translate('register'),
+          style: const TextStyle(color: Colors.white),
         ),
         centerTitle: true,
       ),
@@ -47,9 +48,9 @@ class RegistrationChoiceScreen extends StatelessWidget {
         onPressed: () {
           // TODO: Implement OneID registration
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Регистрация через OneID будет реализована'),
-              backgroundColor: Color(0xFFFFD700),
+            SnackBar(
+              content: Text(context.l10n.translate('oneid_registration_coming_soon')),
+              backgroundColor: const Color(0xFFFFD700),
             ),
           );
         },
@@ -60,9 +61,9 @@ class RegistrationChoiceScreen extends StatelessWidget {
           ),
           elevation: 0,
         ),
-        child: const Text(
-          'Регистрация через OneID',
-          style: TextStyle(
+        child: Text(
+          context.l10n.translate('oneid_registration'),
+          style: const TextStyle(
             color: Color(0xFF0A0E27),
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -78,18 +79,11 @@ class RegistrationChoiceScreen extends StatelessWidget {
       height: 56,
       child: ElevatedButton(
         onPressed: () {
-          // Выполняем навигацию асинхронно
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            try {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SelfRegistrationScreen(),
-                ),
-              );
-            } catch (e) {
-              debugPrint('Navigation error: $e');
-            }
-          });
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SelfRegistrationScreen(),
+            ),
+          );
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1A1F3A),
@@ -98,9 +92,9 @@ class RegistrationChoiceScreen extends StatelessWidget {
           ),
           elevation: 0,
         ),
-        child: const Text(
-          'Самостоятельная регистрация',
-          style: TextStyle(
+        child: Text(
+          context.l10n.translate('self_registration'),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.w600,

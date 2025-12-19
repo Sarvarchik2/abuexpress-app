@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
+import '../utils/localization_helper.dart';
 
 class AddressesScreen extends StatefulWidget {
   final int currentIndex;
@@ -66,7 +67,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                       children: [
                         // Header
                         Text(
-                          'Адреса офисов',
+                          context.l10n.translate('office_addresses'),
                           style: TextStyle(
                             color: textColor,
                             fontSize: 28,
@@ -74,9 +75,9 @@ class _AddressesScreenState extends State<AddressesScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Используйте эти адреса при заказе товаров в интернет-магазинах',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.translate('use_for_orders'),
+                          style: const TextStyle(
                             color: AppTheme.gold,
                             fontSize: 14,
                           ),
@@ -88,7 +89,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                             Expanded(
                               child: _buildCountryButton(
                                 'USA',
-                                'США',
+                                context.l10n.translate('usa'),
                                 Icons.flag,
                                 _selectedCountry == 'USA',
                               ),
@@ -97,7 +98,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                             Expanded(
                               child: _buildCountryButton(
                                 'Turkey',
-                                'Турция',
+                                context.l10n.translate('turkey'),
                                 Icons.flag,
                                 _selectedCountry == 'Turkey',
                               ),
@@ -244,9 +245,9 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   color: const Color(0xFF1877F2),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  'Склад',
-                  style: TextStyle(
+                child: Text(
+                  context.l10n.translate('warehouse'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -271,7 +272,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
           // City line
           _buildAddressLine(
             Icons.business_outlined,
-            'Город - ${address.city}',
+            '${context.l10n.translate('city')} - ${address.city}',
           ),
           const SizedBox(height: 16),
           // ZIP line
@@ -330,10 +331,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
           onTap: () {
             Clipboard.setData(ClipboardData(text: text));
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Скопировано в буфер обмена'),
+              SnackBar(
+                content: Text(context.l10n.translate('copy_to_clipboard')),
                 backgroundColor: AppTheme.gold,
-                duration: Duration(seconds: 1),
+                duration: const Duration(seconds: 1),
               ),
             );
           },

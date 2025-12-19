@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/onboarding_icon.dart';
 import '../models/onboarding_item.dart';
+import '../utils/localization_helper.dart';
 import 'login_screen.dart';
 import 'registration_choice_screen.dart';
 
@@ -9,6 +10,17 @@ class AuthScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String tagline;
+    String footer;
+    try {
+      tagline = context.l10n.translate('international_delivery');
+      footer = context.l10n.translate('worldwide_delivery');
+    } catch (e) {
+      debugPrint('Localization error in build: $e');
+      tagline = 'Международная доставка посылок';
+      footer = 'Доставка по всему миру';
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF030712),
       body: SafeArea(
@@ -32,9 +44,9 @@ class AuthScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               // Tagline
-              const Text(
-                'Международная доставка посылок',
-                style: TextStyle(
+              Text(
+                tagline,
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 16,
                 ),
@@ -47,9 +59,9 @@ class AuthScreen extends StatelessWidget {
               _buildRegisterButton(context),
               const SizedBox(height: 40),
               // Footer text
-              const Text(
-                'Доставка по всему миру',
-                style: TextStyle(
+              Text(
+                footer,
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
                 ),
@@ -63,43 +75,43 @@ class AuthScreen extends StatelessWidget {
   }
 
   Widget _buildLoginButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: () {
-          // Выполняем навигацию асинхронно
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            try {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const LoginScreen(),
-                ),
-              );
-            } catch (e) {
-              debugPrint('Navigation error: $e');
-            }
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFD700),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+    String buttonText;
+    try {
+      buttonText = context.l10n.translate('login');
+    } catch (e) {
+      debugPrint('Localization error: $e');
+      buttonText = 'Вход';
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        debugPrint('=== LOGIN BUTTON TAPPED ===');
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
           ),
-          elevation: 0,
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFD700),
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.arrow_forward,
               color: Color(0xFF0A0E27),
               size: 20,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
-              'Вход',
-              style: TextStyle(
+              buttonText,
+              style: const TextStyle(
                 color: Color(0xFF0A0E27),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -112,32 +124,33 @@ class AuthScreen extends StatelessWidget {
   }
 
   Widget _buildRegisterButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: OutlinedButton(
-        onPressed: () {
-          // Выполняем навигацию асинхронно
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            try {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const RegistrationChoiceScreen(),
-                ),
-              );
-            } catch (e) {
-              debugPrint('Navigation error: $e');
-            }
-          });
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          side: const BorderSide(
-            color: Color(0xFF1A1F3A),
-            width: 1,
+    String buttonText;
+    try {
+      buttonText = context.l10n.translate('register');
+    } catch (e) {
+      debugPrint('Localization error: $e');
+      buttonText = 'Регистрация';
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        debugPrint('=== REGISTER BUTTON TAPPED ===');
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const RegistrationChoiceScreen(),
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF1A1F3A),
+            width: 1,
           ),
         ),
         child: Row(
@@ -160,9 +173,9 @@ class AuthScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Text(
-              'Регистрация',
-              style: TextStyle(
+            Text(
+              buttonText,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -174,4 +187,3 @@ class AuthScreen extends StatelessWidget {
     );
   }
 }
-

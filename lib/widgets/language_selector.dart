@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/locale_provider.dart';
 
 class LanguageSelector extends StatelessWidget {
-  final String selectedLanguage;
-  final Function(String) onLanguageChanged;
-
-  const LanguageSelector({
-    super.key,
-    required this.selectedLanguage,
-    required this.onLanguageChanged,
-  });
+  const LanguageSelector({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
+    final currentLang = localeProvider.locale.languageCode.toUpperCase();
+    
+    final languageMap = {
+      'RU': 'ru',
+      'EN': 'en',
+      'UZ': 'uz',
+    };
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
@@ -20,10 +24,12 @@ class LanguageSelector extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: ['RU', 'EN', 'UZ'].map((lang) {
-          final isSelected = lang == selectedLanguage;
+        children: languageMap.keys.map((lang) {
+          final isSelected = lang == currentLang;
           return GestureDetector(
-            onTap: () => onLanguageChanged(lang),
+            onTap: () {
+              localeProvider.setLanguage(languageMap[lang]!);
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(

@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
+import '../utils/localization_helper.dart';
 import 'main_screen.dart';
 
 class SelfRegistrationScreen extends StatefulWidget {
@@ -57,7 +58,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
             ListTile(
               leading: Icon(Icons.camera_alt, color: textColor),
               title: Text(
-                'Сделать фото',
+                context.l10n.translate('take_photo'),
                 style: TextStyle(color: textColor),
               ),
               onTap: () async {
@@ -77,7 +78,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
             ListTile(
               leading: Icon(Icons.photo_library, color: textColor),
               title: Text(
-                'Выбрать из галереи',
+                context.l10n.translate('choose_from_gallery'),
                 style: TextStyle(color: textColor),
               ),
               onTap: () async {
@@ -116,7 +117,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Регистрация',
+          context.l10n.translate('register'),
           style: TextStyle(color: textColor),
         ),
         centerTitle: true,
@@ -131,15 +132,15 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
               children: [
                 // Full Name field
                 _buildTextField(
-                  label: 'ФИО',
+                  label: context.l10n.translate('recipient_name'),
                   controller: _fullNameController,
                   icon: Icons.person_outlined,
-                  hint: 'Журабаев Асадбек Нодирович',
+                  hint: context.l10n.translate('enter_full_name'),
                 ),
                 const SizedBox(height: 20),
                 // Email field
                 _buildTextField(
-                  label: 'Email',
+                  label: context.l10n.translate('email'),
                   controller: _emailController,
                   icon: Icons.email_outlined,
                   hint: 'example@email.com',
@@ -148,7 +149,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 const SizedBox(height: 20),
                 // Phone field
                 _buildTextField(
-                  label: 'Телефон',
+                  label: context.l10n.translate('phone_number'),
                   controller: _phoneController,
                   icon: Icons.phone_outlined,
                   hint: '+998 90 123 45 67',
@@ -157,7 +158,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 const SizedBox(height: 20),
                 // Passport Series field
                 _buildTextField(
-                  label: 'Серия паспорта',
+                  label: context.l10n.translate('passport_series'),
                   controller: _passportSeriesController,
                   icon: Icons.credit_card_outlined,
                   hint: 'AA',
@@ -165,7 +166,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 const SizedBox(height: 20),
                 // Passport Number field
                 _buildTextField(
-                  label: 'Номер паспорта',
+                  label: context.l10n.translate('passport_number'),
                   controller: _passportNumberController,
                   icon: Icons.credit_card_outlined,
                   hint: '1234567',
@@ -174,21 +175,21 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 const SizedBox(height: 24),
                 // Passport Front Image
                 _buildImageUpload(
-                  label: 'Фото паспорта (лицевая сторона)',
+                  label: context.l10n.translate('passport_front'),
                   image: _frontPassportImage,
                   onTap: () => _pickImage(true),
                 ),
                 const SizedBox(height: 16),
                 // Passport Back Image
                 _buildImageUpload(
-                  label: 'Фото паспорта (обратная сторона)',
+                  label: context.l10n.translate('passport_back'),
                   image: _backPassportImage,
                   onTap: () => _pickImage(false),
                 ),
                 const SizedBox(height: 20),
                 // Password field
                 _buildPasswordField(
-                  label: 'Пароль',
+                  label: context.l10n.translate('password'),
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -196,7 +197,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 const SizedBox(height: 20),
                 // Confirm Password field
                 _buildPasswordField(
-                  label: 'Подтвердите пароль',
+                  label: context.l10n.translate('confirm_password'),
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
@@ -375,7 +376,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Нажмите для загрузки',
+                        context.l10n.translate('click_to_upload'),
                         style: TextStyle(
                           color: textSecondaryColor,
                           fontSize: 14,
@@ -427,9 +428,9 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                   }
                 });
               },
-              child: const Text(
-                'Удалить фото',
-                style: TextStyle(
+              child: Text(
+                context.l10n.translate('delete_photo'),
+                style: const TextStyle(
                   color: Colors.red,
                   fontSize: 12,
                 ),
@@ -449,8 +450,8 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
           if (_formKey.currentState!.validate()) {
             if (_frontPassportImage == null || _backPassportImage == null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Пожалуйста, загрузите обе стороны паспорта'),
+                SnackBar(
+                  content: Text(context.l10n.translate('upload_both_sides')),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -458,8 +459,8 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
             }
             if (_passwordController.text != _confirmPasswordController.text) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Пароли не совпадают'),
+                SnackBar(
+                  content: Text(context.l10n.translate('passwords_dont_match')),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -480,7 +481,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Ошибка навигации: $e'),
+                        content: Text('${context.l10n.translate('navigation_error')}: $e'),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -498,7 +499,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
           elevation: 0,
         ),
         child: Text(
-          'Зарегистрироваться',
+          context.l10n.translate('register_button'),
           style: TextStyle(
             color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
             fontSize: 18,

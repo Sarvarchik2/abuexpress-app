@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'add_parcel_screen.dart';
 import 'settings_screen.dart';
+import 'parcel_details_screen.dart';
 import '../models/parcel.dart';
 import '../models/notification.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/notifications_bottom_sheet.dart';
 import '../utils/theme_helper.dart';
+import '../utils/localization_helper.dart';
 import '../utils/theme.dart';
 
 class ParcelsScreen extends StatefulWidget {
@@ -23,10 +25,29 @@ class ParcelsScreen extends StatefulWidget {
 }
 
 class _ParcelsScreenState extends State<ParcelsScreen> {
-  String _selectedFilter = 'Все';
+  String _selectedFilterKey = 'all';
   final List<Parcel> _parcels = [];
 
-  final List<String> _filters = ['Все', 'На складе', 'В пути', 'В таможне', 'Доставлен'];
+  List<String> _getFilters(BuildContext context) {
+    return ['all', 'in_warehouse', 'in_transit', 'at_customs', 'delivered'];
+  }
+
+  String _getFilterLabel(String key, BuildContext context) {
+    switch (key) {
+      case 'all':
+        return context.l10n.translate('all');
+      case 'in_warehouse':
+        return context.l10n.translate('in_warehouse');
+      case 'in_transit':
+        return context.l10n.translate('in_transit');
+      case 'at_customs':
+        return context.l10n.translate('at_customs');
+      case 'delivered':
+        return context.l10n.translate('delivered');
+      default:
+        return key;
+    }
+  }
 
   final List<NotificationItem> _notifications = [
     NotificationItem(
@@ -127,13 +148,13 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 _buildFilters(),
                 const SizedBox(height: 24),
                 // My Parcels section
-                _buildMyParcelsHeader(),
+                _buildMyParcelsHeader(context),
                 const SizedBox(height: 16),
                 // Empty state or parcel list
                 Expanded(
                   child: _parcels.isEmpty
-                      ? _buildEmptyState()
-                      : _buildParcelsList(),
+                      ? _buildEmptyState(context)
+                      : _buildParcelsList(context),
                 ),
                 // Spacer для навигации
                 const SizedBox(height: 80),
@@ -288,20 +309,22 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
   Widget _buildFilters() {
     final cardColor = ThemeHelper.getCardColor(context);
     final textColor = ThemeHelper.getTextColor(context);
+    final filters = _getFilters(context);
     
     return SizedBox(
       height: 40,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _filters.length,
+        itemCount: filters.length,
         itemBuilder: (context, index) {
-          final filter = _filters[index];
-          final isSelected = filter == _selectedFilter;
+          final filterKey = filters[index];
+          final filterLabel = _getFilterLabel(filterKey, context);
+          final isSelected = filterKey == _selectedFilterKey;
           return GestureDetector(
             onTap: () {
               setState(() {
-                _selectedFilter = filter;
+                _selectedFilterKey = filterKey;
               });
             },
             child: Container(
@@ -315,7 +338,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
               ),
               child: Center(
                 child: Text(
-                  filter,
+                  filterLabel,
                   style: TextStyle(
                     color: isSelected
                         ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
@@ -332,7 +355,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
     );
   }
 
-  Widget _buildMyParcelsHeader() {
+  Widget _buildMyParcelsHeader(BuildContext context) {
     final textColor = ThemeHelper.getTextColor(context);
     
     return Padding(
@@ -341,7 +364,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Мои посылки',
+            context.l10n.translate('my_parcels'),
             style: TextStyle(
               color: textColor,
               fontSize: 24,
@@ -381,7 +404,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     final cardColor = ThemeHelper.getCardColor(context);
     final textColor = ThemeHelper.getTextColor(context);
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
@@ -407,7 +430,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'У вас пока нет посылок',
+            context.l10n.translate('no_parcels'),
             style: TextStyle(
               color: textColor,
               fontSize: 20,
@@ -418,7 +441,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Добавьте первую посылку, чтобы начать отслеживать её статус',
+              context.l10n.translate('add_first_parcel'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: textSecondaryColor,
@@ -449,7 +472,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
               ),
             ),
             child: Text(
-              'Добавить посылку',
+              context.l10n.translate('add_parcel'),
               style: TextStyle(
                 color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                 fontSize: 16,
@@ -463,10 +486,18 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
     );
   }
 
-  Widget _buildParcelsList() {
-    final filteredParcels = _selectedFilter == 'Все'
+  Widget _buildParcelsList(BuildContext context) {
+    final filteredParcels = _selectedFilterKey == 'all'
         ? _parcels
-        : _parcels.where((p) => p.status == _selectedFilter).toList();
+        : _parcels.where((p) {
+            final statusMap = {
+              'in_warehouse': 'На складе',
+              'in_transit': 'В пути',
+              'at_customs': 'В таможне',
+              'delivered': 'Доставлен',
+            };
+            return p.status == statusMap[_selectedFilterKey];
+          }).toList();
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
@@ -504,15 +535,24 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
         statusTextColor = textColor;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ParcelDetailsScreen(parcel: parcel),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
           // Icon - квадратная иконка с темно-желтым фоном и желтым контуром коробки
           Container(
             width: 48,
@@ -590,7 +630,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              parcel.status,
+              _getStatusLabel(_getStatusKey(parcel.status), context),
               style: TextStyle(
                 color: statusTextColor,
                 fontSize: 12,
@@ -598,9 +638,47 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
               ),
             ),
           ),
+          // Стрелка для навигации
+          const SizedBox(width: 8),
+          Icon(
+            Icons.chevron_right,
+            color: textSecondaryColor,
+            size: 24,
+          ),
         ],
       ),
+      ),
     );
+  }
+
+  String _getStatusKey(String status) {
+    switch (status) {
+      case 'На складе':
+        return 'in_warehouse';
+      case 'В пути':
+        return 'in_transit';
+      case 'В таможне':
+        return 'at_customs';
+      case 'Доставлен':
+        return 'delivered';
+      default:
+        return 'all';
+    }
+  }
+
+  String _getStatusLabel(String key, BuildContext context) {
+    switch (key) {
+      case 'in_warehouse':
+        return context.l10n.translate('in_warehouse');
+      case 'in_transit':
+        return context.l10n.translate('in_transit');
+      case 'at_customs':
+        return context.l10n.translate('at_customs');
+      case 'delivered':
+        return context.l10n.translate('delivered');
+      default:
+        return key;
+    }
   }
 }
 

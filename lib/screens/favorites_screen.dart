@@ -5,6 +5,7 @@ import '../widgets/bottom_navigation_bar.dart';
 import '../providers/theme_provider.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart';
+import '../utils/localization_helper.dart';
 
 class FavoritesScreen extends StatefulWidget {
   final int currentIndex;
@@ -78,7 +79,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Избранное',
+                        context.l10n.translate('favorites'),
                         style: TextStyle(
                           color: ThemeHelper.getTextColor(context),
                           fontSize: 28,
@@ -186,7 +187,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'У вас пока нет избранных товаров',
+            context.l10n.translate('no_favorites'),
             style: TextStyle(
               color: ThemeHelper.getTextColor(context),
               fontSize: 20,
@@ -197,7 +198,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Добавьте товары в избранное, чтобы они появились здесь',
+              context.l10n.translate('add_to_favorites'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: ThemeHelper.getTextSecondaryColor(context),
@@ -311,7 +312,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${product.name} добавлен в корзину'),
+                          content: Text('${product.name} ${context.l10n.translate('added_to_cart')}'),
                           backgroundColor: const Color(0xFFFFD700),
                           duration: const Duration(seconds: 1),
                         ),
@@ -326,7 +327,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       padding: EdgeInsets.zero,
                     ),
                     child: Text(
-                      'В корзину',
+                      context.l10n.translate('add_to_cart'),
                       style: TextStyle(
                         color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                         fontSize: 12,

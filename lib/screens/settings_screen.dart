@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/locale_provider.dart';
 import '../utils/theme.dart';
+import '../utils/localization_helper.dart';
+import '../widgets/custom_dialog.dart';
+import '../widgets/custom_snackbar.dart';
 import 'delivery_addresses_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -12,9 +16,13 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedLanguage = 'Русский';
-
-  final List<String> _languages = ['Русский', 'English', 'O\'zbekcha'];
+  final Map<String, String> _languageMap = {
+    // Основные языки приложения (с полной локализацией)
+    'ru': 'Русский',
+    'en': 'English',
+    'uz': 'O\'zbekcha',
+    // Дополнительные языки (поддержка Flutter Material)
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +41,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Настройки',
+          context.l10n.translate('settings'),
           style: TextStyle(color: textColor),
         ),
         centerTitle: true,
@@ -45,7 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             // Interface Language Section
             _buildSectionHeader(
-              'Язык интерфейса',
+              context.l10n.translate('interface_language'),
               Icons.language,
             ),
             const SizedBox(height: 12),
@@ -53,7 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 32),
             // Theme Section
             _buildSectionHeader(
-              'Тема оформления',
+              context.l10n.translate('theme'),
               Icons.palette_outlined,
             ),
             const SizedBox(height: 12),
@@ -62,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // Delivery Addresses
             _buildNavigationItem(
               icon: Icons.location_on_outlined,
-              title: 'Адреса доставки',
+              title: context.l10n.translate('delivery_addresses'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -76,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // Change Password
             _buildNavigationItem(
               icon: Icons.lock_outline,
-              title: 'Изменить пароль',
+              title: context.l10n.translate('change_password'),
               onTap: () {
                 // TODO: Navigate to change password screen
               },
@@ -84,7 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 32),
             // Social Networks Section
             _buildSectionHeader(
-              'Социальные сети',
+              context.l10n.translate('social_networks'),
               Icons.share_outlined,
             ),
             const SizedBox(height: 12),
@@ -126,6 +134,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildLanguageSection() {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
     final isDark = themeProvider.isDarkMode;
     final cardColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
     
@@ -135,17 +144,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        children: _languages.map((language) {
-          final isSelected = language == _selectedLanguage;
+        children: _languageMap.entries.map((entry) {
+          final languageCode = entry.key;
+          final languageName = entry.value;
+          final isSelected = localeProvider.locale.languageCode == languageCode;
           return _buildSelectableItem(
-            language,
+            languageName,
             isSelected,
             () {
-              setState(() {
-                _selectedLanguage = language;
-              });
+              localeProvider.setLanguage(languageCode);
             },
-            showDivider: language != _languages.last,
+            showDivider: entry != _languageMap.entries.last,
           );
         }).toList(),
       ),
@@ -165,13 +174,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         children: [
           _buildThemeSelectableItem(
-            'Тёмная',
+            context.l10n.translate('dark'),
             isDark,
             () => themeProvider.toggleTheme(true),
             showDivider: true,
           ),
           _buildThemeSelectableItem(
-            'Светлая',
+            context.l10n.translate('light'),
             !isDark,
             () => themeProvider.toggleTheme(false),
             showDivider: false,
@@ -306,7 +315,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isDark = themeProvider.isDarkMode;
     final cardColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
     final textColor = isDark ? AppTheme.darkText : AppTheme.lightText;
-    final textSecondaryColor = isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
     
     return Container(
       decoration: BoxDecoration(
@@ -322,7 +330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Icon(
                 icon,
-                color: textColor,
+                color: AppTheme.gold, // Желтая/золотая иконка
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -337,7 +345,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               Icon(
                 Icons.chevron_right,
-                color: textSecondaryColor,
+                color: Colors.white,
                 size: 24,
               ),
             ],
@@ -348,12 +356,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSocialNetworksSection() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final cardColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
+    
     return Row(
       children: [
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.facebook,
-            color: const Color(0xFF1877F2),
+            icon: Icons.facebook_outlined,
+            iconColor: const Color(0xFF1DA1F2), // Светло-синий контур Facebook
+            backgroundColor: cardColor,
             onTap: () {
               // TODO: Open Facebook
             },
@@ -363,7 +376,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Expanded(
           child: _buildSocialButton(
             icon: Icons.camera_alt_outlined,
-            color: const Color(0xFFE4405F),
+            iconColor: const Color(0xFFE4405F), // Розовый контур Instagram
+            backgroundColor: cardColor,
             onTap: () {
               // TODO: Open Instagram
             },
@@ -373,7 +387,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Expanded(
           child: _buildSocialButton(
             icon: Icons.alternate_email,
-            color: const Color(0xFF1DA1F2),
+            iconColor: const Color(0xFF1DA1F2), // Светло-синий контур Twitter
+            backgroundColor: cardColor,
             onTap: () {
               // TODO: Open Twitter
             },
@@ -385,7 +400,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSocialButton({
     required IconData icon,
-    required Color color,
+    required Color iconColor,
+    required Color backgroundColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -393,13 +409,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         height: 56,
         decoration: BoxDecoration(
-          color: color,
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 28,
+        child: Center(
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: 28,
+          ),
         ),
       ),
     );
@@ -414,25 +432,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _showLogoutDialog();
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFDC3545),
+          backgroundColor: const Color(0xFF8B4513), // Красно-коричневый цвет
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 0,
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.logout,
-              color: Colors.white,
+              Icons.exit_to_app_outlined, // Контурная иконка выхода
+              color: const Color(0xFFFF6B6B), // Светло-красный цвет иконки
               size: 20,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
-              'Выйти из аккаунта',
-              style: TextStyle(
-                color: Colors.white,
+              context.l10n.translate('logout'),
+              style: const TextStyle(
+                color: Color(0xFFFF6B6B), // Светло-красный цвет текста
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -444,67 +462,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLogoutDialog() {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final cardColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
-    final textColor = isDark ? AppTheme.darkText : AppTheme.lightText;
-    final textSecondaryColor = isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
-    
-    showDialog(
+    CustomDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: cardColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      title: context.l10n.translate('logout_confirm'),
+      message: context.l10n.translate('logout_confirm_message'),
+      icon: Icons.logout_rounded,
+      iconColor: const Color(0xFFDC3545),
+      actions: [
+        CustomDialogActions.secondaryButton(
+          context: context,
+          text: context.l10n.translate('cancel'),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Выйти из аккаунта?',
-          style: TextStyle(
-            color: textColor,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        const SizedBox(width: 8),
+        CustomDialogActions.primaryButton(
+          context: context,
+          text: context.l10n.translate('logout'),
+          onPressed: () {
+            Navigator.pop(context);
+            // TODO: Implement logout logic
+            CustomSnackBar.success(
+              context: context,
+              message: context.l10n.translate('logged_out'),
+            );
+          },
+          backgroundColor: const Color(0xFFDC3545),
         ),
-        content: Text(
-          'Вы уверены, что хотите выйти из аккаунта?',
-          style: TextStyle(
-            color: textSecondaryColor,
-            fontSize: 14,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Отмена',
-              style: TextStyle(
-                color: textSecondaryColor,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement logout logic
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Вы вышли из аккаунта'),
-                  backgroundColor: AppTheme.gold,
-                ),
-              );
-            },
-            child: const Text(
-              'Выйти',
-              style: TextStyle(
-                color: Color(0xFFDC3545),
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

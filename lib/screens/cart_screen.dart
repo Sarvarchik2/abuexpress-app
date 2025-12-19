@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
+import '../utils/localization_helper.dart';
+import '../widgets/custom_dialog.dart';
+import '../widgets/custom_snackbar.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -46,7 +49,7 @@ class _CartScreenState extends State<CartScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Корзина',
+          context.l10n.translate('cart'),
           style: TextStyle(color: textColor),
         ),
         centerTitle: true,
@@ -97,7 +100,7 @@ class _CartScreenState extends State<CartScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Корзина пуста',
+            context.l10n.translate('cart_empty'),
             style: TextStyle(
               color: textColor,
               fontSize: 20,
@@ -108,7 +111,7 @@ class _CartScreenState extends State<CartScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Добавьте товары в корзину, чтобы они появились здесь',
+              context.l10n.translate('add_items_to_cart'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: textSecondaryColor,
@@ -278,7 +281,7 @@ class _CartScreenState extends State<CartScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Итого:',
+                  context.l10n.translate('total'),
                   style: TextStyle(
                     color: textColor,
                     fontSize: 18,
@@ -303,11 +306,9 @@ class _CartScreenState extends State<CartScreen> {
             height: 56,
             child: ElevatedButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Заказ оформлен'),
-                    backgroundColor: Color(0xFFFFD700),
-                  ),
+                CustomSnackBar.success(
+                  context: context,
+                  message: context.l10n.translate('order_placed'),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -319,7 +320,7 @@ class _CartScreenState extends State<CartScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: Text(
-                'Оформить заказ',
+                context.l10n.translate('place_order'),
                 style: TextStyle(
                   color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                   fontSize: 16,
@@ -334,61 +335,35 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   void _removeItem(CartItem item) {
-    final cardColor = ThemeHelper.getCardColor(context);
-    final textColor = ThemeHelper.getTextColor(context);
-    final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
-    
-    showDialog(
+    CustomDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: cardColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      title: context.l10n.translate('remove_item_confirm'),
+      message: context.l10n.translate('remove_item_message').replaceAll('{item}', item.name),
+      icon: Icons.delete_outline_rounded,
+      iconColor: Colors.red,
+      actions: [
+        CustomDialogActions.secondaryButton(
+          context: context,
+          text: context.l10n.translate('cancel'),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Удалить товар?',
-          style: TextStyle(
-            color: textColor,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        const SizedBox(width: 8),
+        CustomDialogActions.primaryButton(
+          context: context,
+          text: context.l10n.translate('delete'),
+          onPressed: () {
+            setState(() {
+              _cartItems.removeWhere((i) => i.id == item.id);
+            });
+            Navigator.pop(context);
+            CustomSnackBar.success(
+              context: context,
+              message: context.l10n.translate('item_removed'),
+            );
+          },
+          backgroundColor: Colors.red,
         ),
-        content: Text(
-          'Вы уверены, что хотите удалить "${item.name}" из корзины?',
-          style: TextStyle(
-            color: textSecondaryColor,
-            fontSize: 14,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Отмена',
-              style: TextStyle(
-                color: textSecondaryColor,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _cartItems.removeWhere((i) => i.id == item.id);
-              });
-              Navigator.pop(context);
-            },
-            child: const Text(
-              'Удалить',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 
