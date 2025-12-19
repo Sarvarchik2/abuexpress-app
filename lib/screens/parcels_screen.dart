@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'add_parcel_screen.dart';
-import 'settings_screen.dart';
 import 'parcel_details_screen.dart';
 import '../models/parcel.dart';
 import '../models/notification.dart';
@@ -162,9 +161,14 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
             ),
           ),
           // Навигация прикреплена к низу
-          CustomBottomNavigationBar(
-            currentIndex: widget.currentIndex,
-            onTap: widget.onNavTap,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: CustomBottomNavigationBar(
+              currentIndex: widget.currentIndex,
+              onTap: widget.onNavTap,
+            ),
           ),
         ],
       ),
@@ -249,9 +253,15 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
             ),
           ),
           // Notification icon
-          GestureDetector(
-            onTap: _showNotificationsBottomSheet,
-            child: Stack(
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                debugPrint('Notification icon tapped');
+                _showNotificationsBottomSheet();
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
               children: [
                 Icon(
                   Icons.notifications_outlined,
@@ -279,26 +289,10 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                           ),
                         ),
                       ),
-                    ),
                   ),
+                ),
               ],
             ),
-          ),
-          const SizedBox(width: 16),
-          // Settings icon
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
-            child: Icon(
-              Icons.settings_outlined,
-              color: textColor,
-              size: 28,
             ),
           ),
         ],
@@ -321,30 +315,35 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
           final filterKey = filters[index];
           final filterLabel = _getFilterLabel(filterKey, context);
           final isSelected = filterKey == _selectedFilterKey;
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedFilterKey = filterKey;
-              });
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.gold
-                    : cardColor,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Center(
-                child: Text(
-                  filterLabel,
-                  style: TextStyle(
-                    color: isSelected
-                        ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
-                        : textColor,
-                    fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                debugPrint('Filter tapped: $filterKey');
+                setState(() {
+                  _selectedFilterKey = filterKey;
+                });
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppTheme.gold
+                      : cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Text(
+                    filterLabel,
+                    style: TextStyle(
+                      color: isSelected
+                          ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
+                          : textColor,
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    ),
                   ),
                 ),
               ),
@@ -371,31 +370,36 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          GestureDetector(
-            onTap: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddParcelScreen(),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () async {
+                debugPrint('Add parcel button tapped');
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddParcelScreen(),
+                  ),
+                );
+                if (result != null && result is Parcel) {
+                  setState(() {
+                    _parcels.add(result);
+                  });
+                }
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFD700),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              );
-              if (result != null && result is Parcel) {
-                setState(() {
-                  _parcels.add(result);
-                });
-              }
-            },
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFD700),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.add,
-                color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
-                size: 24,
+                child: Icon(
+                  Icons.add,
+                  color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
+                  size: 24,
+                ),
               ),
             ),
           ),

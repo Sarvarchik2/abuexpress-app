@@ -328,10 +328,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: AppTheme.gold, // Желтая/золотая иконка
-                size: 24,
+              // Желтый градиентный фон для иконки (40x40)
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFFF0B100), // #F0B100
+                      Color(0xFFD08700), // #D08700
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white, // Белая иконка на желтом градиенте
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -345,7 +361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               Icon(
                 Icons.chevron_right,
-                color: Colors.white,
+                color: isDark ? Colors.white : Colors.grey.shade400, // Светло-серый в светлой теме
                 size: 24,
               ),
             ],
@@ -358,15 +374,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSocialNetworksSection() {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
-    final cardColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
+    // Темно-синий фон для кнопок социальных сетей
+    final socialButtonColor = isDark ? AppTheme.darkCard : const Color(0xFF1A1F3A);
     
     return Row(
       children: [
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.facebook_outlined,
-            iconColor: const Color(0xFF1DA1F2), // Светло-синий контур Facebook
-            backgroundColor: cardColor,
+            icon: Icons.facebook, // Solid white Facebook icon
+            iconColor: Colors.white, // Белая иконка Facebook
+            backgroundColor: socialButtonColor,
             onTap: () {
               // TODO: Open Facebook
             },
@@ -375,9 +392,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.camera_alt_outlined,
-            iconColor: const Color(0xFFE4405F), // Розовый контур Instagram
-            backgroundColor: cardColor,
+            icon: Icons.camera_alt, // Solid red camera icon
+            iconColor: const Color(0xFFE4405F), // Красная иконка Instagram
+            backgroundColor: socialButtonColor,
             onTap: () {
               // TODO: Open Instagram
             },
@@ -386,11 +403,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.alternate_email,
-            iconColor: const Color(0xFF1DA1F2), // Светло-синий контур Twitter
-            backgroundColor: cardColor,
+            icon: Icons.alternate_email_outlined, // Outlined @ symbol
+            iconColor: const Color(0xFF1DA1F2), // Светло-синий контур
+            backgroundColor: socialButtonColor,
             onTap: () {
-              // TODO: Open Twitter
+              // TODO: Open Twitter/Email
             },
           ),
         ),
@@ -424,6 +441,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildLogoutButton() {
+    const redColor = Color(0xFFFB2C36);
+    
     return SizedBox(
       width: double.infinity,
       height: 56,
@@ -432,9 +451,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _showLogoutDialog();
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF8B4513), // Красно-коричневый цвет
+          backgroundColor: redColor.withValues(alpha: 0.1), // #FB2C36 с 10% opacity
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: redColor.withValues(alpha: 0.3), // #FB2C36 с 30% opacity
+              width: 0.63,
+            ),
           ),
           elevation: 0,
         ),
@@ -442,15 +465,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.exit_to_app_outlined, // Контурная иконка выхода
-              color: const Color(0xFFFF6B6B), // Светло-красный цвет иконки
+              Icons.exit_to_app, // Solid red exit icon
+              color: redColor, // Красная иконка
               size: 20,
             ),
             const SizedBox(width: 8),
             Text(
               context.l10n.translate('logout'),
-              style: const TextStyle(
-                color: Color(0xFFFF6B6B), // Светло-красный цвет текста
+              style: TextStyle(
+                color: redColor, // Красный цвет текста
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),

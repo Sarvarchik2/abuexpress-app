@@ -15,10 +15,8 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
+    return Material(
+      color: Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
         child: ClipRRect(
@@ -38,7 +36,6 @@ class CustomBottomNavigationBar extends StatelessWidget {
                   width: 0.5,
                 ),
               ),
-
               child: SafeArea(
                 top: false,
                 bottom: false,
@@ -54,15 +51,14 @@ class CustomBottomNavigationBar extends StatelessWidget {
                         const SizedBox(width: 12),
                         _buildNavItem(context, Icons.shopping_bag_outlined, context.l10n.translate('shop'), 1),
                         const SizedBox(width: 12),
-                        _buildNavItem(context, Icons.favorite_outline, context.l10n.translate('favorites'), 2),
+                        _buildNavItem(context, Icons.location_on_outlined, context.l10n.translate('addresses'), 2),
                         const SizedBox(width: 12),
-                        _buildNavItem(context, Icons.location_on_outlined, context.l10n.translate('addresses'), 3),
+                        _buildNavItem(context, Icons.settings_outlined, context.l10n.translate('settings'), 3),
                       ],
                     ),
                   ),
                 ),
               ),
-
             ),
           ),
         ),
@@ -74,9 +70,15 @@ class CustomBottomNavigationBar extends StatelessWidget {
     final isSelected = currentIndex == index;
     final textColor = ThemeHelper.getTextColor(context);
 
-    return GestureDetector(
-      onTap: () => onTap(index),
-      child: AnimatedContainer(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          debugPrint('Bottom nav item tapped: $index');
+          onTap(index);
+        },
+        borderRadius: BorderRadius.circular(60),
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -113,6 +115,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

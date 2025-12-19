@@ -69,9 +69,14 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             // Scrollable content
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
+              child: GestureDetector(
+                onTap: () {
+                  // Убираем фокус с полей при нажатии вне их
+                  FocusScope.of(context).unfocus();
+                },
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 20),
@@ -140,6 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 20),
                   ],
                 ),
+                ),
               ),
             ),
           ],
@@ -171,12 +177,16 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          enabled: true,
-          style: TextStyle(color: textColor),
-          decoration: InputDecoration(
+        Material(
+          color: Colors.transparent,
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            enabled: true,
+            readOnly: false,
+            autofocus: false,
+            style: TextStyle(color: textColor),
+            decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
               color: textSecondaryColor,
@@ -200,6 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
               vertical: 16,
             ),
           ),
+          ),
         ),
       ],
     );
@@ -222,12 +233,16 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
-          controller: _passwordController,
-          obscureText: _obscurePassword,
-          enabled: true,
-          style: TextStyle(color: textColor),
-          decoration: InputDecoration(
+        Material(
+          color: Colors.transparent,
+          child: TextField(
+            controller: _passwordController,
+            obscureText: _obscurePassword,
+            enabled: true,
+            readOnly: false,
+            autofocus: false,
+            style: TextStyle(color: textColor),
+            decoration: InputDecoration(
             hintText: '••••••••',
             hintStyle: TextStyle(
               color: textSecondaryColor,
@@ -262,6 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
               horizontal: 16,
               vertical: 16,
             ),
+          ),
           ),
         ),
       ],

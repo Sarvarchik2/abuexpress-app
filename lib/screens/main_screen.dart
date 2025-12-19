@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'parcels_screen.dart';
-import 'shop_screen.dart';
-import 'favorites_screen.dart';
+import 'shop_bottom_sheet.dart';
 import 'addresses_screen.dart';
+import 'settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,11 +15,37 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   void _onTabTapped(int index) {
-    if (mounted && index != _currentIndex) {
-      setState(() {
-        _currentIndex = index;
-      });
+    if (mounted) {
+      // Открываем магазин как модальный bottom sheet при нажатии на "Магазин" (индекс 1)
+      if (index == 1) {
+        _showShopBottomSheet();
+        return; // Не меняем индекс, остаемся на текущем экране
+      }
+      
+      // Для остальных вкладок меняем индекс
+      if (index != _currentIndex) {
+        setState(() {
+          _currentIndex = index;
+        });
+      }
     }
+  }
+
+  void _showShopBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      enableDrag: true,
+      isDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => const ShopBottomSheet(),
+    ).then((_) {
+      // Обновляем состояние после закрытия bottom sheet
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   @override
@@ -36,13 +62,9 @@ class _MainScreenState extends State<MainScreen> {
                   currentIndex: _currentIndex,
                   onNavTap: _onTabTapped,
                 ),
-                ShopScreen(
+                // Магазин открывается как bottom sheet, но нужен экран для индекса
+                ParcelsScreen(
                   key: const ValueKey('shop'),
-                  currentIndex: _currentIndex,
-                  onNavTap: _onTabTapped,
-                ),
-                FavoritesScreen(
-                  key: const ValueKey('favorites'),
                   currentIndex: _currentIndex,
                   onNavTap: _onTabTapped,
                 ),
@@ -50,6 +72,9 @@ class _MainScreenState extends State<MainScreen> {
                   key: const ValueKey('addresses'),
                   currentIndex: _currentIndex,
                   onNavTap: _onTabTapped,
+                ),
+                const SettingsScreen(
+                  key: ValueKey('settings'),
                 ),
               ],
             );
