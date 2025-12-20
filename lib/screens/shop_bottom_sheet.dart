@@ -11,6 +11,8 @@ import '../utils/localization_helper.dart';
 import '../providers/theme_provider.dart';
 import '../models/product.dart';
 
+// Импортируем CartItem из модели
+
 // Observer для отслеживания изменений в Navigator
 class _NavigatorObserver extends NavigatorObserver {
   final Function(bool canPop) onRouteChanged;
@@ -20,29 +22,43 @@ class _NavigatorObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
-    onRouteChanged(true);
+    // Откладываем вызов, чтобы избежать проблем во время сборки
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigator = route.navigator;
+      if (navigator != null && navigator.mounted) {
+        onRouteChanged(navigator.canPop());
+      } else {
+        onRouteChanged(true);
+      }
+    });
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
-    final navigator = route.navigator;
-    if (navigator != null) {
-      onRouteChanged(navigator.canPop());
-    } else {
-      onRouteChanged(false);
-    }
+    // Откладываем вызов, чтобы избежать проблем во время сборки
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigator = route.navigator;
+      if (navigator != null && navigator.mounted) {
+        onRouteChanged(navigator.canPop());
+      } else {
+        onRouteChanged(false);
+      }
+    });
   }
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didRemove(route, previousRoute);
-    final navigator = route.navigator;
-    if (navigator != null) {
-      onRouteChanged(navigator.canPop());
-    } else {
-      onRouteChanged(false);
-    }
+    // Откладываем вызов, чтобы избежать проблем во время сборки
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigator = route.navigator;
+      if (navigator != null && navigator.mounted) {
+        onRouteChanged(navigator.canPop());
+      } else {
+        onRouteChanged(false);
+      }
+    });
   }
 }
 
@@ -333,11 +349,18 @@ class _ShopBottomSheetState extends State<ShopBottomSheet> {
                             ),
                           ],
                         ),
+                        // Показываем кнопку "назад" на экране корзины, иначе кнопку "закрыть"
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              Navigator.pop(context);
+                              if (_shopNavIndex == 3) {
+                                // На экране корзины - возвращаемся на главный экран
+                                _onNavTap(0);
+                              } else {
+                                // На других экранах - закрываем bottom sheet
+                                Navigator.pop(context);
+                              }
                             },
                             borderRadius: BorderRadius.circular(20),
                             child: Container(
@@ -348,7 +371,7 @@ class _ShopBottomSheetState extends State<ShopBottomSheet> {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                Icons.close,
+                                _shopNavIndex == 3 ? Icons.arrow_back : Icons.close,
                                 color: ThemeHelper.getTextColor(context),
                                 size: 24,
                               ),
@@ -372,19 +395,34 @@ class _ShopBottomSheetState extends State<ShopBottomSheet> {
                         _NavigatorObserver(
                           onRouteChanged: (canPop) {
                             if (mounted) {
-                              setState(() {
-                                _showNavigationBar = !canPop;
+                              // Откладываем setState до завершения текущего кадра сборки
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (mounted) {
+                                  setState(() {
+                                    _showNavigationBar = !canPop;
+                                  });
+                                }
                               });
                             }
                           },
                         ),
                       ],
+                      onGenerateInitialRoutes: (NavigatorState navigator, String initialRoute) {
+                        // Возвращаем начальный маршрут
+                        return [
+                          MaterialPageRoute(
+                            builder: (context) => _buildCurrentScreen(),
+                            settings: RouteSettings(name: initialRoute),
+                          ),
+                        ];
+                      },
                     ),
                   ),
                 ],
               ),
-              // Shop Navigation Bar (floating) - показываем только если нет открытых экранов
-              if (_showNavigationBar) _buildShopNavigationBar(),
+              // Shop Navigation Bar (floating) - показываем только если нет открытых экранов и не на экране корзины
+              if (_showNavigationBar && _shopNavIndex != 3) 
+                _buildShopNavigationBar(),
             ],
           ),
         );

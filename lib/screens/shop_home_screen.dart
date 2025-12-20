@@ -71,27 +71,30 @@ class _ShopHomeScreenState extends State<ShopHomeScreen> {
             // Search bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: ThemeHelper.getCardColor(context),
-                  borderRadius: BorderRadius.circular(44),
-                ),
-                child: TextField(
-                  style: TextStyle(color: ThemeHelper.getTextColor(context)),
-                  decoration: InputDecoration(
-                    hintText: context.l10n.translate('search_products'),
-                    hintStyle: TextStyle(
-                      color: ThemeHelper.getTextSecondaryColor(context),
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: ThemeHelper.getTextSecondaryColor(context),
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: ThemeHelper.getCardColor(context),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: TextField(
+                    style: TextStyle(color: ThemeHelper.getTextColor(context)),
+                    decoration: InputDecoration(
+                      hintText: context.l10n.translate('search_products'),
+                      hintStyle: TextStyle(
+                        color: ThemeHelper.getTextSecondaryColor(context),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: ThemeHelper.getTextSecondaryColor(context),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -100,123 +103,139 @@ class _ShopHomeScreenState extends State<ShopHomeScreen> {
             // Category filters
             SizedBox(
               height: 40,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final category = _categories[index];
-                  final isSelected = category == _selectedCategory;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedCategory = category;
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppTheme.gold
-                            : ThemeHelper.getCardColor(context),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _getCategoryLabel(category, context),
-                          style: TextStyle(
-                            color: isSelected
-                                ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
-                                : ThemeHelper.getTextColor(context),
-                            fontSize: 14,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Promotional Banner Carousel
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 160,
-                    child: PageView.builder(
-                      controller: _bannerController,
-                      onPageChanged: (index) {
+              child: ClipRect(
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  clipBehavior: Clip.hardEdge,
+                  itemCount: _categories.length,
+                  itemBuilder: (context, index) {
+                    final category = _categories[index];
+                    final isSelected = category == _selectedCategory;
+                    return GestureDetector(
+                      onTap: () {
                         setState(() {
-                          _currentBannerIndex = index;
+                          _selectedCategory = category;
                         });
                       },
-                      itemCount: 3, // 3 баннера
-                      itemBuilder: (context, index) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF833AB4), // Фиолетовый
-                                const Color(0xFFE4405F), // Розовый
-                              ],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.local_offer_rounded,
-                              size: 80,
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Banner indicators
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(3, (index) {
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        width: _currentBannerIndex == index ? 24 : 8,
-                        height: 8,
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: _currentBannerIndex == index
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(4),
+                          color: isSelected
+                              ? AppTheme.gold
+                              : ThemeHelper.getCardColor(context),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      );
-                    }),
-                  ),
-                ],
+                        child: Center(
+                          child: Text(
+                            _getCategoryLabel(category, context),
+                            style: TextStyle(
+                              color: isSelected
+                                  ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
+                                  : ThemeHelper.getTextColor(context),
+                              fontSize: 14,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            // Products grid
+            // Scrollable content: Banner + Products
             Expanded(
-              child: GridView.builder(
+              child: CustomScrollView(
                 controller: widget.scrollController,
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.68,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: filteredProducts.length,
-                itemBuilder: (context, index) {
-                  return _buildProductCard(filteredProducts[index]);
-                },
+                slivers: [
+                  // Promotional Banner Carousel
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            height: 160,
+                            child: PageView.builder(
+                              controller: _bannerController,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  _currentBannerIndex = index;
+                                });
+                              },
+                              itemCount: 3, // 3 баннера
+                              itemBuilder: (context, index) {
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        const Color(0xFF833AB4), // Фиолетовый
+                                        const Color(0xFFE4405F), // Розовый
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.local_offer_rounded,
+                                      size: 80,
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Banner indicators
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(3, (index) {
+                              return Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                width: _currentBannerIndex == index ? 24 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _currentBannerIndex == index
+                                      ? Colors.white
+                                      : Colors.white.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 16),
+                  ),
+                  // Products grid
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                    sliver: SliverGrid(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.68,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return _buildProductCard(filteredProducts[index]);
+                        },
+                        childCount: filteredProducts.length,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

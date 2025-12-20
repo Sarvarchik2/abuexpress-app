@@ -4,6 +4,7 @@ import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
 import '../widgets/custom_dialog.dart';
 import '../widgets/custom_snackbar.dart';
+import '../models/product.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -389,20 +390,4 @@ class _CartScreenState extends State<CartScreen> {
         return Icons.shopping_bag;
     }
   }
-}
-
-class CartItem {
-  final String id;
-  final String name;
-  final double price;
-  final String image;
-  int quantity;
-
-  CartItem({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.image,
-    required this.quantity,
-  });
 }

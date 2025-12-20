@@ -6,6 +6,7 @@ import '../utils/localization_helper.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/custom_dialog.dart';
 import '../widgets/custom_snackbar.dart';
+import '../models/product.dart';
 
 class ShopCartScreen extends StatefulWidget {
   final List<CartItem> cartItems;
@@ -288,21 +289,5 @@ class _ShopCartScreenState extends State<ShopCartScreen> {
         return Icons.shopping_bag;
     }
   }
-}
-
-class CartItem {
-  final String id;
-  final String name;
-  final double price;
-  final String image;
-  int quantity;
-
-  CartItem({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.image,
-    this.quantity = 1,
-  });
 }
 

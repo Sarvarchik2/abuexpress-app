@@ -105,6 +105,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 // Scrollable content
                 Expanded(
                   child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 100),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -359,24 +360,18 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                 ),
                 // Fixed bottom button
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
+                Material(
+                  elevation: 8,
+                  shadowColor: Colors.black.withValues(alpha: 0.1),
+                  color: cardColor,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: SafeArea(
+                      top: false,
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
                         onPressed: () {
                           CustomSnackBar.show(
                             context: context,
@@ -414,6 +409,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             ),
                           ],
                         ),
+                      ),
                       ),
                     ),
                   ),
