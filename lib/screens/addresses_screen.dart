@@ -118,9 +118,14 @@ class _AddressesScreenState extends State<AddressesScreen> {
             ),
           ),
           // Навигация прикреплена к низу
-          CustomBottomNavigationBar(
-            currentIndex: widget.currentIndex,
-            onTap: widget.onNavTap,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: CustomBottomNavigationBar(
+              currentIndex: widget.currentIndex,
+              onTap: widget.onNavTap,
+            ),
           ),
         ],
       ),

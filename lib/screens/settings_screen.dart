@@ -9,7 +9,14 @@ import '../widgets/custom_snackbar.dart';
 import 'delivery_addresses_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final int currentIndex;
+  final Function(int) onNavTap;
+  
+  const SettingsScreen({
+    super.key,
+    required this.currentIndex,
+    required this.onNavTap,
+  });
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -38,7 +45,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Переключаемся обратно на экран адресов (индекс 2)
+            widget.onNavTap(2);
+          },
         ),
         title: Text(
           context.l10n.translate('settings'),

@@ -73,8 +73,10 @@ class _MainScreenState extends State<MainScreen> {
                   currentIndex: _currentIndex,
                   onNavTap: _onTabTapped,
                 ),
-                const SettingsScreen(
-                  key: ValueKey('settings'),
+                SettingsScreen(
+                  key: const ValueKey('settings'),
+                  currentIndex: _currentIndex,
+                  onNavTap: _onTabTapped,
                 ),
               ],
             );
