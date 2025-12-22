@@ -106,17 +106,20 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.only(bottom: 100),
+                    
                     child: Column(
+                      
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Product Images Carousel
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 0),
                           child: Column(
                             children: [
                               // Main Image Swiper
                               SizedBox(
                                 height: 300,
+                                
                                 child: PageView.builder(
                                   controller: _imageController,
                                   onPageChanged: (index) {
@@ -146,8 +149,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               const SizedBox(height: 12),
                               // Thumbnail Images
                               SizedBox(
+                                
+                                
                                 height: 60,
                                 child: ListView.builder(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5),
                                   scrollDirection: Axis.horizontal,
                                   itemCount: _productImages.length,
                                   itemBuilder: (context, index) {
@@ -198,6 +204,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(32),
                               topRight: Radius.circular(32),
+                              bottomLeft: Radius.circular(32),
+                              bottomRight: Radius.circular(32),
                             ),
                           ),
                           child: Padding(
@@ -214,7 +222,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   ),
                                   child: Text(
                                     widget.product.category,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: AppTheme.gold,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -364,11 +372,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   elevation: 8,
                   shadowColor: Colors.black.withValues(alpha: 0.1),
                   color: cardColor,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                    child: SafeArea(
-                      top: false,
-                      child: SizedBox(
+                  child: SafeArea(
+                    top: false,
+                    child: SizedBox(
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
@@ -410,7 +416,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           ],
                         ),
                       ),
-                      ),
                     ),
                   ),
                 ),
@@ -424,7 +429,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   Widget _buildSpecificationItem(String label, String value, Color textColor, Color textSecondaryColor) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 32),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

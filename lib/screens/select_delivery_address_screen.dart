@@ -14,7 +14,7 @@ class SelectDeliveryAddressScreen extends StatefulWidget {
 
 class _SelectDeliveryAddressScreenState extends State<SelectDeliveryAddressScreen> {
   // В реальном приложении это должно быть из провайдера или базы данных
-  List<DeliveryAddress> _addresses = [
+  final List<DeliveryAddress> _addresses = [
     DeliveryAddress(
       id: '1',
       type: 'Дом',
@@ -344,7 +344,7 @@ class _SelectDeliveryAddressScreenState extends State<SelectDeliveryAddressScree
                             ),
                             child: Text(
                               context.l10n.translate('default'),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppTheme.gold,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,

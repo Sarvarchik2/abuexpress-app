@@ -37,7 +37,7 @@ class CustomDialog extends StatelessWidget {
       context: context,
       barrierDismissible: barrierDismissible,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.black.withOpacity(0.5),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return const SizedBox.shrink();
@@ -89,7 +89,7 @@ class CustomDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -109,7 +109,7 @@ class CustomDialog extends StatelessWidget {
                         width: 64,
                         height: 64,
                         decoration: BoxDecoration(
-                          color: (iconColor ?? AppTheme.gold).withOpacity(0.2),
+                          color: (iconColor ?? AppTheme.gold).withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -132,7 +132,7 @@ class CustomDialog extends StatelessWidget {
                       ),
                       onPressed: () => Navigator.of(context).pop(),
                       style: IconButton.styleFrom(
-                        backgroundColor: backgroundColor.withOpacity(0.5),
+                        backgroundColor: backgroundColor.withValues(alpha: 0.5),
                         padding: const EdgeInsets.all(8),
                       ),
                     ),
@@ -258,7 +258,7 @@ class CustomDialogActions {
         style: OutlinedButton.styleFrom(
           backgroundColor: cardColor,
           side: BorderSide(
-            color: textColor.withOpacity(0.2),
+            color: textColor.withValues(alpha: 0.2),
             width: 1,
           ),
           shape: RoundedRectangleBorder(

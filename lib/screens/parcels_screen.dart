@@ -166,8 +166,8 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
             right: 0,
             bottom: 0,
             child: CustomBottomNavigationBar(
-              currentIndex: widget.currentIndex,
-              onTap: widget.onNavTap,
+            currentIndex: widget.currentIndex,
+            onTap: widget.onNavTap,
             ),
           ),
         ],
@@ -261,7 +261,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 _showNotificationsBottomSheet();
               },
               borderRadius: BorderRadius.circular(20),
-              child: Stack(
+            child: Stack(
               children: [
                 Icon(
                   Icons.notifications_outlined,
@@ -289,8 +289,8 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                           ),
                         ),
                       ),
+                    ),
                   ),
-                ),
               ],
             ),
             ),
@@ -318,31 +318,31 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
           return Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () {
+            onTap: () {
                 debugPrint('Filter tapped: $filterKey');
-                setState(() {
-                  _selectedFilterKey = filterKey;
-                });
-              },
+              setState(() {
+                _selectedFilterKey = filterKey;
+              });
+            },
               borderRadius: BorderRadius.circular(20),
-              child: Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppTheme.gold
-                      : cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    filterLabel,
-                    style: TextStyle(
-                      color: isSelected
-                          ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
-                          : textColor,
-                      fontSize: 14,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppTheme.gold
+                    : cardColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Center(
+                child: Text(
+                  filterLabel,
+                  style: TextStyle(
+                    color: isSelected
+                        ? (ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121))
+                        : textColor,
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                 ),
@@ -373,32 +373,32 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () async {
+            onTap: () async {
                 debugPrint('Add parcel button tapped');
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddParcelScreen(),
-                  ),
-                );
-                if (result != null && result is Parcel) {
-                  setState(() {
-                    _parcels.add(result);
-                  });
-                }
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFD700),
-                  borderRadius: BorderRadius.circular(12),
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddParcelScreen(),
                 ),
-                child: Icon(
-                  Icons.add,
-                  color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
-                  size: 24,
+              );
+              if (result != null && result is Parcel) {
+                setState(() {
+                  _parcels.add(result);
+                });
+              }
+            },
+              borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.add,
+                color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
+                size: 24,
                 ),
               ),
             ),

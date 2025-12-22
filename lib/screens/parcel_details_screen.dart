@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/parcel.dart';
 import '../models/parcel_history.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
+import '../widgets/custom_snackbar.dart';
 
 class ParcelDetailsScreen extends StatelessWidget {
   final Parcel parcel;
@@ -48,7 +50,7 @@ class ParcelDetailsScreen extends StatelessWidget {
           // История перемещений
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.local_shipping_outlined,
                 color: AppTheme.gold,
                 size: 20,
@@ -73,20 +75,31 @@ class ParcelDetailsScreen extends StatelessWidget {
             width: double.infinity,
             height: 56,
             child: OutlinedButton.icon(
-              onPressed: () {
-                // TODO: Реализовать звонок
+              onPressed: () async {
+                final phoneNumber = '+998901234567'; // Номер службы поддержки
+                final url = Uri.parse('tel:$phoneNumber');
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url);
+                } else {
+                  if (context.mounted) {
+                    CustomSnackBar.error(
+                      context: context,
+                      message: 'Не удалось совершить звонок',
+                    );
+                  }
+                }
               },
-              icon: Icon(Icons.phone, color: AppTheme.gold),
+              icon: const Icon(Icons.phone, color: AppTheme.gold),
               label: Text(
                 context.l10n.translate('call'),
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppTheme.gold,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppTheme.gold, width: 2),
+                side: const BorderSide(color: AppTheme.gold, width: 2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -105,7 +118,7 @@ class ParcelDetailsScreen extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
+                const Icon(
                   Icons.help_outline,
                   color: AppTheme.gold,
                   size: 24,
@@ -373,7 +386,7 @@ class ParcelDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         item.location,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppTheme.gold,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,

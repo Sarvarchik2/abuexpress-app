@@ -418,7 +418,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
               ),
             ),
           );
-        }).toList(),
+        }),
         const SizedBox(width: 8),
         // Кнопка для кастомного типа
         GestureDetector(
@@ -525,7 +525,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
               _isDefault = value;
             });
           },
-          activeColor: AppTheme.gold,
+          activeThumbColor: AppTheme.gold,
         ),
       ],
     );

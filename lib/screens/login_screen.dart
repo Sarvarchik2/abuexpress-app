@@ -5,6 +5,7 @@ import '../utils/localization_helper.dart';
 import '../widgets/custom_snackbar.dart';
 import 'main_screen.dart';
 import 'registration_choice_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -74,9 +75,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Убираем фокус с полей при нажатии вне их
                   FocusScope.of(context).unfocus();
                 },
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 20),
@@ -97,7 +98,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          // TODO: Navigate to forgot password screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ForgotPasswordScreen(),
+                            ),
+                          );
                         },
                         child: Text(
                           context.l10n.translate('forgot_password'),
@@ -149,8 +155,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ],
-        ),
       ),
+    ),
     );
   }
 
@@ -180,13 +186,13 @@ class _LoginScreenState extends State<LoginScreen> {
         Material(
           color: Colors.transparent,
           child: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            enabled: true,
+          controller: controller,
+          keyboardType: keyboardType,
+          enabled: true,
             readOnly: false,
             autofocus: false,
-            style: TextStyle(color: textColor),
-            decoration: InputDecoration(
+          style: TextStyle(color: textColor),
+          decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
               color: textSecondaryColor,
@@ -209,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
               horizontal: 16,
               vertical: 16,
             ),
-          ),
+            ),
           ),
         ),
       ],
@@ -236,13 +242,13 @@ class _LoginScreenState extends State<LoginScreen> {
         Material(
           color: Colors.transparent,
           child: TextField(
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            enabled: true,
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          enabled: true,
             readOnly: false,
             autofocus: false,
-            style: TextStyle(color: textColor),
-            decoration: InputDecoration(
+          style: TextStyle(color: textColor),
+          decoration: InputDecoration(
             hintText: '••••••••',
             hintStyle: TextStyle(
               color: textSecondaryColor,
@@ -277,7 +283,7 @@ class _LoginScreenState extends State<LoginScreen> {
               horizontal: 16,
               vertical: 16,
             ),
-          ),
+            ),
           ),
         ),
       ],

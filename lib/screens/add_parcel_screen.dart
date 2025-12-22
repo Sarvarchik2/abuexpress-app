@@ -453,7 +453,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                   // Кнопка добавления товара (всегда показывается если есть данные)
                   if (_canAddItem && _selectedCountry != null) ...[
                     // Кнопка отмены показывается если уже есть хотя бы 1 товар
-                    if (_items.length >= 1)
+                    if (_items.isNotEmpty)
                       Row(
                         children: [
                           // Кнопка отмены
@@ -548,43 +548,43 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                       )
                     else
                       // Если товаров меньше 2, показываем только кнопку добавления
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _addItem,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.gold,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 0,
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _addItem,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.gold,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add,
+                          elevation: 0,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add,
+                              color: ThemeHelper.isDark(context) 
+                                  ? const Color(0xFF0A0E27) 
+                                  : const Color(0xFF212121),
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              context.l10n.translate('add_item'),
+                              style: TextStyle(
                                 color: ThemeHelper.isDark(context) 
                                     ? const Color(0xFF0A0E27) 
                                     : const Color(0xFF212121),
-                                size: 24,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                context.l10n.translate('add_item'),
-                                style: TextStyle(
-                                  color: ThemeHelper.isDark(context) 
-                                      ? const Color(0xFF0A0E27) 
-                                      : const Color(0xFF212121),
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
                     const SizedBox(height: 12),
                   ],
                   if (_items.isNotEmpty || _canAddItem)
@@ -647,26 +647,26 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
         itemCount: countries.length,
         itemBuilder: (context, index) {
           final country = countries[index];
-          final isSelected = _selectedCountry == country;
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedCountry = country;
-              });
-            },
-            child: Container(
+        final isSelected = _selectedCountry == country;
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedCountry = country;
+            });
+          },
+          child: Container(
               width: 110,
               margin: const EdgeInsets.symmetric(horizontal: 8),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
                 color: isSelected 
                     ? AppTheme.gold.withValues(alpha: 0.2)
                     : cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isSelected ? AppTheme.gold : Colors.transparent,
-                  width: 2,
-                ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? AppTheme.gold : Colors.transparent,
+                width: 2,
+              ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
@@ -676,29 +676,29 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                         ),
                       ]
                     : null,
-              ),
+            ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Флаг
-                  Container(
+              children: [
+                // Флаг
+                Container(
                     width: 56,
                     height: 56,
-                    decoration: BoxDecoration(
+                  decoration: BoxDecoration(
                       color: isSelected
                           ? AppTheme.gold.withValues(alpha: 0.15)
                           : textSecondaryColor.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        countryFlags[country] ?? '🏳️',
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      countryFlags[country] ?? '🏳️',
                         style: const TextStyle(fontSize: 32),
-                      ),
                     ),
                   ),
+                ),
                   const SizedBox(height: 12),
-                  // Название страны
+                // Название страны
                   Text(
                     countryNames[country] ?? country,
                     textAlign: TextAlign.center,
@@ -708,21 +708,21 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                       color: isSelected ? AppTheme.gold : textColor,
                       fontSize: 14,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    ),
                   ),
-                  // Иконка выбора
+                ),
+                // Иконка выбора
                   if (isSelected) ...[
                     const SizedBox(height: 8),
-                    Icon(
-                      Icons.check_circle,
-                      color: AppTheme.gold,
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppTheme.gold,
                       size: 20,
-                    ),
+                  ),
                   ],
-                ],
-              ),
+              ],
             ),
-          );
+          ),
+        );
         },
       ),
     );
@@ -746,7 +746,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.flag, color: AppTheme.gold, size: 24),
+          const Icon(Icons.flag, color: AppTheme.gold, size: 24),
           const SizedBox(width: 12),
             Expanded(
             child: Text(
@@ -768,7 +768,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
             },
             child: Text(
               context.l10n.translate('edit'),
-              style: TextStyle(color: AppTheme.gold),
+              style: const TextStyle(color: AppTheme.gold),
             ),
           ),
         ],
@@ -823,7 +823,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                   Row(
                     children: [
                       IconButton(
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.edit,
                           color: AppTheme.gold,
                           size: 20,

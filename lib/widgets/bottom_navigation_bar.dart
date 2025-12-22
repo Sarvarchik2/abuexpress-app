@@ -78,7 +78,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
           onTap(index);
         },
         borderRadius: BorderRadius.circular(60),
-        child: AnimatedContainer(
+      child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -115,7 +115,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
             ),
           ],
         ),
-      ),
+        ),
       ),
     );
   }

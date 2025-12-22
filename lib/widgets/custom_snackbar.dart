@@ -203,16 +203,22 @@ class _AnimatedSnackBarState extends State<_AnimatedSnackBar>
             child: GestureDetector(
               onTap: _dismiss,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
                   color: backgroundColor,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 20,
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 24,
                       offset: const Offset(0, 8),
                       spreadRadius: 0,
+                    ),
+                    BoxShadow(
+                      color: iconColor.withValues(alpha: 0.2),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                      spreadRadius: -4,
                     ),
                   ],
                 ),
@@ -220,45 +226,70 @@ class _AnimatedSnackBarState extends State<_AnimatedSnackBar>
                   children: [
                     if (widget.icon != null) ...[
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
-                          color: iconColor.withOpacity(0.15),
+                          gradient: LinearGradient(
+                            colors: [
+                              iconColor.withValues(alpha: 0.25),
+                              iconColor.withValues(alpha: 0.15),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: iconColor.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Icon(
                           widget.icon,
                           color: iconColor,
-                          size: 22,
+                          size: 24,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                     ],
                     Expanded(
                       child: Text(
                         widget.message,
-                        style: const TextStyle(
-                          color: Color(0xFFE2E8F0),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                        style: TextStyle(
+                          color: backgroundColor.computeLuminance() > 0.5 
+                              ? const Color(0xFF0A0E27) 
+                              : const Color(0xFFE2E8F0),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                           height: 1.4,
+                          letterSpacing: -0.2,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: _dismiss,
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          color: Color(0xFF94A3B8),
-                          size: 16,
+                    const SizedBox(width: 12),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _dismiss,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: (backgroundColor.computeLuminance() > 0.5 
+                                ? Colors.black 
+                                : Colors.white).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            color: backgroundColor.computeLuminance() > 0.5 
+                                ? const Color(0xFF0A0E27) 
+                                : const Color(0xFF94A3B8),
+                            size: 16,
+                          ),
                         ),
                       ),
                     ),

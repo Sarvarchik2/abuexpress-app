@@ -152,7 +152,7 @@ class _ShopBottomSheetState extends State<ShopBottomSheet> {
     ),
   ];
 
-  List<CartItem> _cartItems = [
+  final List<CartItem> _cartItems = [
     CartItem(
       id: '4',
       name: 'MacBook Pro 16',
@@ -333,7 +333,7 @@ class _ShopBottomSheetState extends State<ShopBottomSheet> {
                       children: [
                         Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.flight_takeoff_rounded,
                               color: AppTheme.gold,
                               size: 28,

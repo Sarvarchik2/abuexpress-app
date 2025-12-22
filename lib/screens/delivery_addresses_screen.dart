@@ -15,7 +15,7 @@ class DeliveryAddressesScreen extends StatefulWidget {
 }
 
 class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
-  List<DeliveryAddress> _addresses = [
+  final List<DeliveryAddress> _addresses = [
     DeliveryAddress(
       id: '1',
       type: 'Дом',

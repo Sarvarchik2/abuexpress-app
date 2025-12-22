@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/theme_provider.dart';
 import '../providers/locale_provider.dart';
 import '../utils/theme.dart';
@@ -24,11 +25,9 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final Map<String, String> _languageMap = {
-    // Основные языки приложения (с полной локализацией)
     'ru': 'Русский',
     'en': 'English',
     'uz': 'O\'zbekcha',
-    // Дополнительные языки (поддержка Flutter Material)
   };
 
   @override
@@ -96,7 +95,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.lock_outline,
               title: context.l10n.translate('change_password'),
               onTap: () {
-                // TODO: Navigate to change password screen
+                CustomSnackBar.info(
+                  context: context,
+                  message: 'Функция в разработке',
+                );
               },
             ),
             const SizedBox(height: 32),
@@ -394,8 +396,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.facebook, // Solid white Facebook icon
             iconColor: Colors.white, // Белая иконка Facebook
             backgroundColor: socialButtonColor,
-            onTap: () {
-              // TODO: Open Facebook
+            onTap: () async {
+              final url = Uri.parse('https://www.facebook.com/abuexpress');
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  CustomSnackBar.error(
+                    context: context,
+                    message: 'Не удалось открыть ссылку',
+                  );
+                }
+              }
             },
           ),
         ),
@@ -405,8 +417,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.camera_alt, // Solid red camera icon
             iconColor: const Color(0xFFE4405F), // Красная иконка Instagram
             backgroundColor: socialButtonColor,
-            onTap: () {
-              // TODO: Open Instagram
+            onTap: () async {
+              final url = Uri.parse('https://www.instagram.com/abuexpress');
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  CustomSnackBar.error(
+                    context: context,
+                    message: 'Не удалось открыть ссылку',
+                  );
+                }
+              }
             },
           ),
         ),
@@ -416,8 +438,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.alternate_email_outlined, // Outlined @ symbol
             iconColor: const Color(0xFF1DA1F2), // Светло-синий контур
             backgroundColor: socialButtonColor,
-            onTap: () {
-              // TODO: Open Twitter/Email
+            onTap: () async {
+              final url = Uri.parse('mailto:support@abuexpress.com');
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url);
+              } else {
+                if (mounted) {
+                  CustomSnackBar.error(
+                    context: context,
+                    message: 'Не удалось открыть ссылку',
+                  );
+                }
+              }
             },
           ),
         ),
@@ -474,7 +506,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.exit_to_app, // Solid red exit icon
               color: redColor, // Красная иконка
               size: 20,
@@ -482,7 +514,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(width: 8),
             Text(
               context.l10n.translate('logout'),
-              style: TextStyle(
+              style: const TextStyle(
                 color: redColor, // Красный цвет текста
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -513,7 +545,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           text: context.l10n.translate('logout'),
           onPressed: () {
             Navigator.pop(context);
-            // TODO: Implement logout logic
+            // Logout logic: clear user session and show success message
+            // In a real app, you would clear tokens, user data, etc.
             CustomSnackBar.success(
               context: context,
               message: context.l10n.translate('logged_out'),

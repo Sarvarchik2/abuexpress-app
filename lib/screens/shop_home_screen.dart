@@ -172,10 +172,10 @@ class _ShopHomeScreenState extends State<ShopHomeScreen> {
                                   margin: const EdgeInsets.symmetric(horizontal: 4),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    gradient: LinearGradient(
+                                    gradient: const LinearGradient(
                                       colors: [
-                                        const Color(0xFF833AB4), // Фиолетовый
-                                        const Color(0xFFE4405F), // Розовый
+                                        Color(0xFF833AB4), // Фиолетовый
+                                        Color(0xFFE4405F), // Розовый
                                       ],
                                       begin: Alignment.centerLeft,
                                       end: Alignment.centerRight,

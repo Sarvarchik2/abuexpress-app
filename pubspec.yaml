@@ -18,6 +18,8 @@ dependencies:
   rename_app: ^1.6.5
   provider: ^6.1.1
   shared_preferences: ^2.2.2
+  audioplayers: ^6.0.0
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:
@@ -34,6 +36,8 @@ flutter:
     - lib/assets/intro/box.svg
     - lib/assets/intro/drop.svg
     - lib/assets/intro/world.svg
+    - lib/assets/intro.gif
+    - assets/audio/airplane_sound.mp3
 
 
 

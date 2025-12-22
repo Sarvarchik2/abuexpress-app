@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/bottom_navigation_bar.dart';
+import '../widgets/custom_snackbar.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
@@ -332,28 +332,26 @@ class _AddressesScreenState extends State<AddressesScreen> {
           ),
         ),
         const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () {
-            Clipboard.setData(ClipboardData(text: text));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(context.l10n.translate('copy_to_clipboard')),
-                backgroundColor: AppTheme.gold,
-                duration: const Duration(seconds: 1),
-              ),
-            );
-          },
-          child: Container(
-            width: 24,
-            height: 24,
-            padding: const EdgeInsets.all(4),
-            child: SvgPicture.asset(
-              'lib/assets/icon/Copy.svg',
-              colorFilter: ColorFilter.mode(
-                textSecondaryColor,
-                BlendMode.srcIn,
-              ),
-              placeholderBuilder: (context) => Icon(
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: text));
+              CustomSnackBar.show(
+                context: context,
+                message: context.l10n.translate('copy_to_clipboard'),
+                icon: Icons.check_circle_rounded,
+                backgroundColor: AppTheme.gold.withValues(alpha: 0.95),
+                iconColor: const Color(0xFF0A0E27),
+                duration: const Duration(seconds: 2),
+              );
+            },
+            borderRadius: BorderRadius.circular(4),
+            child: Container(
+              width: 24,
+              height: 24,
+              padding: const EdgeInsets.all(4),
+              child: Icon(
                 Icons.copy,
                 color: textSecondaryColor,
                 size: 16,

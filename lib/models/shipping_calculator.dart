@@ -13,6 +13,7 @@ class ShippingCalculator {
   // Дополнительные услуги
   static const double _insuranceRate = 0.02; // 2% от стоимости товара
   static const double _packagingCost = 5.0; // $5 за упаковку
+  static const double _customsRate = 0.15; // 15% таможенные сборы от стоимости товара
 
   /// Рассчитывает стоимость доставки
   static ShippingCost calculate({
@@ -29,12 +30,14 @@ class ShippingCalculator {
 
     final insurance = totalCost * _insuranceRate;
     final packaging = _packagingCost * itemCount;
-    final total = shippingCost + insurance + packaging;
+    final customs = totalCost * _customsRate;
+    final total = shippingCost + insurance + packaging + customs;
 
     return ShippingCost(
       baseShipping: shippingCost,
       insurance: insurance,
       packaging: packaging,
+      customs: customs,
       total: total,
       country: country,
     );
@@ -47,6 +50,7 @@ class ShippingCost {
   final double baseShipping;
   final double insurance;
   final double packaging;
+  final double customs;
   final double total;
   final String country;
 
@@ -54,6 +58,7 @@ class ShippingCost {
     required this.baseShipping,
     required this.insurance,
     required this.packaging,
+    required this.customs,
     required this.total,
     required this.country,
   });
@@ -62,5 +67,6 @@ class ShippingCost {
   String get formattedBaseShipping => '\$${baseShipping.toStringAsFixed(2)}';
   String get formattedInsurance => '\$${insurance.toStringAsFixed(2)}';
   String get formattedPackaging => '\$${packaging.toStringAsFixed(2)}';
+  String get formattedCustoms => '\$${customs.toStringAsFixed(2)}';
 }
 

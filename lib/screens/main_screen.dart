@@ -38,7 +38,7 @@ class _MainScreenState extends State<MainScreen> {
       backgroundColor: Colors.transparent,
       enableDrag: true,
       isDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.5),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
       builder: (context) => const ShopBottomSheet(),
     ).then((_) {
       // Обновляем состояние после закрытия bottom sheet

@@ -4,6 +4,7 @@ import 'dart:io';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
+import '../widgets/custom_snackbar.dart';
 import 'main_screen.dart';
 
 class SelfRegistrationScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
   File? _backPassportImage;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isRegistering = false;
 
   @override
   void dispose() {
@@ -441,56 +443,91 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
     );
   }
 
+  Future<void> _registerUser() async {
+    if (_isRegistering) return;
+
+    setState(() {
+      _isRegistering = true;
+    });
+
+    try {
+      // Собираем данные для регистрации
+      final registrationData = {
+        'fullName': _fullNameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'passportSeries': _passportSeriesController.text.trim(),
+        'passportNumber': _passportNumberController.text.trim(),
+        'password': _passwordController.text,
+        'frontPassportImage': _frontPassportImage?.path,
+        'backPassportImage': _backPassportImage?.path,
+      };
+
+      // Имитация отправки данных на сервер
+      // В реальном приложении здесь будет API вызов
+      debugPrint('Registration data: ${registrationData.keys.join(', ')}');
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (!mounted) return;
+
+      // Имитация успешной регистрации
+      // В реальном приложении здесь будет проверка ответа от сервера
+      CustomSnackBar.success(
+        context: context,
+        message: 'Регистрация успешно завершена',
+      );
+
+      // Переходим на главный экран через небольшую задержку
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const MainScreen(),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      debugPrint('Registration error: $e');
+      CustomSnackBar.error(
+        context: context,
+        message: 'Произошла ошибка при регистрации. Попробуйте еще раз.',
+      );
+
+      setState(() {
+        _isRegistering = false;
+      });
+    }
+  }
+
   Widget _buildRegisterButton() {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            if (_frontPassportImage == null || _backPassportImage == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(context.l10n.translate('upload_both_sides')),
-                  backgroundColor: Colors.red,
-                ),
-              );
-              return;
-            }
-            if (_passwordController.text != _confirmPasswordController.text) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(context.l10n.translate('passwords_dont_match')),
-                  backgroundColor: Colors.red,
-                ),
-              );
-              return;
-            }
-            // TODO: Implement registration logic
-            // Выполняем навигацию асинхронно, чтобы не блокировать UI
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                try {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => const MainScreen(),
-                    ),
-                  );
-                } catch (e) {
-                  debugPrint('Navigation error: $e');
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${context.l10n.translate('navigation_error')}: $e'),
-                        backgroundColor: Colors.red,
-                      ),
+        onPressed: _isRegistering
+            ? null
+            : () {
+                if (_formKey.currentState!.validate()) {
+                    if (_frontPassportImage == null || _backPassportImage == null) {
+                    CustomSnackBar.error(
+                      context: context,
+                      message: context.l10n.translate('upload_both_sides'),
                     );
+                    return;
                   }
+                  if (_passwordController.text != _confirmPasswordController.text) {
+                    CustomSnackBar.error(
+                      context: context,
+                      message: context.l10n.translate('passwords_dont_match'),
+                    );
+                    return;
+                  }
+                  _registerUser();
                 }
-              }
-            });
-          }
-        },
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.gold,
           shape: RoundedRectangleBorder(
@@ -498,14 +535,25 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
           ),
           elevation: 0,
         ),
-        child: Text(
-          context.l10n.translate('register_button'),
-          style: TextStyle(
-            color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: _isRegistering
+            ? SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
+                  ),
+                ),
+              )
+            : Text(
+                context.l10n.translate('register_button'),
+                style: TextStyle(
+                  color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
   }

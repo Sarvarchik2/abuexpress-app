@@ -6,7 +6,7 @@ import 'providers/theme_provider.dart';
 import 'providers/locale_provider.dart';
 import 'utils/theme.dart';
 import 'l10n/app_localizations.dart';
-import 'screens/onboarding_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   // Подавляем предупреждения о клавиатуре в симуляторе
@@ -68,7 +68,7 @@ class AbuExpressApp extends StatelessWidget {
               Locale('en', ''), // English
               Locale('uz', ''), // O'zbekcha
             ],
-            home: const OnboardingScreen(),
+            home: const SplashScreen(),
           );
         },
       ),
