@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'add_parcel_screen.dart';
 import 'parcel_details_screen.dart';
 import '../models/parcel.dart';
@@ -8,6 +9,7 @@ import '../widgets/notifications_bottom_sheet.dart';
 import '../utils/theme_helper.dart';
 import '../utils/localization_helper.dart';
 import '../utils/theme.dart';
+import '../providers/user_provider.dart';
 
 class ParcelsScreen extends StatefulWidget {
   final int currentIndex;
@@ -178,6 +180,11 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
   Widget _buildHeader() {
     final textColor = ThemeHelper.getTextColor(context);
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final userInfo = userProvider.userInfo;
+    final fullName = userInfo?.fullName ?? 'Пользователь';
+    final userId = userInfo?.id ?? 0;
+    final initials = userProvider.getInitials();
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -195,7 +202,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'АЖ',
+                    initials,
                     style: TextStyle(
                       color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
                       fontSize: 20,
@@ -234,7 +241,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Журабаев Асадбек',
+                  fullName,
                   style: TextStyle(
                     color: textColor,
                     fontSize: 18,
@@ -243,7 +250,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'ID: 12345678',
+                  'ID: $userId',
                   style: TextStyle(
                     color: textSecondaryColor,
                     fontSize: 14,

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
 import '../widgets/custom_snackbar.dart';
+import '../services/api_service.dart';
+import '../models/api/login_request.dart';
+import '../providers/user_provider.dart';
 import 'main_screen.dart';
 import 'registration_choice_screen.dart';
 import 'forgot_password_screen.dart';
@@ -17,7 +21,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _apiService = ApiService();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -290,45 +296,176 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _handleLogin() async {
+    // Проверяем, что поля не пустые
+    if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
+      CustomSnackBar.warning(
+        context: context,
+        message: context.l10n.translate('fill_all_fields'),
+      );
+      return;
+    }
+
+    // Валидация email
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(_emailController.text.trim())) {
+      CustomSnackBar.error(
+        context: context,
+        message: 'Введите корректный email адрес',
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final request = LoginRequest(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      final response = await _apiService.login(request);
+
+      if (!mounted) return;
+
+      // Успешный вход
+      debugPrint('=== LOGIN SUCCESS IN SCREEN ===');
+      debugPrint('Login successful');
+      debugPrint('Email: ${response.email ?? _emailController.text.trim()}');
+      debugPrint('Access Token: ${response.accessToken != null ? "${response.accessToken!.substring(0, 20)}..." : "null"}');
+      
+      if (!mounted) {
+        debugPrint('Widget not mounted, cannot show snackbar or navigate');
+        return;
+      }
+
+      // Загружаем информацию о пользователе
+      try {
+        if (!mounted) return;
+        
+        try {
+          final userProvider = Provider.of<UserProvider>(context, listen: false);
+          
+          // Сохраняем токен в UserProvider
+          if (response.accessToken != null) {
+            userProvider.setAuthToken(response.accessToken);
+            _apiService.setAuthToken(response.accessToken);
+            debugPrint('=== AUTH TOKEN SAVED TO PROVIDER ===');
+          }
+          
+          debugPrint('=== LOADING USER INFO ===');
+          final userInfo = await _apiService.getMe();
+          
+          if (!mounted) return;
+          
+          debugPrint('=== USER INFO LOADED ===');
+          debugPrint('Full Name: ${userInfo.fullName}');
+          debugPrint('Email: ${userInfo.email}');
+          debugPrint('Phone: ${userInfo.phoneNumber}');
+          
+          if (mounted) {
+            userProvider.setUserInfo(userInfo);
+            debugPrint('=== USER INFO SAVED TO PROVIDER ===');
+          }
+        } on ProviderNotFoundException catch (e) {
+          debugPrint('=== PROVIDER NOT FOUND ===');
+          debugPrint('Error: $e');
+          debugPrint('UserProvider not available in context, skipping user info loading');
+        } catch (e, stackTrace) {
+          debugPrint('=== ERROR LOADING USER INFO ===');
+          debugPrint('Error: $e');
+          debugPrint('Stack Trace: $stackTrace');
+          // Продолжаем даже если не удалось загрузить информацию о пользователе
+        }
+      } catch (e, stackTrace) {
+        debugPrint('=== OUTER ERROR IN USER INFO LOADING ===');
+        debugPrint('Error: $e');
+        debugPrint('Stack Trace: $stackTrace');
+        // Продолжаем даже если произошла ошибка
+      }
+
+      if (!mounted) return;
+
+      // Сбрасываем состояние загрузки
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+
+      if (!mounted) return;
+
+      try {
+        CustomSnackBar.success(
+          context: context,
+          message: 'Вход выполнен успешно',
+        );
+      } catch (e) {
+        debugPrint('=== ERROR SHOWING SNACKBAR ===');
+        debugPrint('Error: $e');
+      }
+
+      debugPrint('=== NAVIGATING TO MAIN SCREEN ===');
+      
+      // Переходим на главный экран без задержки
+      if (!mounted) {
+        debugPrint('Widget not mounted, cannot navigate');
+        return;
+      }
+
+      try {
+        debugPrint('=== CALLING Navigator.pushAndRemoveUntil ===');
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const MainScreen(),
+          ),
+          (route) => false,
+        );
+        debugPrint('=== NAVIGATION COMPLETED ===');
+      } catch (e, stackTrace) {
+        debugPrint('=== NAVIGATION ERROR ===');
+        debugPrint('Error: $e');
+        debugPrint('Stack Trace: $stackTrace');
+        if (mounted) {
+          try {
+            CustomSnackBar.error(
+              context: context,
+              message: 'Ошибка перехода: $e',
+            );
+          } catch (snackbarError) {
+            debugPrint('=== ERROR SHOWING ERROR SNACKBAR ===');
+            debugPrint('Error: $snackbarError');
+          }
+        }
+      }
+    } catch (e, stackTrace) {
+      if (!mounted) return;
+
+      debugPrint('=== LOGIN SCREEN ERROR ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack Trace: $stackTrace');
+      
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      
+      CustomSnackBar.error(
+        context: context,
+        message: errorMessage,
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Widget _buildLoginButton() {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: () async {
-          // Проверяем, что поля не пустые
-          if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
-            // Показываем сообщение, если поля пустые
-            CustomSnackBar.warning(
-              context: context,
-              message: context.l10n.translate('fill_all_fields'),
-            );
-            return;
-          }
-
-          // Выполняем навигацию с небольшой задержкой для стабильности
-          await Future.delayed(const Duration(milliseconds: 100));
-          
-          if (mounted) {
-            try {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const MainScreen(),
-                ),
-                (route) => false,
-              );
-            } catch (e, stackTrace) {
-              debugPrint('Navigation error: $e');
-              debugPrint('Stack trace: $stackTrace');
-              if (mounted) {
-                CustomSnackBar.error(
-                  context: context,
-                  message: 'Ошибка навигации: $e',
-                );
-              }
-            }
-          }
-        },
+        onPressed: _isLoading ? null : _handleLogin,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.gold,
           shape: RoundedRectangleBorder(
@@ -336,14 +473,29 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           elevation: 0,
         ),
-        child: Text(
-          context.l10n.translate('enter'),
-          style: TextStyle(
-            color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF030712),
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: _isLoading
+            ? SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    ThemeHelper.isDark(context) 
+                        ? const Color(0xFF0A0E27) 
+                        : const Color(0xFF030712),
+                  ),
+                ),
+              )
+            : Text(
+                context.l10n.translate('enter'),
+                style: TextStyle(
+                  color: ThemeHelper.isDark(context) 
+                      ? const Color(0xFF0A0E27) 
+                      : const Color(0xFF030712),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
   }

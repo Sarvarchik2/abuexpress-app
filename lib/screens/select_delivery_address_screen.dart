@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
 import '../models/delivery_address.dart';
-import 'delivery_addresses_screen.dart';
+import '../models/api/receiver.dart';
+import '../services/api_service.dart';
+import '../providers/user_provider.dart';
+import '../widgets/custom_snackbar.dart';
+import 'add_edit_address_screen.dart';
 
 class SelectDeliveryAddressScreen extends StatefulWidget {
   const SelectDeliveryAddressScreen({super.key});
@@ -13,65 +18,155 @@ class SelectDeliveryAddressScreen extends StatefulWidget {
 }
 
 class _SelectDeliveryAddressScreenState extends State<SelectDeliveryAddressScreen> {
-  // В реальном приложении это должно быть из провайдера или базы данных
-  final List<DeliveryAddress> _addresses = [
-    DeliveryAddress(
-      id: '1',
-      type: 'Дом',
-      icon: Icons.home,
-      isDefault: true,
-      address: 'г. Ташкент, Юнусабадский район, ул. Амира Темура, д. 123, кв. 45',
-      recipientName: 'Журабаев Асадбек Нодирович',
-      phone: '+998 90 123 45 67',
-      city: 'Ташкент',
-      district: 'Юнусабадский район',
-      street: 'ул. Амира Темура',
-      house: '123',
-      apartment: '45',
-    ),
-    DeliveryAddress(
-      id: '2',
-      type: 'Работа',
-      icon: Icons.business,
-      isDefault: false,
-      address: 'г. Ташкент, Мирзо-Улугбекский район, ул. Мустакиллик, офис 501',
-      recipientName: 'Журабаев Асадбек Нодирович',
-      phone: '+998 90 123 45 67',
-      city: 'Ташкент',
-      district: 'Мирзо-Улугбекский район',
-      street: 'ул. Мустакиллик',
-      house: '501',
-      apartment: null,
-    ),
-  ];
-
+  final List<DeliveryAddress> _addresses = [];
+  late final ApiService _apiService;
+  bool _isLoading = true;
+  String? _errorMessage;
   String? _selectedAddressId;
 
   @override
   void initState() {
     super.initState();
-    // Загружаем адреса (в реальном приложении из провайдера)
+    // Получаем токен из UserProvider и создаем ApiService с токеном
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final token = userProvider.authToken;
+    _apiService = ApiService(authToken: token);
     _loadAddresses();
   }
 
-  void _loadAddresses() {
-    // В реальном приложении здесь будет загрузка из провайдера или базы данных
-    // Пока используем тестовые данные
+  Future<void> _loadAddresses() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final currentUser = userProvider.userInfo;
+      
+      if (currentUser == null) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Пользователь не авторизован';
+        });
+        return;
+      }
+
+      debugPrint('=== LOADING ADDRESSES FOR SELECTION ===');
+      debugPrint('Current user email: ${currentUser.email}');
+      
+      final receivers = await _apiService.getAddresses();
+      debugPrint('=== ADDRESSES LOADED ===');
+      debugPrint('Total addresses from API: ${receivers.length}');
+
+      // Фильтруем адреса по email текущего пользователя
+      final userAddresses = receivers.where((receiver) {
+        final matches = receiver.email.toLowerCase() == currentUser.email.toLowerCase();
+        return matches;
+      }).toList();
+
+      debugPrint('Filtered addresses for user: ${userAddresses.length}');
+
+      if (mounted) {
+        setState(() {
+          _addresses.clear();
+          _addresses.addAll(userAddresses.map((receiver) => _receiverToDeliveryAddress(receiver)));
+          // Выбираем адрес по умолчанию, если есть
+          if (_addresses.isNotEmpty && _selectedAddressId == null) {
+            final defaultAddress = _addresses.firstWhere(
+              (addr) => addr.isDefault,
+              orElse: () => _addresses.first,
+            );
+            _selectedAddressId = defaultAddress.id;
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      debugPrint('=== ERROR LOADING ADDRESSES ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack Trace: $stackTrace');
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Ошибка загрузки адресов';
+        });
+      }
+    }
+  }
+
+  DeliveryAddress _receiverToDeliveryAddress(Receiver receiver) {
+    // Определяем тип адреса по officeNumber
+    final hasOffice = receiver.officeNumber != null && receiver.officeNumber!.isNotEmpty;
+    final type = hasOffice ? 'Работа' : 'Дом';
+    final icon = hasOffice ? Icons.business : Icons.home;
+    
+    // Формируем полный адрес
+    final addressParts = <String>[];
+    if (receiver.address.isNotEmpty) {
+      addressParts.add(receiver.address);
+    }
+    if (receiver.apartment.isNotEmpty) {
+      addressParts.add('кв. ${receiver.apartment}');
+    } else if (receiver.officeNumber != null && receiver.officeNumber!.isNotEmpty) {
+      addressParts.add('офис ${receiver.officeNumber}');
+    }
+    if (receiver.district.isNotEmpty) {
+      addressParts.add(receiver.district);
+    }
+    if (receiver.city.isNotEmpty) {
+      addressParts.add('г. ${receiver.city}');
+    }
+    
+    final fullAddress = addressParts.isNotEmpty 
+        ? addressParts.join(', ')
+        : receiver.fullAddress;
+    
+    // Извлекаем номер дома из адреса (если есть)
+    final houseMatch = RegExp(r'д\.\s*(\d+)').firstMatch(receiver.address);
+    final house = houseMatch?.group(1) ?? receiver.address.split(' ').last;
+    
+    return DeliveryAddress(
+      id: receiver.id.toString(),
+      type: type,
+      icon: icon,
+      isDefault: _addresses.isEmpty, // Первый адрес по умолчанию
+      address: fullAddress,
+      recipientName: receiver.fullName,
+      phone: receiver.phoneNumber,
+      city: receiver.city,
+      district: receiver.district,
+      street: receiver.address,
+      house: house,
+      apartment: receiver.apartment.isNotEmpty ? receiver.apartment : null,
+    );
   }
 
   Future<void> _addNewAddress() async {
-    await Navigator.push(
+    // Переходим на экран добавления адреса
+    final result = await Navigator.push<DeliveryAddress>(
       context,
       MaterialPageRoute(
-        builder: (context) => const DeliveryAddressesScreen(),
+        builder: (context) => const AddEditAddressScreen(),
       ),
     );
 
-    // После возврата обновляем список адресов
-    if (mounted) {
-      setState(() {
-        _loadAddresses();
-      });
+    // После добавления адреса обновляем список
+    if (result != null && mounted) {
+      await _loadAddresses();
+      
+      // Автоматически выбираем только что добавленный адрес
+      if (_addresses.isNotEmpty) {
+        setState(() {
+          _selectedAddressId = result.id;
+        });
+      }
+      
+      CustomSnackBar.success(
+        context: context,
+        message: context.l10n.translate('address_added'),
+      );
     }
   }
 
@@ -120,23 +215,52 @@ class _SelectDeliveryAddressScreenState extends State<SelectDeliveryAddressScree
       body: Column(
         children: [
           Expanded(
-            child: _addresses.isEmpty
-                ? _buildEmptyState(textColor, textSecondaryColor)
-                : ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _addresses.length,
-                    itemBuilder: (context, index) {
-                      final address = _addresses[index];
-                      final isSelected = _selectedAddressId == address.id;
-                      return _buildAddressCard(
-                        address,
-                        isSelected,
-                        textColor,
-                        textSecondaryColor,
-                        cardColor,
-                      );
-                    },
-                  ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 64,
+                              color: textSecondaryColor,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _loadAddresses,
+                              child: const Text('Повторить'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _addresses.isEmpty
+                        ? _buildEmptyState(textColor, textSecondaryColor)
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(20),
+                            itemCount: _addresses.length,
+                            itemBuilder: (context, index) {
+                              final address = _addresses[index];
+                              final isSelected = _selectedAddressId == address.id;
+                              return _buildAddressCard(
+                                address,
+                                isSelected,
+                                textColor,
+                                textSecondaryColor,
+                                cardColor,
+                              );
+                            },
+                          ),
           ),
           // Кнопка подтверждения
           if (_addresses.isNotEmpty)

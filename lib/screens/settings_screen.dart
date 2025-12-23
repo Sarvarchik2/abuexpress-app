@@ -3,11 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/theme_provider.dart';
 import '../providers/locale_provider.dart';
+import '../providers/user_provider.dart';
+import '../services/api_service.dart';
 import '../utils/theme.dart';
 import '../utils/localization_helper.dart';
 import '../widgets/custom_dialog.dart';
 import '../widgets/custom_snackbar.dart';
 import 'delivery_addresses_screen.dart';
+import 'login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final int currentIndex;
@@ -545,16 +548,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
           text: context.l10n.translate('logout'),
           onPressed: () {
             Navigator.pop(context);
-            // Logout logic: clear user session and show success message
-            // In a real app, you would clear tokens, user data, etc.
-            CustomSnackBar.success(
-              context: context,
-              message: context.l10n.translate('logged_out'),
-            );
+            _handleLogout();
           },
           backgroundColor: const Color(0xFFDC3545),
         ),
       ],
     );
+  }
+
+  void _handleLogout() {
+    try {
+      // Очищаем данные пользователя
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      userProvider.clearUser();
+
+      // Очищаем токен авторизации (создаем новый экземпляр для очистки)
+      // В реальном приложении токен должен храниться в SharedPreferences
+      // и очищаться оттуда, но для текущей реализации этого достаточно
+      final apiService = ApiService();
+      apiService.setAuthToken(null);
+
+      debugPrint('=== LOGOUT SUCCESS ===');
+      debugPrint('User data cleared');
+      debugPrint('Auth token cleared');
+
+      if (!mounted) return;
+
+      // Показываем уведомление об успешном выходе
+      CustomSnackBar.success(
+        context: context,
+        message: context.l10n.translate('logged_out'),
+      );
+
+      // Небольшая задержка перед навигацией, чтобы пользователь увидел уведомление
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        
+        // Перенаправляем на экран логина, удаляя все предыдущие экраны
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ),
+          (route) => false,
+        );
+      });
+    } catch (e, stackTrace) {
+      debugPrint('=== LOGOUT ERROR ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack Trace: $stackTrace');
+      if (mounted) {
+        CustomSnackBar.error(
+          context: context,
+          message: 'Ошибка при выходе из аккаунта',
+        );
+      }
+    }
   }
 }

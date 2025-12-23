@@ -261,6 +261,8 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
           totalWeight: totalWeight,
           totalCost: totalCost,
           itemCount: _items.length,
+          items: _items,
+          selectedAddressId: _selectedAddressId,
         ),
       ),
     );

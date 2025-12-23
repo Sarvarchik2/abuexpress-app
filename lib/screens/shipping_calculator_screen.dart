@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/shipping_calculator.dart';
+import '../models/parcel_item.dart';
+import '../models/api/order_own_create_request.dart';
+import '../services/api_service.dart';
+import '../providers/user_provider.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
@@ -10,6 +15,8 @@ class ShippingCalculatorScreen extends StatefulWidget {
   final double totalWeight;
   final double totalCost;
   final int itemCount;
+  final List<ParcelItem> items;
+  final String? selectedAddressId;
 
   const ShippingCalculatorScreen({
     super.key,
@@ -17,6 +24,8 @@ class ShippingCalculatorScreen extends StatefulWidget {
     required this.totalWeight,
     required this.totalCost,
     required this.itemCount,
+    required this.items,
+    this.selectedAddressId,
   });
 
   @override
@@ -54,6 +63,14 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
   Future<void> _handleCheckout() async {
     if (_isProcessing) return;
 
+    if (widget.selectedAddressId == null) {
+      CustomSnackBar.error(
+        context: context,
+        message: 'Адрес доставки не выбран',
+      );
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
     });
@@ -62,23 +79,99 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
     await _animationController.forward();
     await _animationController.reverse();
 
-    // Имитация обработки
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final token = userProvider.authToken;
+      final apiService = ApiService(authToken: token);
 
-    if (!mounted) return;
+      final addressId = int.tryParse(widget.selectedAddressId!) ?? 0;
+      if (addressId == 0) {
+        throw Exception('Неверный ID адреса');
+      }
 
-    // Показываем успешное сообщение
-    CustomSnackBar.success(
-      context: context,
-      message: 'Посылка успешно оформлена!',
-    );
+      debugPrint('=== CREATING ORDERS ===');
+      debugPrint('Items count: ${widget.items.length}');
+      debugPrint('Address ID: $addressId');
 
-    // Переходим назад через небольшую задержку
-    await Future.delayed(const Duration(milliseconds: 1500));
+      // Создаем заказ для каждого товара
+      int successCount = 0;
+      int failCount = 0;
 
-    if (!mounted) return;
+      for (final item in widget.items) {
+        try {
+          final request = OrderOwnCreateRequest(
+            trackNumber: item.trackNumber.isNotEmpty ? item.trackNumber : 'N/A',
+            marketName: item.storeName.isNotEmpty ? item.storeName : 'Не указан',
+            urlProduct: item.productLink?.isNotEmpty == true ? item.productLink! : 'https://example.com',
+            productName: item.productName.isNotEmpty ? item.productName : 'Товар',
+            productPrice: item.cost > 0 ? item.cost : 0.01,
+            productQuantity: item.quantity > 0 ? item.quantity : 1,
+            productWeight: item.weight > 0 ? item.weight : null,
+            productColor: (item.color?.isNotEmpty == true) ? item.color! : 'Не указан',
+            productSize: item.size?.isNotEmpty == true ? item.size : null,
+            comment: item.comment?.isNotEmpty == true ? item.comment : null,
+            receiverAddress: addressId,
+          );
 
-    Navigator.pop(context, true);
+          debugPrint('=== CREATING ORDER FOR ITEM ===');
+          debugPrint('Product: ${item.productName}');
+          debugPrint('Track Number: ${item.trackNumber}');
+
+          final order = await apiService.createOrderOwn(request);
+          debugPrint('=== ORDER CREATED SUCCESSFULLY ===');
+          debugPrint('Order ID: ${order.id}');
+          successCount++;
+        } catch (e) {
+          debugPrint('=== ERROR CREATING ORDER FOR ITEM ===');
+          debugPrint('Item: ${item.productName}');
+          debugPrint('Error: $e');
+          failCount++;
+        }
+      }
+
+      if (!mounted) return;
+
+      if (successCount > 0) {
+        // Показываем успешное сообщение
+        CustomSnackBar.success(
+          context: context,
+          message: failCount > 0
+              ? 'Создано заказов: $successCount. Ошибок: $failCount'
+              : 'Посылка успешно оформлена!',
+        );
+
+        // Переходим назад через небольшую задержку
+        await Future.delayed(const Duration(milliseconds: 1500));
+
+        if (!mounted) return;
+        Navigator.pop(context, true);
+      } else {
+        // Все заказы не удалось создать
+        setState(() {
+          _isProcessing = false;
+        });
+
+        CustomSnackBar.error(
+          context: context,
+          message: 'Не удалось создать заказы. Попробуйте позже',
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint('=== ERROR IN CHECKOUT ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack Trace: $stackTrace');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isProcessing = false;
+      });
+
+      CustomSnackBar.error(
+        context: context,
+        message: 'Ошибка при оформлении заказа: $e',
+      );
+    }
   }
 
   @override
