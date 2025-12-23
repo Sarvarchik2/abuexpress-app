@@ -32,6 +32,7 @@ flutter:
   uses-material-design: true
   assets:
     - lib/assets/icon/abu-logo.png
+    - lib/assets/icon/12abu-logo.png
     - lib/assets/icon/Copy.svg
     - lib/assets/intro/logo.svg
     - lib/assets/intro/box.svg
@@ -48,3 +49,9 @@ flutter_launcher_icons:
   image_path: "lib/assets/icon/abu-logo.png"
   min_sdk_android: 21 
   background_color: "#000000"
+  remove_alpha_ios: true
+  # Дополнительные параметры для настройки размера:
+  # adaptive_icon_background: "#000000"  # Фон для адаптивной иконки Android (8.0+)
+  # adaptive_icon_foreground: "lib/assets/icon/abu-logo.png"  # Передний план адаптивной иконки
+  # image_path_android: "lib/assets/icon/abu-logo.png"  # Отдельная иконка для Android
+  # image_path_ios: "lib/assets/icon/abu-logo.png"  # Отдельная иконка для iOS

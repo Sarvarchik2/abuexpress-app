@@ -35,11 +35,13 @@ class OnboardingIcon extends StatelessWidget {
   Widget _buildIcon() {
     String assetPath;
     double iconSize;
+    bool isPng = false;
     
     switch (iconType) {
       case OnboardingIconType.airplane:
-        assetPath = 'lib/assets/intro/logo.svg';
-        iconSize = 190; // Логотип почти на весь круг (200px)
+        assetPath = 'lib/assets/icon/12abu-logo.png';
+        iconSize = 200; // Логотип почти на весь круг (200px)
+        isPng = true;
         break;
       case OnboardingIconType.box:
         assetPath = 'lib/assets/intro/box.svg';
@@ -58,17 +60,21 @@ class OnboardingIcon extends StatelessWidget {
     return SizedBox(
       width: iconSize,
       height: iconSize,
-      child: SvgPicture.asset(
-        assetPath,
-        fit: iconType == OnboardingIconType.airplane 
-            ? BoxFit.contain // Для логотипа contain, чтобы не обрезать
-            : BoxFit.contain,
-        alignment: Alignment.center,
-        colorFilter: const ColorFilter.mode(
-          Color(0xFF0A0E27),
-          BlendMode.srcIn,
-        ),
-      ),
+      child: isPng
+          ? Image.asset(
+              assetPath,
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+            )
+          : SvgPicture.asset(
+              assetPath,
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFF0A0E27),
+                BlendMode.srcIn,
+              ),
+            ),
     );
   }
 }
