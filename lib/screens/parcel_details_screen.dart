@@ -23,7 +23,7 @@ class ParcelDetailsScreen extends StatelessWidget {
     final cardColor = ThemeHelper.getCardColor(context);
 
     // Генерируем историю, если её нет
-    final history = parcel.history ?? _generateDefaultHistory(parcel);
+    final history = parcel.history ?? _generateDefaultHistory(parcel, context);
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -202,6 +202,16 @@ class ParcelDetailsScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    if (parcel.storeName.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        parcel.storeName,
+                        style: TextStyle(
+                          color: textSecondaryColor,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -209,7 +219,7 @@ class ParcelDetailsScreen extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6),
+                        color: _getStatusColor(parcel.status),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -228,6 +238,19 @@ class ParcelDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           
+          // Номер отслеживания
+          if (parcel.trackNumber.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildDetailItem(
+                Icons.qr_code_outlined,
+                context.l10n.translate('tracking_number_label'),
+                parcel.trackNumber,
+                textColor,
+                textSecondaryColor,
+              ),
+            ),
+          
           // Детали в две колонки
           Row(
             children: [
@@ -245,6 +268,29 @@ class ParcelDetailsScreen extends StatelessWidget {
                   Icons.inbox_outlined,
                   context.l10n.translate('dimensions'),
                   parcel.dimensions,
+                  textColor,
+                  textSecondaryColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  Icons.attach_money_outlined,
+                  context.l10n.translate('cost_label'),
+                  '${parcel.cost.toStringAsFixed(2)} \$',
+                  textColor,
+                  textSecondaryColor,
+                ),
+              ),
+              Expanded(
+                child: _buildDetailItem(
+                  Icons.inventory_2_outlined,
+                  context.l10n.translate('quantity_label'),
+                  '${parcel.quantity} ${context.l10n.translate('item')}',
                   textColor,
                   textSecondaryColor,
                 ),
@@ -419,57 +465,127 @@ class ParcelDetailsScreen extends StatelessWidget {
     );
   }
 
-  List<ParcelHistoryItem> _generateDefaultHistory(Parcel parcel) {
-    return [
-      ParcelHistoryItem(
-        id: '1',
-        status: 'Получено',
-        location: 'Склад AbuExpress, ${parcel.origin.split(',')[0]}',
-        description: 'Посылка принята на складе',
-        dateTime: parcel.dateAdded,
-        isCompleted: true,
-      ),
-      ParcelHistoryItem(
-        id: '2',
-        status: 'Упаковано',
-        location: 'Склад AbuExpress, ${parcel.origin.split(',')[0]}',
-        description: 'Посылка упакована и подготовлена к отправке',
-        dateTime: parcel.dateAdded.add(const Duration(days: 1)),
-        isCompleted: true,
-      ),
-      ParcelHistoryItem(
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'На складе':
+        return const Color(0xFF3B82F6); // Синий
+      case 'В пути':
+        return AppTheme.gold; // Желтый
+      case 'Доставлено':
+      case 'Доставлен':
+        return const Color(0xFF10B981); // Зеленый
+      case 'Отклонено':
+        return const Color(0xFFEF4444); // Красный
+      case 'Принято':
+        return const Color(0xFF3B82F6); // Синий
+      case 'Ожидает':
+        return const Color(0xFF6B7280); // Серый
+      default:
+        return const Color(0xFF6B7280); // Серый
+    }
+  }
+
+  List<ParcelHistoryItem> _generateDefaultHistory(Parcel parcel, BuildContext context) {
+    final history = <ParcelHistoryItem>[];
+    int dayOffset = 0;
+
+    // Безопасная проверка статусов
+    final isAccepted = parcel.isAccepted;
+    final isRejected = parcel.isRejected;
+    final isShipped = parcel.isShipped;
+    final isArrived = parcel.isArrived;
+    final isDelivered = parcel.isDelivered;
+    
+    final l10n = context.l10n;
+    
+    final originLocation = parcel.origin != l10n.translate('not_specified')
+        ? '${l10n.translate('warehouse_location')}, ${parcel.origin.split(',')[0]}'
+        : l10n.translate('warehouse_location');
+
+    // 1. Заказ создан - всегда показываем
+    history.add(ParcelHistoryItem(
+      id: '1',
+      status: l10n.translate('order_created'),
+      location: l10n.translate('online'),
+      description: l10n.translate('order_created_description'),
+      dateTime: parcel.dateAdded,
+      isCompleted: true,
+    ));
+    dayOffset++;
+
+    // 2. Принято - всегда показываем
+    history.add(ParcelHistoryItem(
+      id: '2',
+      status: isAccepted ? l10n.translate('accepted') : l10n.translate('awaiting_acceptance'),
+      location: originLocation,
+      description: isAccepted 
+          ? l10n.translate('accepted_description')
+          : l10n.translate('awaiting_acceptance_description'),
+      dateTime: parcel.dateAdded.add(Duration(days: dayOffset)),
+      isCompleted: isAccepted,
+    ));
+    dayOffset++;
+
+    // 3. Отклонено - показываем только если отклонен, и останавливаемся
+    if (isRejected) {
+      history.add(ParcelHistoryItem(
         id: '3',
-        status: 'Отправлено',
-        location: parcel.origin.contains('США') ? 'JFK Airport' : 'Аэропорт',
-        description: 'Посылка отправлена авиарейсом',
-        dateTime: parcel.dateAdded.add(const Duration(days: 2)),
+        status: l10n.translate('rejected'),
+        location: originLocation,
+        description: l10n.translate('rejected_description'),
+        dateTime: parcel.dateAdded.add(Duration(days: dayOffset)),
         isCompleted: true,
-      ),
-      ParcelHistoryItem(
-        id: '4',
-        status: 'На складе',
-        location: 'Склад AbuExpress, Ташкент',
-        description: 'Посылка прибыла на склад в Ташкенте',
-        dateTime: parcel.dateAdded.add(const Duration(days: 4)),
-        isCompleted: parcel.status == 'На складе' || parcel.status == 'В таможне' || parcel.status == 'Доставлен',
-      ),
-      ParcelHistoryItem(
-        id: '5',
-        status: 'В таможне',
-        location: 'Таможенный терминал',
-        description: 'Ожидает таможенного оформления',
-        dateTime: parcel.dateAdded.add(const Duration(days: 5)),
-        isCompleted: parcel.status == 'Доставлен',
-      ),
-      ParcelHistoryItem(
-        id: '6',
-        status: 'Готово к выдаче',
-        location: 'Офис выдачи',
-        description: 'Готово к получению в офисе',
-        dateTime: parcel.dateAdded.add(const Duration(days: 7)),
-        isCompleted: parcel.status == 'Доставлен',
-      ),
-    ];
+      ));
+      return history; // Если отклонен, останавливаемся здесь
+    }
+
+    // 4. Отправлено - всегда показываем
+    final airportName = parcel.origin.contains('США') || parcel.origin.contains('USA')
+        ? 'JFK Airport, Нью-Йорк'
+        : parcel.origin.contains('Китай') || parcel.origin.contains('China')
+            ? 'Аэропорт Пекина'
+            : parcel.origin.contains('Турция') || parcel.origin.contains('Turkey')
+                ? 'Аэропорт Стамбула'
+                : l10n.translate('airport');
+    
+    history.add(ParcelHistoryItem(
+      id: '4',
+      status: isShipped ? l10n.translate('shipped') : l10n.translate('preparing_for_shipment'),
+      location: isShipped ? airportName : originLocation,
+      description: isShipped
+          ? l10n.translate('shipped_description')
+          : l10n.translate('preparing_for_shipment_description'),
+      dateTime: parcel.dateAdded.add(Duration(days: dayOffset)),
+      isCompleted: isShipped,
+    ));
+    dayOffset++;
+
+    // 5. На складе - всегда показываем
+    history.add(ParcelHistoryItem(
+      id: '5',
+      status: isArrived ? l10n.translate('at_warehouse') : l10n.translate('in_transit'),
+      location: isArrived ? '${l10n.translate('warehouse_location')}, Ташкент' : l10n.translate('in_transit'),
+      description: isArrived
+          ? l10n.translate('at_warehouse_description')
+          : l10n.translate('in_transit_description'),
+      dateTime: parcel.dateAdded.add(Duration(days: dayOffset)),
+      isCompleted: isArrived,
+    ));
+    dayOffset++;
+
+    // 6. Доставлено - всегда показываем
+    history.add(ParcelHistoryItem(
+      id: '6',
+      status: isDelivered ? l10n.translate('delivered') : l10n.translate('ready_for_pickup'),
+      location: l10n.translate('pickup_office'),
+      description: isDelivered
+          ? l10n.translate('delivered_description')
+          : l10n.translate('ready_for_pickup_description'),
+      dateTime: parcel.dateAdded.add(Duration(days: dayOffset)),
+      isCompleted: isDelivered,
+    ));
+
+    return history;
   }
 }
 

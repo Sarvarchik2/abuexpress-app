@@ -419,14 +419,18 @@ class ApiService {
     try {
       final url = Uri.parse('$baseUrl${ApiConfig.orderOwn}');
 
+      // Отправляем данные напрямую, без обертки 'data'
+      // Сервер не видит данные внутри обертки 'data'
+      final requestBody = request.toJson();
+      
       debugPrint('=== CREATE ORDER OWN REQUEST ===');
       debugPrint('URL: $url');
-      debugPrint('Body: ${jsonEncode(request.toJson())}');
+      debugPrint('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await client.post(
         url,
         headers: _getHeaders(),
-        body: jsonEncode(request.toJson()),
+        body: jsonEncode(requestBody),
       ).timeout(
         const Duration(seconds: 30),
         onTimeout: () {
@@ -449,7 +453,21 @@ class ApiService {
           }
           debugPrint('=== CREATE ORDER OWN SUCCESS ===');
           debugPrint('Response Data: $jsonData');
-          return OrderOwn.fromJson(jsonData);
+          
+          // Проверяем, обернут ли ответ в 'data'
+          Map<String, dynamic> orderData;
+          if (jsonData.containsKey('data') && jsonData['data'] is Map<String, dynamic>) {
+            orderData = jsonData['data'] as Map<String, dynamic>;
+            debugPrint('=== ORDER DATA EXTRACTED FROM WRAPPER ===');
+          } else {
+            orderData = jsonData;
+            debugPrint('=== ORDER DATA USED DIRECTLY ===');
+          }
+          
+          debugPrint('=== ORDER DATA ===');
+          debugPrint('Order Data: $orderData');
+          
+          return OrderOwn.fromJson(orderData);
         } catch (e) {
           debugPrint('=== CREATE ORDER OWN JSON PARSE ERROR ===');
           debugPrint('Error: $e');
@@ -463,25 +481,54 @@ class ApiService {
           debugPrint('=== CREATE ORDER OWN ERROR DATA ===');
           debugPrint('Error Data: $errorData');
           
-          // Обработка ошибок валидации (может быть объект с полями)
-          if (errorData.containsKey('data') && errorData['data'] is Map) {
-            final dataErrors = errorData['data'] as Map<String, dynamic>;
-            final errorMessages = <String>[];
-            dataErrors.forEach((key, value) {
-              if (value is List) {
-                errorMessages.addAll(value.map((e) => e.toString()));
-              } else {
-                errorMessages.add(value.toString());
-              }
-            });
-            if (errorMessages.isNotEmpty) {
-              errorMessage = errorMessages.join(', ');
+          // Обработка ошибок валидации (формат: {"field": ["сообщение"], ...})
+          final fieldErrors = <String, String>{};
+          final errorMessages = <String>[];
+          
+          errorData.forEach((key, value) {
+            String fieldName = key;
+            String errorText = '';
+            
+            if (value is List && value.isNotEmpty) {
+              errorText = value.first.toString();
+            } else if (value is String) {
+              errorText = value;
+            } else {
+              errorText = value.toString();
             }
-          } else {
-            errorMessage = errorData['message'] as String? ?? 
-                          errorData['error'] as String? ??
-                          errorData['detail'] as String? ??
-                          errorMessage;
+            
+            // Переводим названия полей на русский для пользователя
+            final fieldNames = {
+              'track_number': 'Номер отслеживания',
+              'market_name': 'Название магазина',
+              'url_product': 'Ссылка на товар',
+              'product_name': 'Название товара',
+              'product_price': 'Цена товара',
+              'product_quantity': 'Количество товара',
+              'product_color': 'Цвет товара',
+              'receiver_address': 'Адрес доставки',
+              'product_weight': 'Вес товара',
+              'product_size': 'Размер товара',
+            };
+            
+            final displayName = fieldNames[fieldName] ?? fieldName;
+            fieldErrors[displayName] = errorText;
+            errorMessages.add('$displayName: $errorText');
+          });
+          
+          if (fieldErrors.isNotEmpty) {
+            // Формируем список незаполненных полей
+            final missingFields = fieldErrors.keys.toList();
+            errorMessage = 'Не заполнены обязательные поля:\n${missingFields.join(', ')}';
+            debugPrint('=== VALIDATION ERRORS ===');
+            debugPrint('Missing fields: $missingFields');
+            debugPrint('All errors: $errorMessages');
+          } else if (errorData.containsKey('message')) {
+            errorMessage = errorData['message'] as String;
+          } else if (errorData.containsKey('error')) {
+            errorMessage = errorData['error'] as String;
+          } else if (errorData.containsKey('detail')) {
+            errorMessage = errorData['detail'] as String;
           }
         } catch (e) {
           debugPrint('=== ERROR PARSING FAILED ===');
@@ -489,7 +536,7 @@ class ApiService {
           debugPrint('Response body: ${response.body}');
           
           if (response.statusCode == 400) {
-            errorMessage = 'Неверные данные запроса';
+            errorMessage = 'Неверные данные запроса. Проверьте заполнение всех полей';
           } else if (response.statusCode == 401) {
             errorMessage = 'Требуется авторизация';
           } else if (response.statusCode == 403) {

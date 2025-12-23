@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/parcel.dart';
 import '../models/parcel_item.dart';
 import '../models/shipping_calculator.dart';
 import '../utils/theme_helper.dart';
@@ -271,30 +270,10 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
       setState(() {
         _shippingCost = cost;
       });
-      _finalizeParcel();
+      // Заказы уже созданы через API в ShippingCalculatorScreen._handleCheckout()
+      // Просто возвращаемся назад - список обновится из API
+      Navigator.pop(context, true);
     }
-  }
-
-  void _finalizeParcel() {
-    if (_selectedCountry == null || _selectedAddressId == null || _shippingCost == null) {
-      return;
-    }
-
-    final parcel = Parcel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      items: List.from(_items),
-      status: 'На складе',
-      dateAdded: DateTime.now(),
-      deliveryAddressId: _selectedAddressId,
-      originCountry: _selectedCountry,
-      shippingCost: _shippingCost,
-    );
-
-    Navigator.pop(context, parcel);
-      CustomSnackBar.success(
-        context: context,
-        message: context.l10n.translate('parcel_created'),
-      );
   }
 
   @override

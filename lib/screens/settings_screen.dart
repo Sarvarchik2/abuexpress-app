@@ -11,6 +11,7 @@ import '../widgets/custom_dialog.dart';
 import '../widgets/custom_snackbar.dart';
 import 'delivery_addresses_screen.dart';
 import 'login_screen.dart';
+import 'profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final int currentIndex;
@@ -79,6 +80,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
             _buildThemeSection(),
             const SizedBox(height: 32),
+            // Profile
+            _buildNavigationItem(
+              icon: Icons.person_outline,
+              title: context.l10n.translate('profile'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
             // Delivery Addresses
             _buildNavigationItem(
               icon: Icons.location_on_outlined,
@@ -343,25 +358,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Row(
             children: [
-              // Желтый градиентный фон для иконки (40x40)
+              // Золотой градиентный фон для иконки с тенью и свечением
               Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFFF0B100), // #F0B100
-                      Color(0xFFD08700), // #D08700
-                    ],
+                  gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.gold,
+                      AppTheme.gold.withValues(alpha: 0.8),
+                    ],
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.gold.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 4),
+                    ),
+                    BoxShadow(
+                      color: AppTheme.gold.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
                 child: Icon(
                   icon,
-                  color: Colors.white, // Белая иконка на желтом градиенте
-                  size: 24,
+                  color: isDark 
+                      ? const Color(0xFF0A0E27) 
+                      : const Color(0xFF212121),
+                  size: 22,
                 ),
               ),
               const SizedBox(width: 12),

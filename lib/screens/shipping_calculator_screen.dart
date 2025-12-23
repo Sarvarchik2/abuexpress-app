@@ -71,6 +71,41 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
       return;
     }
 
+    // Валидация полей перед отправкой
+    final missingFields = <String>[];
+    for (final item in widget.items) {
+      if (item.trackNumber.trim().isEmpty) {
+        missingFields.add(context.l10n.translate('tracking_number_label'));
+      }
+      if (item.storeName.trim().isEmpty) {
+        missingFields.add(context.l10n.translate('store_name'));
+      }
+      if (item.productLink == null || item.productLink!.trim().isEmpty) {
+        missingFields.add(context.l10n.translate('product_link'));
+      }
+      if (item.productName.trim().isEmpty) {
+        missingFields.add(context.l10n.translate('product_name'));
+      }
+      if (item.cost <= 0) {
+        missingFields.add(context.l10n.translate('cost'));
+      }
+      if (item.quantity <= 0) {
+        missingFields.add(context.l10n.translate('quantity'));
+      }
+      if (item.color == null || item.color!.trim().isEmpty) {
+        missingFields.add(context.l10n.translate('color'));
+      }
+    }
+
+    if (missingFields.isNotEmpty) {
+      final uniqueFields = missingFields.toSet().toList();
+      CustomSnackBar.error(
+        context: context,
+        message: '${context.l10n.translate('fill_required_fields')}:\n${uniqueFields.join(', ')}',
+      );
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
     });
@@ -99,17 +134,31 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
 
       for (final item in widget.items) {
         try {
+          // Убеждаемся, что все обязательные поля заполнены
+          // (валидация уже выполнена выше, но на всякий случай проверяем еще раз)
+          if (item.trackNumber.trim().isEmpty ||
+              item.storeName.trim().isEmpty ||
+              item.productLink == null ||
+              item.productLink!.trim().isEmpty ||
+              item.productName.trim().isEmpty ||
+              item.cost <= 0 ||
+              item.quantity <= 0 ||
+              item.color == null ||
+              item.color!.trim().isEmpty) {
+            throw Exception('Не все обязательные поля заполнены');
+          }
+
           final request = OrderOwnCreateRequest(
-            trackNumber: item.trackNumber.isNotEmpty ? item.trackNumber : 'N/A',
-            marketName: item.storeName.isNotEmpty ? item.storeName : 'Не указан',
-            urlProduct: item.productLink?.isNotEmpty == true ? item.productLink! : 'https://example.com',
-            productName: item.productName.isNotEmpty ? item.productName : 'Товар',
-            productPrice: item.cost > 0 ? item.cost : 0.01,
-            productQuantity: item.quantity > 0 ? item.quantity : 1,
+            trackNumber: item.trackNumber.trim(),
+            marketName: item.storeName.trim(),
+            urlProduct: item.productLink!.trim(),
+            productName: item.productName.trim(),
+            productPrice: item.cost,
+            productQuantity: item.quantity,
             productWeight: item.weight > 0 ? item.weight : null,
-            productColor: (item.color?.isNotEmpty == true) ? item.color! : 'Не указан',
-            productSize: item.size?.isNotEmpty == true ? item.size : null,
-            comment: item.comment?.isNotEmpty == true ? item.comment : null,
+            productColor: item.color!.trim(),
+            productSize: item.size?.trim().isNotEmpty == true ? item.size!.trim() : null,
+            comment: item.comment?.trim().isNotEmpty == true ? item.comment!.trim() : null,
             receiverAddress: addressId,
           );
 
@@ -125,6 +174,17 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
           debugPrint('=== ERROR CREATING ORDER FOR ITEM ===');
           debugPrint('Item: ${item.productName}');
           debugPrint('Error: $e');
+          
+          // Сохраняем ошибку для показа пользователю
+          if (failCount == 0) {
+            // Показываем первую ошибку пользователю
+            if (mounted && e.toString().contains('Не заполнены')) {
+              CustomSnackBar.error(
+                context: context,
+                message: e.toString().replaceAll('Exception: ', ''),
+              );
+            }
+          }
           failCount++;
         }
       }
@@ -136,8 +196,8 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
         CustomSnackBar.success(
           context: context,
           message: failCount > 0
-              ? 'Создано заказов: $successCount. Ошибок: $failCount'
-              : 'Посылка успешно оформлена!',
+              ? '${context.l10n.translate('orders_created')}: $successCount. ${context.l10n.translate('errors')}: $failCount'
+              : context.l10n.translate('parcel_created_successfully'),
         );
 
         // Переходим назад через небольшую задержку
@@ -151,10 +211,14 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
           _isProcessing = false;
         });
 
-        CustomSnackBar.error(
-          context: context,
-          message: 'Не удалось создать заказы. Попробуйте позже',
-        );
+        // Сообщение об ошибке уже показано в catch блоке
+        // Здесь показываем только общее сообщение, если не было показано ранее
+        if (failCount > 0) {
+          CustomSnackBar.error(
+            context: context,
+            message: '${context.l10n.translate('failed_to_create_orders')}. ${context.l10n.translate('check_all_fields')}',
+          );
+        }
       }
     } catch (e, stackTrace) {
       debugPrint('=== ERROR IN CHECKOUT ===');
@@ -250,11 +314,11 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                               size: 20,
                             ),
                             const SizedBox(width: 8),
-                            Text(
+                      Text(
                               context.l10n.translate('total_to_pay'),
-                              style: TextStyle(
+                        style: TextStyle(
                                 color: textColor,
-                                fontSize: 14,
+                          fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
                               ),
@@ -267,9 +331,9 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                      Text(
                             '\$',
-                            style: TextStyle(
+                        style: TextStyle(
                               color: AppTheme.gold.withValues(alpha: 0.7),
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -280,7 +344,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                           Text(
                             widget.shippingCost.total.toStringAsFixed(2).split('.')[0],
                             style: const TextStyle(
-                              color: AppTheme.gold,
+                          color: AppTheme.gold,
                               fontSize: 48,
                               fontWeight: FontWeight.bold,
                               letterSpacing: -1.5,
@@ -294,11 +358,11 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                               style: TextStyle(
                                 color: AppTheme.gold.withValues(alpha: 0.8),
                                 fontSize: 28,
-                                fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                                 height: 1,
                               ),
                             ),
-                          ),
+                        ),
                         ],
                       ),
                     ],
@@ -318,15 +382,15 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Text(
+                Text(
                       context.l10n.translate('calculation_details'),
-                      style: TextStyle(
-                        color: textColor,
+                  style: TextStyle(
+                    color: textColor,
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                         letterSpacing: 0.3,
                       ),
-                    ),
+                  ),
                   ],
                 ),
                 const SizedBox(height: 18),
@@ -379,10 +443,10 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text(
+                      Text(
                             context.l10n.translate('parcel_info'),
-                            style: TextStyle(
-                              color: textColor,
+                        style: TextStyle(
+                          color: textColor,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.3,
@@ -440,16 +504,16 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                   scale: _scaleAnimation.value,
                   child: Opacity(
                     opacity: _fadeAnimation.value,
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
                         onPressed: _isProcessing ? null : _handleCheckout,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.gold,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.gold,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                           elevation: _isProcessing ? 0 : 4,
                           shadowColor: AppTheme.gold.withValues(alpha: 0.4),
                         ),
@@ -495,19 +559,19 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                                   const SizedBox(width: 8),
                                   Text(
                                     context.l10n.translate('checkout_parcel'),
-                                    style: TextStyle(
-                                      color: ThemeHelper.isDark(context)
-                                          ? const Color(0xFF0A0E27)
-                                          : const Color(0xFF212121),
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
+                  style: TextStyle(
+                    color: ThemeHelper.isDark(context) 
+                        ? const Color(0xFF0A0E27) 
+                        : const Color(0xFF212121),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
                               ),
-                      ),
-                    ),
                   ),
+                ),
+              ),
                 );
               },
             ),
@@ -572,11 +636,11 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              value,
+            value,
               style: const TextStyle(
-                color: AppTheme.gold,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              color: AppTheme.gold,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
               ),
             ),
@@ -596,7 +660,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        children: [
+      children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -605,28 +669,28 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
             ),
             child: Icon(icon, color: AppTheme.gold, size: 18),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: textSecondaryColor,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: textSecondaryColor,
                 fontSize: 15,
                 height: 1.4,
               ),
-            ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              color: textColor,
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: textColor,
               fontSize: 15,
-              fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             ),
           ),
         ],
-      ),
+        ),
     );
   }
 

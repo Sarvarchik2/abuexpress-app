@@ -39,6 +39,34 @@ class OrderOwn {
     required this.receiverAddress,
   });
 
+  /// Парсит receiver_address, который может быть числом (ID) или объектом
+  static int _parseReceiverAddress(dynamic value) {
+    if (value == null) return 0;
+    
+    // Если это число, возвращаем его
+    if (value is num) {
+      return value.toInt();
+    }
+    
+    // Если это объект (Map), пытаемся извлечь ID
+    if (value is Map<String, dynamic>) {
+      // Проверяем, есть ли поле 'id' в объекте
+      if (value.containsKey('id') && value['id'] is num) {
+        return (value['id'] as num).toInt();
+      }
+      // Если ID нет в объекте, возвращаем 0
+      // (в этом случае адрес был отправлен, но сервер вернул объект без ID)
+      return 0;
+    }
+    
+    // Если это строка, пытаемся преобразовать в число
+    if (value is String) {
+      return int.tryParse(value) ?? 0;
+    }
+    
+    return 0;
+  }
+
   factory OrderOwn.fromJson(Map<String, dynamic> json) {
     return OrderOwn(
       id: (json['id'] as num?)?.toInt() ?? 0,
@@ -60,7 +88,7 @@ class OrderOwn {
       isShipped: json['is_shipped'] as bool? ?? false,
       isArrived: json['is_arrived'] as bool? ?? false,
       isDelivered: json['is_delivered'] as bool? ?? false,
-      receiverAddress: (json['receiver_address'] as num?)?.toInt() ?? 0,
+      receiverAddress: _parseReceiverAddress(json['receiver_address']),
     );
   }
 

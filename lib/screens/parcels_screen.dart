@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'add_parcel_screen.dart';
 import 'parcel_details_screen.dart';
+import 'profile_screen.dart';
 import '../models/parcel.dart';
+import '../models/parcel_item.dart';
+import '../models/api/order_own.dart';
 import '../models/notification.dart';
+import '../services/api_service.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/notifications_bottom_sheet.dart';
 import '../utils/theme_helper.dart';
@@ -25,9 +29,191 @@ class ParcelsScreen extends StatefulWidget {
   State<ParcelsScreen> createState() => _ParcelsScreenState();
 }
 
-class _ParcelsScreenState extends State<ParcelsScreen> {
+class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserver {
   String _selectedFilterKey = 'all';
   final List<Parcel> _parcels = [];
+  late final ApiService _apiService;
+  bool _isLoading = false;
+  DateTime? _lastUpdateTime;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Получаем токен из UserProvider и создаем ApiService с токеном
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final token = userProvider.authToken;
+    _apiService = ApiService(authToken: token);
+    _loadParcels();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Обновляем данные при возврате приложения в активное состояние
+    if (state == AppLifecycleState.resumed) {
+      _loadParcels();
+    }
+  }
+
+  @override
+  void didUpdateWidget(ParcelsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Обновляем данные при переключении на вкладку посылок
+    if (widget.currentIndex == 0 && oldWidget.currentIndex != 0) {
+      _loadParcels();
+    }
+  }
+
+
+  Future<void> _loadParcels() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      debugPrint('=== LOADING PARCELS FROM API ===');
+      final orders = await _apiService.getOrderOwn();
+      debugPrint('=== ORDERS LOADED ===');
+      debugPrint('Total orders: ${orders.length}');
+
+      // Группируем заказы по track_number для создания посылок
+      final Map<String, List<OrderOwn>> ordersByTrack = {};
+      for (final order in orders) {
+        final track = order.trackNumber.isNotEmpty ? order.trackNumber : 'order_${order.id}';
+        if (!ordersByTrack.containsKey(track)) {
+          ordersByTrack[track] = [];
+        }
+        ordersByTrack[track]!.add(order);
+      }
+
+      debugPrint('=== GROUPED ORDERS ===');
+      debugPrint('Unique tracks: ${ordersByTrack.length}');
+
+      // Преобразуем заказы в посылки
+      final parcels = <Parcel>[];
+      for (final entry in ordersByTrack.entries) {
+        final orders = entry.value;
+        if (orders.isEmpty) continue;
+
+        // Берем первый заказ для основной информации
+        final firstOrder = orders.first;
+
+        // Преобразуем заказы в ParcelItem
+        final items = orders.map((order) {
+          return ParcelItem(
+            id: order.id.toString(),
+            trackNumber: order.trackNumber,
+            storeName: order.marketName,
+            productName: order.productName,
+            productLink: order.urlProduct.isNotEmpty ? order.urlProduct : null,
+            cost: order.productPrice.toDouble(),
+            weight: order.productWeight?.toDouble() ?? 0.0,
+            color: order.productColor.isNotEmpty ? order.productColor : null,
+            size: order.productSize,
+            quantity: order.productQuantity,
+            comment: order.comment,
+          );
+        }).toList();
+
+        // Определяем статус на основе первого заказа
+        String statusKey = firstOrder.status;
+        String statusLabel = _getStatusLabelFromKey(statusKey);
+
+        // Определяем страну отправления на основе названия магазина
+        String? originCountry = _determineOriginCountry(firstOrder.marketName);
+
+        parcels.add(Parcel(
+          id: firstOrder.id.toString(),
+          items: items,
+          status: statusLabel,
+          dateAdded: firstOrder.dateAdded,
+          deliveryAddressId: firstOrder.receiverAddress.toString(),
+          originCountry: originCountry,
+          shippingCost: null, // Можно добавить позже
+          isAccepted: firstOrder.isAccepted,
+          isRejected: firstOrder.isRejected,
+          isShipped: firstOrder.isShipped,
+          isArrived: firstOrder.isArrived,
+          isDelivered: firstOrder.isDelivered,
+        ));
+      }
+
+      debugPrint('=== PARCELS CREATED ===');
+      debugPrint('Total parcels: ${parcels.length}');
+
+      if (mounted) {
+        setState(() {
+          _parcels.clear();
+          _parcels.addAll(parcels);
+          _isLoading = false;
+          _lastUpdateTime = DateTime.now();
+        });
+        debugPrint('=== PARCELS UPDATED ===');
+        debugPrint('Update time: ${_lastUpdateTime}');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('=== ERROR LOADING PARCELS ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack Trace: $stackTrace');
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String? _determineOriginCountry(String marketName) {
+    final marketNameLower = marketName.toLowerCase();
+    
+    if (marketNameLower.contains('amazon') || 
+        marketNameLower.contains('ebay') ||
+        marketNameLower.contains('walmart') ||
+        marketNameLower.contains('target')) {
+      return 'USA';
+    } else if (marketNameLower.contains('aliexpress') || 
+               marketNameLower.contains('taobao') ||
+               marketNameLower.contains('1688')) {
+      return 'China';
+    } else if (marketNameLower.contains('trendyol') || 
+               marketNameLower.contains('hepsiburada') ||
+               marketNameLower.contains('gitti')) {
+      return 'Turkey';
+    } else if (marketNameLower.contains('noon') || 
+               marketNameLower.contains('amazon.ae')) {
+      return 'UAE';
+    }
+    
+    return null; // Не удалось определить
+  }
+
+  String _getStatusLabelFromKey(String statusKey) {
+    switch (statusKey) {
+      case 'delivered':
+        return 'Доставлено';
+      case 'in_warehouse':
+        return 'На складе';
+      case 'in_transit':
+        return 'В пути';
+      case 'at_customs':
+        return 'На таможне';
+      case 'rejected':
+        return 'Отклонено';
+      case 'accepted':
+        return 'Принято';
+      case 'pending':
+        return 'Ожидает';
+      default:
+        return 'Ожидает';
+    }
+  }
 
   List<String> _getFilters(BuildContext context) {
     return ['all', 'in_warehouse', 'in_transit', 'at_customs', 'delivered'];
@@ -153,9 +339,20 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                 const SizedBox(height: 16),
                 // Empty state or parcel list
                 Expanded(
-                  child: _parcels.isEmpty
-                      ? _buildEmptyState(context)
-                      : _buildParcelsList(context),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _parcels.isEmpty
+                          ? RefreshIndicator(
+                              onRefresh: _loadParcels,
+                              child: SingleChildScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                child: _buildEmptyState(context),
+                              ),
+                            )
+                          : RefreshIndicator(
+                              onRefresh: _loadParcels,
+                              child: _buildParcelsList(context),
+                            ),
                 ),
                 // Spacer для навигации
                 const SizedBox(height: 80),
@@ -182,7 +379,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
     final userProvider = Provider.of<UserProvider>(context);
     final userInfo = userProvider.userInfo;
-    final fullName = userInfo?.fullName ?? 'Пользователь';
+    final fullName = userInfo?.fullName ?? context.l10n.translate('user');
     final userId = userInfo?.id ?? 0;
     final initials = userProvider.getInitials();
     
@@ -190,27 +387,39 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          // Avatar
-          Stack(
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: const BoxDecoration(
-                  color: AppTheme.gold,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    initials,
-                    style: TextStyle(
-                      color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+          // Avatar - кликабельно для перехода в профиль
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(30),
+              child: Stack(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.gold,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        initials,
+                        style: TextStyle(
+                          color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
               Positioned(
                 bottom: 0,
                 right: 0,
@@ -232,31 +441,50 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                   ),
                 ),
               ),
-            ],
+                ],
+              ),
+            ),
           ),
           const SizedBox(width: 12),
-          // User info
+          // User info - кликабельно для перехода в профиль
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  fullName,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileScreen(),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        fullName,
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'ID: $userId',
+                        style: TextStyle(
+                          color: textSecondaryColor,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'ID: $userId',
-                  style: TextStyle(
-                    color: textSecondaryColor,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           // Notification icon
@@ -388,10 +616,9 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                   builder: (context) => const AddParcelScreen(),
                 ),
               );
-              if (result != null && result is Parcel) {
-                setState(() {
-                  _parcels.add(result);
-                });
+              // Обновляем список из API после возврата
+              if (result != null || mounted) {
+                await _loadParcels();
               }
             },
               borderRadius: BorderRadius.circular(12),
@@ -469,10 +696,9 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
                   builder: (context) => const AddParcelScreen(),
                 ),
               );
-              if (result != null && result is Parcel) {
-                setState(() {
-                  _parcels.add(result);
-                });
+              // Обновляем список из API после возврата
+              if (result != null || mounted) {
+                await _loadParcels();
               }
             },
             style: ElevatedButton.styleFrom(
@@ -502,12 +728,13 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
         ? _parcels
         : _parcels.where((p) {
             final statusMap = {
-              'in_warehouse': 'На складе',
-              'in_transit': 'В пути',
-              'at_customs': 'В таможне',
-              'delivered': 'Доставлен',
+              'in_warehouse': ['На складе'],
+              'in_transit': ['В пути'],
+              'at_customs': ['На таможне'],
+              'delivered': ['Доставлено', 'Доставлен'],
             };
-            return p.status == statusMap[_selectedFilterKey];
+            final allowedStatuses = statusMap[_selectedFilterKey] ?? [];
+            return allowedStatuses.contains(p.status);
           }).toList();
 
     return ListView.builder(
@@ -537,8 +764,21 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
         statusColor = AppTheme.gold; // Желтый
         statusTextColor = ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121);
         break;
+      case 'Доставлено':
       case 'Доставлен':
-        statusColor = const Color(0xFF374151); // Темно-серый
+        statusColor = const Color(0xFF10B981); // Зеленый
+        statusTextColor = Colors.white;
+        break;
+      case 'Отклонено':
+        statusColor = const Color(0xFFEF4444); // Красный
+        statusTextColor = Colors.white;
+        break;
+      case 'Принято':
+        statusColor = const Color(0xFF3B82F6); // Синий
+        statusTextColor = Colors.white;
+        break;
+      case 'Ожидает':
+        statusColor = const Color(0xFF6B7280); // Серый
         statusTextColor = Colors.white;
         break;
       default:
@@ -547,13 +787,18 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
     }
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        // Открываем детальный экран и обновляем данные при возврате
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ParcelDetailsScreen(parcel: parcel),
           ),
         );
+        // Обновляем данные после возврата из детального экрана
+        if (mounted) {
+          _loadParcels();
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -668,12 +913,19 @@ class _ParcelsScreenState extends State<ParcelsScreen> {
         return 'in_warehouse';
       case 'В пути':
         return 'in_transit';
-      case 'В таможне':
+      case 'На таможне':
         return 'at_customs';
+      case 'Доставлено':
       case 'Доставлен':
         return 'delivered';
+      case 'Отклонено':
+        return 'rejected';
+      case 'Принято':
+        return 'accepted';
+      case 'Ожидает':
+        return 'pending';
       default:
-        return 'all';
+        return 'pending';
     }
   }
 

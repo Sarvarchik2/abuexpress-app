@@ -27,6 +27,11 @@ class _MainScreenState extends State<MainScreen> {
         setState(() {
           _currentIndex = index;
         });
+        
+        // Если переключились на экран посылок (индекс 0), обновляем данные
+        if (index == 0) {
+          // Обновление произойдет через didUpdateWidget в ParcelsScreen
+        }
       }
     }
   }

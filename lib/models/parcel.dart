@@ -11,6 +11,12 @@ class Parcel {
   final String? originCountry;
   final ShippingCost? shippingCost;
   final List<ParcelHistoryItem>? history;
+  // Статусы из API для генерации истории
+  final bool isAccepted;
+  final bool isRejected;
+  final bool isShipped;
+  final bool isArrived;
+  final bool isDelivered;
 
   Parcel({
     required this.id,
@@ -21,6 +27,11 @@ class Parcel {
     this.originCountry,
     this.shippingCost,
     this.history,
+    this.isAccepted = false,
+    this.isRejected = false,
+    this.isShipped = false,
+    this.isArrived = false,
+    this.isDelivered = false,
   });
 
   // Геттеры для обратной совместимости
@@ -55,14 +66,34 @@ class Parcel {
   }
 
   String get origin {
-    if (originCountry == null) return 'Не указано';
-    final countryNames = {
-      'USA': 'Нью-Йорк, США',
-      'Turkey': 'Стамбул, Турция',
-      'China': 'Пекин, Китай',
-      'UAE': 'Дубай, ОАЭ',
-    };
-    return countryNames[originCountry] ?? originCountry!;
+    if (originCountry != null) {
+      final countryNames = {
+        'USA': 'Нью-Йорк, США',
+        'US': 'Нью-Йорк, США',
+        'Turkey': 'Стамбул, Турция',
+        'TR': 'Стамбул, Турция',
+        'China': 'Пекин, Китай',
+        'CN': 'Пекин, Китай',
+        'UAE': 'Дубай, ОАЭ',
+        'AE': 'Дубай, ОАЭ',
+        'amazon': 'Нью-Йорк, США',
+        'aliexpress': 'Пекин, Китай',
+        'ebay': 'Нью-Йорк, США',
+      };
+      return countryNames[originCountry] ?? originCountry!;
+    }
+    
+    // Пытаемся определить по названию магазина
+    final storeNameLower = storeName.toLowerCase();
+    if (storeNameLower.contains('amazon') || storeNameLower.contains('ebay')) {
+      return 'Нью-Йорк, США';
+    } else if (storeNameLower.contains('aliexpress') || storeNameLower.contains('taobao')) {
+      return 'Пекин, Китай';
+    } else if (storeNameLower.contains('trendyol') || storeNameLower.contains('hepsiburada')) {
+      return 'Стамбул, Турция';
+    }
+    
+    return 'Не указано';
   }
 
   DateTime get estimatedDelivery {
