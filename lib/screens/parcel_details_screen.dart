@@ -373,50 +373,68 @@ class ParcelDetailsScreen extends StatelessWidget {
         color: cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        children: List.generate(history.length, (index) {
-          final item = history[index];
-          final isLast = index == history.length - 1;
-          
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Таймлайн
-              Column(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: item.isCompleted ? AppTheme.gold : textSecondaryColor.withValues(alpha: 0.3),
-                      shape: BoxShape.circle,
-                    ),
-                    child: item.isCompleted
-                        ? const Icon(
-                            Icons.check,
-                            color: Color(0xFF0A0E27),
-                            size: 20,
-                          )
-                        : Icon(
-                            Icons.access_time,
-                            color: textSecondaryColor,
-                            size: 20,
-                          ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Таймлайн с непрерывной линией
+          SizedBox(
+            width: 32,
+            child: Stack(
+              children: [
+                // Непрерывная вертикальная линия через центр всех иконок
+                Positioned(
+                  left: 15, // Центр (32/2 - 1)
+                  top: 16, // Начинается от центра первой иконки
+                  bottom: 16, // Заканчивается у центра последней иконки
+                  child: Container(
+                    width: 2,
+                    color: AppTheme.gold, // Можно сделать динамическим, но для простоты используем золотой
                   ),
-                  if (!isLast)
-                    Container(
-                      width: 2,
-                      height: 60,
-                      color: item.isCompleted
-                          ? AppTheme.gold
-                          : textSecondaryColor.withValues(alpha: 0.2),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 16),
-              // Информация
-              Expanded(
-                child: Padding(
+                ),
+                // Иконки
+                Column(
+                  children: List.generate(history.length, (index) {
+                    final item = history[index];
+                    final isLast = index == history.length - 1;
+                    
+                    return Column(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: item.isCompleted ? AppTheme.gold : textSecondaryColor.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: item.isCompleted
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Color(0xFF0A0E27),
+                                  size: 20,
+                                )
+                              : Icon(
+                                  Icons.access_time,
+                                  color: textSecondaryColor,
+                                  size: 20,
+                                ),
+                        ),
+                        if (!isLast) const SizedBox(height: 60),
+                      ],
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Информация
+          Expanded(
+            child: Column(
+              children: List.generate(history.length, (index) {
+                final item = history[index];
+                final isLast = index == history.length - 1;
+                
+                return Padding(
                   padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,11 +474,11 @@ class ParcelDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-              ),
-            ],
-          );
-        }),
+                );
+              }),
+            ),
+          ),
+        ],
       ),
     );
   }
