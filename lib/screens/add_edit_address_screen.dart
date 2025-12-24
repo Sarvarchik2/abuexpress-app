@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/delivery_address.dart';
+import '../models/api/receiver.dart';
+import '../models/api/receiver_create_request.dart';
 import '../utils/theme_helper.dart';
 import '../utils/localization_helper.dart';
 import '../utils/theme.dart' show AppTheme;
+import '../services/api_service.dart';
+import '../providers/user_provider.dart';
+import '../widgets/custom_snackbar.dart';
 
 class AddEditAddressScreen extends StatefulWidget {
   final DeliveryAddress? address; // Если null - добавление, иначе - редактирование
@@ -18,6 +24,17 @@ class AddEditAddressScreen extends StatefulWidget {
 
 class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
   final _formKey = GlobalKey<FormState>();
+  ApiService? _apiService;
+  bool _isLoading = false;
+  
+  ApiService get apiService {
+    _apiService ??= () {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final token = userProvider.authToken;
+      return ApiService(authToken: token);
+    }();
+    return _apiService!;
+  }
   
   // Тип адреса
   String _selectedType = 'home'; // Используем ключи вместо текста
@@ -27,6 +44,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
   // Контактная информация
   final _recipientNameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _passportController = TextEditingController();
   
   // Адрес доставки
   final _cityController = TextEditingController();
@@ -34,6 +52,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
   final _streetController = TextEditingController();
   final _houseController = TextEditingController();
   final _apartmentController = TextEditingController();
+  final _postalCodeController = TextEditingController();
   
   // По умолчанию
   bool _isDefault = false;
@@ -41,6 +60,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
   @override
   void initState() {
     super.initState();
+    
     if (widget.address != null) {
       // Редактирование существующего адреса
       final addressType = widget.address!.type;
@@ -76,11 +96,13 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     _customTypeController.dispose();
     _recipientNameController.dispose();
     _phoneController.dispose();
+    _passportController.dispose();
     _cityController.dispose();
     _districtController.dispose();
     _streetController.dispose();
     _houseController.dispose();
     _apartmentController.dispose();
+    _postalCodeController.dispose();
     super.dispose();
   }
 
@@ -97,13 +119,99 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     }
   }
 
-  void _saveAddress() {
-    if (_formKey.currentState?.validate() ?? false) {
+  Future<void> _saveAddress() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final userInfo = userProvider.userInfo;
+      
+      if (userInfo == null) {
+        if (mounted) {
+          CustomSnackBar.error(
+            context: context,
+            message: 'Пользователь не авторизован',
+          );
+        }
+        return;
+      }
+
+      // Разбиваем имя на firstName и lastName
+      final nameParts = _recipientNameController.text.trim().split(' ');
+      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : firstName;
+
+      // Формируем полный адрес (street + house)
+      final fullAddress = '${_streetController.text.trim()}, д. ${_houseController.text.trim()}';
+
+      // Определяем officeNumber для типа "Работа"
+      String? officeNumber;
+      final isWorkType = _selectedType == 'work' || (_isCustomType && _customTypeController.text.toLowerCase().contains('work'));
+      if (isWorkType) {
+        officeNumber = _apartmentController.text.trim().isNotEmpty 
+            ? _apartmentController.text.trim() 
+            : '1';
+      }
+
+      // Получаем passportNumber (обязательное поле)
+      final passportNumber = _passportController.text.trim().isNotEmpty 
+          ? _passportController.text.trim() 
+          : (userInfo.personalNumber?.isNotEmpty == true ? userInfo.personalNumber! : '000000000');
+      
+      if (passportNumber.isEmpty) {
+        if (mounted) {
+          CustomSnackBar.error(
+            context: context,
+            message: 'Пожалуйста, укажите номер паспорта',
+          );
+        }
+        return;
+      }
+
+      // Определяем apartment (обязательное поле, не может быть пустым)
+      final apartment = isWorkType 
+          ? (_apartmentController.text.trim().isNotEmpty ? _apartmentController.text.trim() : '1')
+          : (_apartmentController.text.trim().isNotEmpty ? _apartmentController.text.trim() : '1');
+
+      // Создаем запрос
+      final request = ReceiverCreateRequest(
+        firstName: firstName,
+        lastName: lastName,
+        passportNumber: passportNumber,
+        phoneNumber: _phoneController.text.trim(),
+        email: userInfo.email,
+        apartment: apartment,
+        address: fullAddress,
+        country: 'Uzbekistan', // По умолчанию
+        city: _cityController.text.trim(),
+        district: _districtController.text.trim(),
+        officeNumber: officeNumber,
+        postalCode: _postalCodeController.text.trim().isNotEmpty 
+            ? _postalCodeController.text.trim() 
+            : '100000',
+      );
+
+      Receiver receiver;
+      if (widget.address != null) {
+        // Обновление существующего адреса
+        final addressId = int.tryParse(widget.address!.id) ?? 0;
+        receiver = await apiService.updateAddress(addressId, request);
+      } else {
+        // Создание нового адреса
+        receiver = await apiService.createAddress(request);
+      }
+
+      // Преобразуем Receiver в DeliveryAddress для возврата
       String type;
       if (_isCustomType && _customTypeController.text.isNotEmpty) {
         type = _customTypeController.text;
       } else {
-        // Используем локализованное название типа
         switch (_selectedType) {
           case 'home':
             type = context.l10n.translate('home');
@@ -118,25 +226,65 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
             type = _selectedType;
         }
       }
-      
+
       final address = DeliveryAddress(
-        id: widget.address?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id: receiver.id.toString(),
         type: type,
         icon: _getTypeIcon(_selectedType),
         isDefault: _isDefault,
-        address: '', // Будет сгенерирован автоматически
-        recipientName: _recipientNameController.text.trim(),
-        phone: _phoneController.text.trim(),
-        city: _cityController.text.trim(),
-        district: _districtController.text.trim(),
-        street: _streetController.text.trim(),
+        address: receiver.fullAddress,
+        recipientName: receiver.fullName,
+        phone: receiver.phoneNumber,
+        city: receiver.city,
+        district: receiver.district,
+        street: receiver.address,
         house: _houseController.text.trim(),
-        apartment: _apartmentController.text.trim().isEmpty 
-            ? null 
-            : _apartmentController.text.trim(),
+        apartment: receiver.apartment.isNotEmpty ? receiver.apartment : null,
       );
 
-      Navigator.pop(context, address);
+      if (mounted) {
+        Navigator.pop(context, address);
+        CustomSnackBar.success(
+          context: context,
+          message: widget.address == null 
+              ? context.l10n.translate('address_added')
+              : context.l10n.translate('address_updated'),
+        );
+      }
+    } catch (e) {
+      debugPrint('=== ERROR SAVING ADDRESS ===');
+      debugPrint('Error: $e');
+      
+      if (mounted) {
+        String errorMessage = widget.address == null 
+            ? 'Не удалось добавить адрес'
+            : 'Не удалось обновить адрес';
+        
+        if (e.toString().contains('400') || e.toString().contains('неверн')) {
+          errorMessage = 'Проверьте правильность заполнения всех полей';
+        } else if (e.toString().contains('401') || e.toString().contains('авторизац')) {
+          errorMessage = 'Требуется авторизация. Пожалуйста, войдите снова';
+        } else if (e.toString().contains('403') || e.toString().contains('запрещен')) {
+          errorMessage = 'Доступ запрещен';
+        } else if (e.toString().contains('500') || e.toString().contains('сервер')) {
+          errorMessage = 'Ошибка сервера. Попробуйте позже';
+        } else if (e.toString().contains('подключен') || e.toString().contains('timeout')) {
+          errorMessage = 'Проблема с подключением. Проверьте интернет';
+        } else {
+          errorMessage = e.toString().replaceAll('Exception: ', '');
+        }
+        
+        CustomSnackBar.error(
+          context: context,
+          message: errorMessage,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -211,6 +359,13 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                 return null;
               },
             ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Паспорт (необязательно)',
+              controller: _passportController,
+              hint: 'AA1234567',
+              textColor: textColor,
+            ),
             const SizedBox(height: 24),
             
             // Адрес доставки
@@ -282,6 +437,14 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Почтовый индекс (необязательно)',
+              controller: _postalCodeController,
+              hint: '100000',
+              textColor: textColor,
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 24),
             
             // По умолчанию
@@ -306,17 +469,28 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton.icon(
-            onPressed: _saveAddress,
-            icon: Icon(
-              Icons.add,
-              color: ThemeHelper.isDark(context) 
-                  ? const Color(0xFF0A0E27) 
-                  : const Color(0xFF212121),
-            ),
+            onPressed: _isLoading ? null : _saveAddress,
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0A0E27)),
+                    ),
+                  )
+                : Icon(
+                    Icons.add,
+                    color: ThemeHelper.isDark(context) 
+                        ? const Color(0xFF0A0E27) 
+                        : const Color(0xFF212121),
+                  ),
             label: Text(
-              widget.address == null 
-                  ? context.l10n.translate('add_address') 
-                  : context.l10n.translate('save_changes'),
+              _isLoading
+                  ? 'Сохранение...'
+                  : (widget.address == null 
+                      ? context.l10n.translate('add_address') 
+                      : context.l10n.translate('save_changes')),
               style: TextStyle(
                 color: ThemeHelper.isDark(context) 
                     ? const Color(0xFF0A0E27) 
@@ -327,6 +501,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.gold,
+              disabledBackgroundColor: AppTheme.gold.withValues(alpha: 0.6),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),

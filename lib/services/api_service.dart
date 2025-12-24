@@ -947,5 +947,100 @@ class ApiService {
       throw Exception('Неизвестная ошибка: $e');
     }
   }
+
+  /// Обновить адрес
+  Future<Receiver> updateAddress(int addressId, ReceiverCreateRequest request) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.addressById(addressId)}');
+
+      debugPrint('=== UPDATE ADDRESS REQUEST ===');
+      debugPrint('URL: $url');
+      debugPrint('Body: ${jsonEncode(request.toJson())}');
+
+      final response = await client.patch(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(request.toJson()),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== UPDATE ADDRESS TIMEOUT ===');
+          throw Exception('Время ожидания истекло. Проверьте подключение к интернету.');
+        },
+      );
+
+      debugPrint('=== UPDATE ADDRESS RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        try {
+          final jsonData = jsonDecode(response.body);
+          if (jsonData is! Map<String, dynamic>) {
+            debugPrint('=== UPDATE ADDRESS INVALID JSON FORMAT ===');
+            throw Exception('Неверный формат ответа сервера');
+          }
+          debugPrint('=== UPDATE ADDRESS SUCCESS ===');
+          return Receiver.fromJson(jsonData);
+        } catch (e) {
+          debugPrint('=== UPDATE ADDRESS JSON PARSE ERROR ===');
+          debugPrint('Error: $e');
+          throw Exception('Ошибка обработки ответа: $e');
+        }
+      } else {
+        String errorMessage = 'Ошибка обновления адреса';
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          
+          if (errorData.containsKey('data') && errorData['data'] is Map) {
+            final dataErrors = errorData['data'] as Map<String, dynamic>;
+            final errorMessages = <String>[];
+            dataErrors.forEach((key, value) {
+              if (value is List) {
+                errorMessages.addAll(value.map((e) => e.toString()));
+              } else {
+                errorMessages.add(value.toString());
+              }
+            });
+            if (errorMessages.isNotEmpty) {
+              errorMessage = errorMessages.join(', ');
+            }
+          } else {
+            errorMessage = errorData['message'] as String? ?? 
+                          errorData['error'] as String? ??
+                          errorData['detail'] as String? ??
+                          errorMessage;
+          }
+        } catch (e) {
+          if (response.statusCode == 400) {
+            errorMessage = 'Неверные данные запроса';
+          } else if (response.statusCode == 401) {
+            errorMessage = 'Требуется авторизация';
+          } else if (response.statusCode == 403) {
+            errorMessage = 'Доступ запрещен';
+          } else if (response.statusCode == 404) {
+            errorMessage = 'Адрес не найден';
+          } else if (response.statusCode >= 500) {
+            errorMessage = 'Ошибка сервера. Попробуйте позже';
+          }
+        }
+        throw Exception(errorMessage);
+      }
+    } on http.ClientException catch (e) {
+      debugPrint('=== HTTP CLIENT EXCEPTION ===');
+      throw Exception('Ошибка подключения: ${e.message}');
+    } on FormatException {
+      debugPrint('=== FORMAT EXCEPTION ===');
+      throw Exception('Ошибка обработки ответа сервера');
+    } catch (e, stackTrace) {
+      debugPrint('=== UNKNOWN ERROR ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack Trace: $stackTrace');
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Неизвестная ошибка: $e');
+    }
+  }
 }
 
