@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/onboarding_item.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/onboarding_icon.dart';
@@ -59,11 +60,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
+    // Устанавливаем полноэкранный режим
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    // Восстанавливаем системные UI элементы
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -96,33 +101,39 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final isLastPage = _currentPage == _onboardingItems.length - 1;
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: const Color(0xFF030712),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: _skipOnboarding,
-                    child: Text(
-                      context.l10n.translate('skip'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
+      body: Column(
+        children: [
+          // Header с учетом статус-бара
+          Padding(
+            padding: EdgeInsets.only(
+              top: statusBarHeight + 16,
+              left: 20,
+              right: 20,
+              bottom: 16,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: _skipOnboarding,
+                  child: Text(
+                    context.l10n.translate('skip'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const LanguageSelector(),
-                ],
-              ),
+                ),
+                const LanguageSelector(),
+              ],
             ),
+          ),
 
             // Page View
             Expanded(
@@ -137,25 +148,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Pagination dots
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _onboardingItems.length,
-                  (index) => _buildPaginationDot(index == _currentPage),
-                ),
+          // Pagination dots
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                _onboardingItems.length,
+                (index) => _buildPaginationDot(index == _currentPage),
               ),
             ),
+          ),
 
-            // Next/Start button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: _buildActionButton(isLastPage),
+          // Next/Start button с учетом нижнего отступа
+          Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: bottomPadding + 20,
             ),
-          ],
-        ),
+            child: _buildActionButton(isLastPage),
+          ),
+        ],
       ),
     );
   }

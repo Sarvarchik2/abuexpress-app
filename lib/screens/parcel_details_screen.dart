@@ -382,15 +382,16 @@ class ParcelDetailsScreen extends StatelessWidget {
             child: Stack(
               children: [
                 // Непрерывная вертикальная линия через центр всех иконок
-                Positioned(
-                  left: 15, // Центр (32/2 - 1)
-                  top: 16, // Начинается от центра первой иконки
-                  bottom: 16, // Заканчивается у центра последней иконки
-                  child: Container(
-                    width: 2,
-                    color: AppTheme.gold, // Можно сделать динамическим, но для простоты используем золотой
+                if (history.length > 1)
+                  Positioned(
+                    left: 15, // Центр иконки (32/2 - 1)
+                    top: 16, // Начинается от центра первой иконки (32/2 = 16)
+                    bottom: 16, // Заканчивается у центра последней иконки
+                    child: Container(
+                      width: 2,
+                      color: AppTheme.gold,
+                    ),
                   ),
-                ),
                 // Иконки
                 Column(
                   children: List.generate(history.length, (index) {
@@ -427,9 +428,10 @@ class ParcelDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          // Информация
+          // Информация о статусах
           Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: List.generate(history.length, (index) {
                 final item = history[index];
                 final isLast = index == history.length - 1;

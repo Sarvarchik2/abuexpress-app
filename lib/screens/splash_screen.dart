@@ -19,6 +19,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    // Устанавливаем полноэкранный режим
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _playSoundAndVibrate();
     
     // Переходим на экран онбординга после завершения GIF (увеличено время для полного проигрывания)
@@ -87,12 +89,12 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF030712),
-      body: Center(
+      body: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
         child: Image.asset(
           'lib/assets/intro.gif',
-          fit: BoxFit.contain,
-          width: double.infinity,
-          height: double.infinity,
+          fit: BoxFit.cover,
         ),
       ),
     );
