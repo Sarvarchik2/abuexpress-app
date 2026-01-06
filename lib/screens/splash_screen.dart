@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:video_player/video_player.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,67 +15,140 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   Timer? _timer;
   final AudioPlayer _audioPlayer = AudioPlayer();
-  bool _hasPlayedSound = false;
+  late VideoPlayerController _videoController;
+  bool _isVideoInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    // Устанавливаем полноэкранный режим
+    debugPrint('🚀 SplashScreen: initState started');
+    // Полноэкранный режим без статус-бара
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    _playSoundAndVibrate();
     
-    // Переходим на экран онбординга после завершения GIF (увеличено время для полного проигрывания)
-    _timer = Timer(const Duration(milliseconds: 8000), () {
+    // Инициализация видео
+    debugPrint('📹 SplashScreen: Initializing video...');
+    _videoController = VideoPlayerController.asset('lib/assets/intro.mp4');
+    
+    // Резервный таймер: если видео не загрузится за 5 секунд, идем дальше
+    _timer = Timer(const Duration(seconds: 5), () {
+      if (mounted && !_isVideoInitialized) {
+        debugPrint('⚠️ SplashScreen: Видео не успело инициализироваться, переходим по таймеру');
+        _navigateToNext();
+      }
+    });
+
+    _videoController.initialize().then((_) {
+      debugPrint('📹 SplashScreen: Video initialized successfully');
+      if (!mounted) return;
+      
+      setState(() {
+        _isVideoInitialized = true;
+      });
+
+      // Запускаем видео
+      debugPrint('📹 SplashScreen: Playing video');
+      _videoController.play();
+      _videoController.setLooping(false);
+
+      // Синхронизируем звук и вибрацию с реальным стартом видео
+      _playIntroSound();
+      _startVibrationSequence();
+
+      // Отменяем старый резервный таймер и ставим новый на конец видео
+      _timer?.cancel();
+      final videoDuration = _videoController.value.duration;
+      debugPrint('📹 SplashScreen: Video duration is $videoDuration');
+      
+      _timer = Timer(videoDuration + const Duration(milliseconds: 500), () {
+        debugPrint('⏰ SplashScreen: Video finished, navigating...');
+        if (mounted) {
+          _navigateToNext();
+        }
+      });
+    }).catchError((error) {
+      debugPrint('❌ SplashScreen: Ошибка инициализации видео: $error');
       if (mounted) {
-        _audioPlayer.dispose();
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const OnboardingScreen(),
-          ),
-        );
+        _navigateToNext();
       }
     });
   }
 
-  Future<void> _playSoundAndVibrate() async {
+  Future<void> _playIntroSound() async {
     try {
-      // Вибрация когда самолет пролетает (примерно через 2-3 секунды после начала)
-      Timer(const Duration(milliseconds: 2500), () async {
-        if (mounted) {
-          try {
-            // Используем встроенную вибрацию Flutter
-            HapticFeedback.mediumImpact();
-            debugPrint('Haptic feedback triggered');
-          } catch (e) {
-            debugPrint('Vibration error: $e');
-          }
-        }
-      });
-
-      // Воспроизводим звук самолета сразу при запуске
-      if (!_hasPlayedSound) {
-        _hasPlayedSound = true;
-        // Небольшая задержка для инициализации
-        await Future.delayed(const Duration(milliseconds: 100));
-        try {
-          // Пытаемся воспроизвести звук из assets
-          debugPrint('🎵 Attempting to play audio: audio/airplane_sound.mp3');
-          
-          // Устанавливаем громкость
-          await _audioPlayer.setVolume(1.0);
-          
-          // Воспроизводим звук
-          await _audioPlayer.play(AssetSource('audio/airplane_sound.mp3'));
-          debugPrint('🎵 Audio playback started successfully');
-        } catch (e, stackTrace) {
-          // Если файл не найден или ошибка воспроизведения
-          debugPrint('❌ Audio playback error: $e');
-          debugPrint('❌ Stack trace: $stackTrace');
-          // В симуляторе может не работать, это нормально
-        }
-      }
+      debugPrint('🎵 SplashScreen: Preparing to play intro sound');
+      await _audioPlayer.setVolume(1.0);
+      await _audioPlayer.play(AssetSource('audio/airplane_sound.mp3'));
+      debugPrint('🎵 SplashScreen: Intro sound playing');
     } catch (e) {
-      debugPrint('Error in _playSoundAndVibrate: $e');
+      debugPrint('❌ SplashScreen: Ошибка звука: $e');
+    }
+  }
+
+  Future<void> _startVibrationSequence() async {
+    try {
+      debugPrint('📳 SplashScreen: Starting ultra-realistic vibration sequence');
+      if (!mounted) return;
+
+      // --- ФАЗА 1: Раскрутка турбин (0 - 1.5 сек) ---
+      // Очень быстрые, почти незаметные щелчки (эффект набора оборотов вала)
+      for (int i = 0; i < 12; i++) {
+        if (!mounted) break;
+        HapticFeedback.selectionClick(); 
+        await Future.delayed(Duration(milliseconds: 150 - (i * 10)));
+      }
+
+      // --- ФАЗА 2: Нагнетание давления (1.5 - 4.0 сек) ---
+      // Смесь легких и средних ударов, имитация дрожи корпуса
+      for (int i = 0; i < 18; i++) {
+        if (!mounted) break;
+        if (i % 3 == 0) {
+          HapticFeedback.mediumImpact();
+        } else {
+          HapticFeedback.lightImpact();
+        }
+        await Future.delayed(const Duration(milliseconds: 120));
+      }
+
+      // --- ФАЗА 3: ВЗЛЕТ / ФОРСАЖ (4.0 - 7.5 сек) ---
+      // Самая мощная фаза. Используем Heavy Impact для ощущения мощи двигателей
+      for (int i = 0; i < 45; i++) {
+        if (!mounted) break;
+        if (i % 4 == 0) {
+          HapticFeedback.heavyImpact(); // Мощный толчок
+        } else if (i % 2 == 0) {
+          HapticFeedback.mediumImpact();
+        } else {
+          HapticFeedback.lightImpact();
+        }
+        await Future.delayed(const Duration(milliseconds: 70));
+      }
+
+      // --- ФАЗА 4: ОТРЫВ И УХОД В НЕБО (7.5 - 9.4 сек) ---
+      // Постепенное затухание, переход в мягкое гудение
+      for (int i = 0; i < 10; i++) {
+        if (!mounted) break;
+        HapticFeedback.lightImpact();
+        await Future.delayed(Duration(milliseconds: 100 + (i * 40)));
+      }
+
+      debugPrint('📳 SplashScreen: Ultra-realistic vibration sequence finished');
+    } catch (e) {
+      debugPrint('❌ SplashScreen: Vibration error: $e');
+    }
+  }
+
+  void _navigateToNext() {
+    debugPrint('➡️ SplashScreen: _navigateToNext called');
+    // Возвращаем системные элементы интерфейса перед уходом со сплэша
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    
+    if (mounted) {
+      debugPrint('➡️ SplashScreen: Pushing OnboardingScreen');
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const OnboardingScreen(),
+        ),
+      );
     }
   }
 
@@ -82,6 +156,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void dispose() {
     _timer?.cancel();
     _audioPlayer.dispose();
+    _videoController.dispose();
     super.dispose();
   }
 
@@ -89,13 +164,21 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF030712),
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: Image.asset(
-          'lib/assets/intro.gif',
-          fit: BoxFit.cover,
-        ),
+      body: SizedBox.expand(
+        child: _isVideoInitialized
+            ? FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _videoController.value.size.width,
+                  height: _videoController.value.size.height,
+                  child: VideoPlayer(_videoController),
+                ),
+              )
+            : const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFFFD700),
+                ),
+              ),
       ),
     );
   }
