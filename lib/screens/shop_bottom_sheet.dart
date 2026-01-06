@@ -420,9 +420,77 @@ class _ShopBottomSheetState extends State<ShopBottomSheet> {
                   ),
                 ],
               ),
-              // Shop Navigation Bar (floating) - показываем только если нет открытых экранов и не на экране корзины
-              if (_showNavigationBar && _shopNavIndex != 3) 
-                _buildShopNavigationBar(),
+              // Soon Overlay
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: AppTheme.gold.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppTheme.gold.withValues(alpha: 0.3), width: 2),
+                              ),
+                              child: const Icon(
+                                Icons.hourglass_empty_rounded,
+                                color: AppTheme.gold,
+                                size: 64,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            Text(
+                              context.l10n.translate('soon').toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 48,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 8,
+                              ),
+                            ),
+                            const SizedBox(height: 60),
+                            // Кнопка закрытия, чтобы можно было выйти из экрана
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Navigator.pop(context),
+                                borderRadius: BorderRadius.circular(30),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(30),
+                                    border: Border.all(color: AppTheme.gold.withValues(alpha: 0.5), width: 1.5),
+                                    color: AppTheme.gold.withValues(alpha: 0.1),
+                                  ),
+                                  child: const Text(
+                                    'CLOSE',
+                                    style: TextStyle(
+                                      color: AppTheme.gold,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         );

@@ -174,6 +174,7 @@ class AppLocalizations {
       'added_to_cart': 'добавлен в корзину',
       'no_favorites': 'У вас пока нет избранных товаров',
       'add_to_favorites': 'Добавьте товары в избранное, чтобы они появились здесь',
+      'soon': 'Скоро',
       
       // Office Addresses
       'office_addresses': 'Адреса офисов',
@@ -467,6 +468,7 @@ class AppLocalizations {
       'added_to_cart': 'added to cart',
       'no_favorites': 'You have no favorite items yet',
       'add_to_favorites': 'Add items to favorites to see them here',
+      'soon': 'Soon',
       
       // Office Addresses
       'office_addresses': 'Office Addresses',
@@ -760,6 +762,7 @@ class AppLocalizations {
       'added_to_cart': 'savatchaga qo\'shildi',
       'no_favorites': 'Sizda hali sevimli mahsulotlar yo\'q',
       'add_to_favorites': 'Bu yerda ko\'rish uchun mahsulotlarni sevimlilarga qo\'shing',
+      'soon': 'Tez kunda',
       
       // Office Addresses
       'office_addresses': 'Ofis manzillari',

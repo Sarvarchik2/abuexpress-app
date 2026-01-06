@@ -419,75 +419,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSocialNetworksSection() {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
-    // Темно-синий фон для кнопок социальных сетей
-    final socialButtonColor = isDark ? AppTheme.darkCard : const Color(0xFF1A1F3A);
+    
+    // Background color based on theme
+    final buttonColor = isDark ? AppTheme.darkCard : AppTheme.lightCard;
     
     return Row(
       children: [
+        // Facebook
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.facebook, // Solid white Facebook icon
-            iconColor: Colors.white, // Белая иконка Facebook
-            backgroundColor: socialButtonColor,
-            onTap: () async {
-              final url = Uri.parse('https://www.facebook.com/abuexpress');
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              } else {
-                if (mounted) {
-                  CustomSnackBar.error(
-                    context: context,
-                    message: 'Не удалось открыть ссылку',
-                  );
-                }
-              }
-            },
+            icon: Icons.facebook,
+            iconColor: const Color(0xFF1877F2),
+            backgroundColor: buttonColor,
+            onTap: () => _launchURL('https://www.facebook.com/abuexpress'),
           ),
         ),
         const SizedBox(width: 12),
+        // Instagram
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.camera_alt, // Solid red camera icon
-            iconColor: const Color(0xFFE4405F), // Красная иконка Instagram
-            backgroundColor: socialButtonColor,
-            onTap: () async {
-              final url = Uri.parse('https://www.instagram.com/abuexpress');
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              } else {
-                if (mounted) {
-                  CustomSnackBar.error(
-                    context: context,
-                    message: 'Не удалось открыть ссылку',
-                  );
-                }
-              }
-            },
+            icon: Icons.camera_alt_rounded,
+            // Use a list of colors for potential gradient or just a brand color
+            iconColor: const Color(0xFFE4405F),
+            backgroundColor: buttonColor,
+            onTap: () => _launchURL('https://www.instagram.com/abuexpress'),
           ),
         ),
         const SizedBox(width: 12),
+        // Telegram
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.alternate_email_outlined, // Outlined @ symbol
-            iconColor: const Color(0xFF1DA1F2), // Светло-синий контур
-            backgroundColor: socialButtonColor,
-            onTap: () async {
-              final url = Uri.parse('mailto:support@abuexpress.com');
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url);
-              } else {
-                if (mounted) {
-                  CustomSnackBar.error(
-                    context: context,
-                    message: 'Не удалось открыть ссылку',
-                  );
-                }
-              }
-            },
+            icon: Icons.send_rounded,
+            iconColor: const Color(0xFF229ED9),
+            backgroundColor: buttonColor,
+            onTap: () => _launchURL('https://t.me/abuexpress'),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _launchURL(String urlString) async {
+    final url = Uri.parse(urlString);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        CustomSnackBar.error(
+          context: context,
+          message: context.l10n.translate('error'),
+        );
+      }
+    }
   }
 
   Widget _buildSocialButton({
@@ -496,19 +479,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required Color backgroundColor,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: backgroundColor,
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isDark ? [] : [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-        ),
-        child: Center(
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: 28,
+          child: SizedBox(
+            height: 60,
+            child: Center(
+              child: Transform.rotate(
+                angle: icon == Icons.send_rounded ? -0.4 : 0, // Rotate telegram icon slightly for official look
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 30,
+                ),
+              ),
+            ),
           ),
         ),
       ),
