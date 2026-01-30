@@ -9,6 +9,8 @@ import '../models/api/order_own.dart';
 import '../models/api/order_own_create_request.dart';
 import '../models/api/receiver.dart';
 import '../models/api/receiver_create_request.dart';
+import '../models/api/office_address.dart';
+import '../models/api/user_registration.dart';
 
 class ApiService {
   final String baseUrl;
@@ -130,13 +132,23 @@ class ApiService {
           debugPrint('Error Data: $errorData');
           
           // Обработка ошибок валидации (формат: {"email": ["сообщение"], "password": ["сообщение"]})
-          if (errorData.containsKey('email') || errorData.containsKey('password')) {
+          if (errorData.containsKey('email') || errorData.containsKey('password') || errorData.containsKey('non_field_errors')) {
             final List<String> errors = [];
             if (errorData['email'] is List) {
               errors.addAll((errorData['email'] as List).map((e) => e.toString()));
             }
             if (errorData['password'] is List) {
               errors.addAll((errorData['password'] as List).map((e) => e.toString()));
+            }
+            if (errorData['non_field_errors'] is List) {
+               final nonFieldErrors = (errorData['non_field_errors'] as List).map((e) => e.toString());
+               for (var err in nonFieldErrors) {
+                 if (err.contains('Invalid credentials')) {
+                    errors.add('Неверный email или пароль');
+                 } else {
+                    errors.add(err);
+                 }
+               }
             }
             errorMessage = errors.isNotEmpty ? errors.join(', ') : errorMessage;
           } else {
@@ -196,6 +208,286 @@ class ApiService {
       if (e is Exception) {
         rethrow;
       }
+      throw Exception('Неизвестная ошибка: $e');
+    }
+  }
+
+  /// Регистрация нового пользователя
+  Future<LoginResponse> register(UserRegistration request) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.register}');
+      
+      final requestBody = request.toJson();
+
+      debugPrint('=== REGISTER REQUEST ===');
+      debugPrint('URL: $url');
+      debugPrint('Body: ${jsonEncode(requestBody)}');
+
+      final response = await client.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== REGISTER TIMEOUT ===');
+          throw Exception('Время ожидания истекло. Проверьте подключение к интернету.');
+        },
+      );
+
+      debugPrint('=== REGISTER RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 201) {
+        debugPrint('=== REGISTER SUCCESS ===');
+        try {
+          // If successful, we might get the user data or token.
+          // The docs say 201 and returns the UserRegistration model (created user).
+          // Usually we want to login immediately or return success.
+          // Since LoginResponse handles token, let's see if register returns token.
+          // The docs don't explicitly show 'access_token' in 201 response, just the user object.
+          // If no token, we might need to auto-login.
+          // But for now let's return a LoginResponse with just email/success, or try to parse token if present.
+          
+          final jsonData = jsonDecode(response.body);
+          
+          // Check if token is in 'data' object (nested)
+          if (jsonData is Map<String, dynamic>) {
+            if (jsonData.containsKey('data') && jsonData['data'] is Map<String, dynamic>) {
+               final data = jsonData['data'] as Map<String, dynamic>;
+               if (data.containsKey('access')) {
+                  return LoginResponse.fromJson(data);
+               }
+            }
+            // Check root object
+            if (jsonData.containsKey('access') || jsonData.containsKey('access_token')) {
+               return LoginResponse.fromJson(jsonData);
+            }
+          }
+          
+          // If no token found, return dummy success with email
+          return LoginResponse(
+            email: request.email,
+            accessToken: null,
+            refreshToken: null,
+          );
+        } catch (e) {
+          debugPrint('=== REGISTER PARSE ERROR: $e');
+           return LoginResponse(email: request.email);
+        }
+      } else {
+        String errorMessage = 'Ошибка регистрации';
+        
+        // Check for 500 error specifically
+        if (response.statusCode >= 500) {
+           debugPrint('=== SERVER ERROR ${response.statusCode} ===');
+           if (response.body.trim().startsWith('<')) {
+              debugPrint('Response is HTML (likely generic server error page)');
+           }
+           throw Exception('Ошибка сервера (${response.statusCode}). Пожалуйста, попробуйте позже или используйте другой email.');
+        }
+
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          debugPrint('=== REGISTER ERROR DATA ===');
+          debugPrint('Error Data: $errorData');
+          
+          if (errorData.containsKey('email') || errorData.containsKey('password') || errorData.containsKey('phone_number')) {
+            final List<String> errors = [];
+            errorData.forEach((key, value) {
+              if (value is List) {
+                errors.addAll(value.map((e) => '$key: $e'));
+              } else {
+                 errors.add('$key: $value');
+              }
+            });
+            errorMessage = errors.isNotEmpty ? errors.join('\n') : errorMessage;
+          } else {
+            errorMessage = errorData['message'] as String? ?? 
+                          errorData['error'] as String? ??
+                          errorData['detail'] as String? ??
+                          errorMessage;
+          }
+        } catch (e) {
+           // If parsing failed (e.g. HTML or plain text)
+           if (response.statusCode == 400) {
+             errorMessage = 'Некорректные данные';
+           } else if (response.body.toLowerCase().contains('verify')) { 
+             // Catch verify errors even if status is weird or parse fails
+             errorMessage = 'Please verify your email address';
+           }
+        }
+        throw Exception(errorMessage);
+      }
+    } on http.ClientException catch (e) {
+      throw Exception('Ошибка подключения: ${e.message}');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Неизвестная ошибка: $e');
+    }
+  }
+
+  /// Отправка OTP кода на email
+  Future<void> sendOtp(String email) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.sendOtp}');
+      
+      final requestBody = {'email': email};
+
+      debugPrint('=== SEND OTP REQUEST ===');
+      debugPrint('URL: $url');
+      debugPrint('Body: ${jsonEncode(requestBody)}');
+
+      final response = await client.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== SEND OTP TIMEOUT ===');
+          throw Exception('Время ожидания истекло. Проверьте подключение к интернету.');
+        },
+      );
+
+      debugPrint('=== SEND OTP RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('=== SEND OTP SUCCESS ===');
+        return;
+      } else {
+        String errorMessage = 'Ошибка отправки кода';
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['message'] as String? ?? 
+                        errorData['error'] as String? ??
+                        errorData['detail'] as String? ??
+                        errorMessage;
+        } catch (e) {
+           // ignore parsing error
+        }
+        throw Exception(errorMessage);
+      }
+    } on http.ClientException catch (e) {
+      throw Exception('Ошибка подключения: ${e.message}');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Неизвестная ошибка: $e');
+    }
+  }
+
+  /// Проверка OTP кода
+  Future<void> verifyOtp(String email, String code) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.verifyOtp}');
+      
+      final requestBody = {
+        'email': email,
+        'otp': code, // Assuming field name is 'otp' or 'code'
+      };
+
+      debugPrint('=== VERIFY OTP REQUEST ===');
+      debugPrint('URL: $url');
+      debugPrint('Body: ${jsonEncode(requestBody)}');
+
+      final response = await client.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== VERIFY OTP TIMEOUT ===');
+          throw Exception('Время ожидания истекло. Проверьте подключение к интернету.');
+        },
+      );
+
+      debugPrint('=== VERIFY OTP RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('=== VERIFY OTP SUCCESS ===');
+        return;
+      } else {
+        String errorMessage = 'Ошибка подтверждения кода';
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['message'] as String? ?? 
+                        errorData['error'] as String? ??
+                        errorData['detail'] as String? ??
+                        errorMessage;
+        } catch (e) {
+           // ignore parsing error
+        }
+        throw Exception(errorMessage);
+      }
+    } on http.ClientException catch (e) {
+      throw Exception('Ошибка подключения: ${e.message}');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Неизвестная ошибка: $e');
+    }
+  }
+
+  /// Сброс пароля
+  Future<void> resetPassword(String email, String otp, String newPassword) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.resetPassword}');
+      
+      final requestBody = {
+        'email': email,
+        'otp': otp,
+        'new_password': newPassword,
+      };
+
+      debugPrint('=== RESET PASSWORD REQUEST ===');
+      debugPrint('URL: $url');
+      debugPrint('Body: ${jsonEncode(requestBody)}');
+
+      final response = await client.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== RESET PASSWORD TIMEOUT ===');
+          throw Exception('Время ожидания истекло.');
+        },
+      );
+
+      debugPrint('=== RESET PASSWORD RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('=== RESET PASSWORD SUCCESS ===');
+        return;
+      } else {
+        String errorMessage = 'Ошибка сброса пароля';
+        if (response.statusCode == 404) {
+           errorMessage = 'Функция сброса пароля временно недоступна (404)';
+        } else {
+           try {
+            final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+            errorMessage = errorData['message'] as String? ?? 
+                          errorData['error'] as String? ??
+                          errorData['detail'] as String? ??
+                          errorMessage;
+          } catch (e) {
+             // ignore
+          }
+        }
+        throw Exception(errorMessage);
+      }
+    } on http.ClientException catch (e) {
+      throw Exception('Ошибка подключения: ${e.message}');
+    } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Неизвестная ошибка: $e');
     }
   }
@@ -1039,6 +1331,77 @@ class ApiService {
       if (e is Exception) {
         rethrow;
       }
+      throw Exception('Неизвестная ошибка: $e');
+    }
+  }
+
+  /// Получить список адресов офисов
+  Future<List<OfficeAddress>> getOfficeAddresses() async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.officeAddresses}');
+
+      debugPrint('=== GET OFFICE ADDRESSES REQUEST ===');
+      debugPrint('URL: $url');
+
+      final response = await client.get(
+        url,
+        headers: _getHeaders(),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== GET OFFICE ADDRESSES TIMEOUT ===');
+          throw Exception('Время ожидания истекло. Проверьте подключение к интернету.');
+        },
+      );
+
+      debugPrint('=== GET OFFICE ADDRESSES RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        try {
+          final jsonData = jsonDecode(response.body);
+          
+          if (jsonData is List) {
+            return jsonData
+                .map((item) => OfficeAddress.fromJson(item as Map<String, dynamic>))
+                .toList();
+          } else {
+             // Handle if wrapped in results or data like other endpoints
+            if (jsonData is Map<String, dynamic>) {
+              if (jsonData.containsKey('results') && jsonData['results'] is List) {
+                return (jsonData['results'] as List)
+                    .map((item) => OfficeAddress.fromJson(item as Map<String, dynamic>))
+                    .toList();
+              } else if (jsonData.containsKey('data') && jsonData['data'] is List) {
+                return (jsonData['data'] as List)
+                    .map((item) => OfficeAddress.fromJson(item as Map<String, dynamic>))
+                    .toList();
+              }
+            }
+            debugPrint('=== GET OFFICE ADDRESSES INVALID FORMAT ===');
+            throw Exception('Неверный формат ответа сервера');
+          }
+        } catch (e) {
+          debugPrint('=== GET OFFICE ADDRESSES JSON PARSE ERROR ===');
+          debugPrint('Error: $e');
+          throw Exception('Ошибка обработки ответа: $e');
+        }
+      } else {
+        String errorMessage = 'Ошибка получения адресов офисов';
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['message'] as String? ?? 
+                        errorData['error'] as String? ??
+                        errorData['detail'] as String? ??
+                        errorMessage;
+        } catch (_) {}
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      debugPrint('=== GET OFFICE ADDRESSES ERROR ===');
+      debugPrint('Error: $e');
+      if (e is Exception) rethrow;
       throw Exception('Неизвестная ошибка: $e');
     }
   }

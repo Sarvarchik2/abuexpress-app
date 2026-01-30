@@ -1,7 +1,7 @@
 class ReceiverCreateRequest {
   final String firstName;
   final String lastName;
-  final String passportNumber;
+
   final String phoneNumber;
   final String? phoneNumber2;
   final String email;
@@ -16,7 +16,7 @@ class ReceiverCreateRequest {
   ReceiverCreateRequest({
     required this.firstName,
     required this.lastName,
-    required this.passportNumber,
+
     required this.phoneNumber,
     this.phoneNumber2,
     required this.email,
@@ -33,7 +33,7 @@ class ReceiverCreateRequest {
     final json = <String, dynamic>{
       'first_name': firstName,
       'last_name': lastName,
-      'passport_number': passportNumber,
+
       'phone_number': phoneNumber,
       'email': email,
       'apartment': apartment,

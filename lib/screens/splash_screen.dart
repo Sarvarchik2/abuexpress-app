@@ -4,6 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:video_player/video_player.dart';
 import 'onboarding_screen.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import '../services/api_service.dart';
+import 'main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -137,13 +141,45 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  void _navigateToNext() {
+  Future<void> _navigateToNext() async {
     debugPrint('➡️ SplashScreen: _navigateToNext called');
     // Возвращаем системные элементы интерфейса перед уходом со сплэша
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     
+    if (!mounted) return;
+
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final apiService = ApiService(); // Or get from provider if available
+      
+      // Check if we have a token
+      final hasToken = await userProvider.checkAuth();
+      
+      if (hasToken) {
+         // Refresh user info
+         try {
+           final userInfo = await apiService.getMe();
+           userProvider.setUserInfo(userInfo);
+           
+           if (!mounted) return;
+           debugPrint('➡️ SplashScreen: User logged in, pushing MainScreen');
+           Navigator.of(context).pushReplacement(
+             MaterialPageRoute(
+               builder: (context) => const MainScreen(),
+             ),
+           );
+           return;
+         } catch (e) {
+           debugPrint('❌ SplashScreen: Failed to refresh user info, forcing logout: $e');
+           userProvider.clearUser();
+         }
+      }
+    } catch (e) {
+       debugPrint('❌ SplashScreen: Auth check failed: $e');
+    }
+    
     if (mounted) {
-      debugPrint('➡️ SplashScreen: Pushing OnboardingScreen');
+      debugPrint('➡️ SplashScreen: Not logged in, pushing OnboardingScreen');
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => const OnboardingScreen(),

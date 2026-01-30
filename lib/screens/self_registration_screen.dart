@@ -6,6 +6,12 @@ import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
 import '../widgets/custom_snackbar.dart';
 import 'main_screen.dart';
+import '../services/api_service.dart';
+import '../models/api/user_registration.dart';
+import '../models/api/login_request.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import 'email_verification_screen.dart';
 
 class SelfRegistrationScreen extends StatefulWidget {
   const SelfRegistrationScreen({super.key});
@@ -158,21 +164,24 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 20),
-                // Passport Series field
+                // Passport Series & Number
                 _buildTextField(
-                  label: context.l10n.translate('passport_series'),
+                  label: 'Серия и номер паспорта',
                   controller: _passportSeriesController,
                   icon: Icons.credit_card_outlined,
-                  hint: 'AA',
+                  hint: 'AA1234567',
+                  textCapitalization: TextCapitalization.characters,
+                  maxLength: 9,
                 ),
                 const SizedBox(height: 20),
-                // Passport Number field
+                // PINFL
                 _buildTextField(
-                  label: context.l10n.translate('passport_number'),
+                  label: 'ПИНФЛ (14 цифр)',
                   controller: _passportNumberController,
-                  icon: Icons.credit_card_outlined,
-                  hint: '1234567',
+                  icon: Icons.pin_outlined,
+                  hint: '12345678901234',
                   keyboardType: TextInputType.number,
+                  maxLength: 14,
                 ),
                 const SizedBox(height: 24),
                 // Passport Front Image
@@ -222,6 +231,8 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
     IconData? icon,
     String? hint,
     TextInputType? keyboardType,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    int? maxLength,
   }) {
     final textColor = ThemeHelper.getTextColor(context);
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
@@ -242,6 +253,8 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          textCapitalization: textCapitalization,
+          maxLength: maxLength,
           style: TextStyle(color: textColor),
           decoration: InputDecoration(
             hintText: hint,
@@ -266,6 +279,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
               horizontal: 16,
               vertical: 16,
             ),
+            counterText: "", // Hide character counter
           ),
         ),
       ],
@@ -451,54 +465,152 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
     });
 
     try {
-      // Собираем данные для регистрации
-      final registrationData = {
-        'fullName': _fullNameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'passportSeries': _passportSeriesController.text.trim(),
-        'passportNumber': _passportNumberController.text.trim(),
-        'password': _passwordController.text,
-        'frontPassportImage': _frontPassportImage?.path,
-        'backPassportImage': _backPassportImage?.path,
-      };
-
-      // Имитация отправки данных на сервер
-      // В реальном приложении здесь будет API вызов
-      debugPrint('Registration data: ${registrationData.keys.join(', ')}');
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (!mounted) return;
-
-      // Имитация успешной регистрации
-      // В реальном приложении здесь будет проверка ответа от сервера
-      CustomSnackBar.success(
-        context: context,
-        message: 'Регистрация успешно завершена',
+      final apiService = ApiService();
+      
+      // Use PINFL (from number controller) as personal_number
+      final personalNumber = _passportNumberController.text.trim();
+      
+      final registrationRequest = UserRegistration(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        fullName: _fullNameController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        personalNumber: personalNumber, // PINFL
+        // cardNumber: _passportSeriesController.text.trim(), // ВРЕМЕННО ОТКЛЮЧЕНО: Вызывает сбой на сервере (500)
       );
 
-      // Переходим на главный экран через небольшую задержку
-      await Future.delayed(const Duration(seconds: 1));
+      // USER REQUEST: Verify email first, then register.
+      // We attempt to send OTP first.
+      try {
+        debugPrint('=== ATTEMPTING VERIFICATION FIRST ===');
+        await apiService.sendOtp(registrationRequest.email);
+        
+        if (!mounted) return;
+        
+        // Navigate to Verification Screen with Registration Data
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationScreen(
+              email: registrationRequest.email,
+              password: registrationRequest.password,
+              registrationData: registrationRequest,
+            ),
+          ),
+        );
+        return;
+      } catch (e) {
+         debugPrint('Verification first failed ($e), falling back to standard registration...');
+         // If sendOtp failed (e.g. User Not Found), we proceed to standard registration below
+      }
 
+      // Standard Registration Flow (Fallback)
+      final response = await apiService.register(registrationRequest);
+      
       if (!mounted) return;
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const MainScreen(),
-        ),
-      );
+      // If registration returns a token, we can auto-login
+      if (response.accessToken != null) {
+         final userProvider = Provider.of<UserProvider>(context, listen: false);
+         userProvider.setAuthToken(response.accessToken!); // Saves to prefs
+         
+         // Fetch user info
+         final userInfo = await apiService.getMe();
+         userProvider.setUserInfo(userInfo);
+
+         if (!mounted) return;
+         
+         Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+            (route) => false,
+         );
+      } else {
+        // Try to login manually
+        try {
+           final loginResponse = await apiService.login(LoginRequest(
+             email: _emailController.text.trim(),
+             password: _passwordController.text,
+           ));
+           
+           if (loginResponse.accessToken != null) {
+             final userProvider = Provider.of<UserProvider>(context, listen: false);
+             userProvider.setAuthToken(loginResponse.accessToken!);
+             
+             apiService.setAuthToken(loginResponse.accessToken);
+             final userInfo = await apiService.getMe();
+             userProvider.setUserInfo(userInfo);
+
+             if (!mounted) return;
+             
+             Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const MainScreen()),
+                (route) => false,
+             );
+             return;
+           }
+        } catch (e) {
+          debugPrint('Auto-login failed: $e');
+        }
+        
+        CustomSnackBar.success(
+          context: context,
+          message: 'Регистрация успешна! Пожалуйста, войдите.',
+        );
+        Navigator.pop(context); 
+      }
+
     } catch (e) {
       if (!mounted) return;
 
       debugPrint('Registration error: $e');
+      String message = e.toString().replaceAll('Exception: ', '');
+      
+      // Check if error is about email verification
+      if (message.toLowerCase().contains('please verify') || 
+          message.toLowerCase().contains('verify your email')) {
+        
+        CustomSnackBar.info(
+          context: context,
+          message: 'Требуется подтверждение Email',
+        );
+        
+        // Send OTP first
+        try {
+          final apiService = ApiService();
+          await apiService.sendOtp(_emailController.text.trim());
+          
+          if (mounted) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => EmailVerificationScreen(
+                  email: _emailController.text.trim(),
+                  password: _passwordController.text,
+                  registrationData: UserRegistration(
+                       email: _emailController.text.trim(),
+                       password: _passwordController.text,
+                       fullName: _fullNameController.text.trim(),
+                       phoneNumber: _phoneController.text.trim(), // Keep formatting
+                       personalNumber: _passportNumberController.text.trim(), // PINFL
+                  ),
+                ),
+              ),
+            );
+          }
+          return;
+        } catch (otpError) {
+          debugPrint('Failed to send OTP automatically: $otpError');
+        }
+      }
+
       CustomSnackBar.error(
         context: context,
-        message: 'Произошла ошибка при регистрации. Попробуйте еще раз.',
+        message: message,
       );
-
-      setState(() {
-        _isRegistering = false;
-      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRegistering = false;
+        });
+      }
     }
   }
 

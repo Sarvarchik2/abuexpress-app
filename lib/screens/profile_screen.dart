@@ -83,15 +83,6 @@ class ProfileScreen extends StatelessWidget {
                   textColor,
                   textSecondaryColor,
                 ),
-                const SizedBox(height: 24),
-                
-                // Статус верификации
-                _buildVerificationSection(
-                  context,
-                  cardColor,
-                  textColor,
-                  textSecondaryColor,
-                ),
               ],
             ),
           );
@@ -319,45 +310,45 @@ class ProfileScreen extends StatelessWidget {
             textColor,
             textSecondaryColor,
           ),
-          if (userInfo.cardNumber != null && userInfo.cardNumber!.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            _buildDivider(),
-            const SizedBox(height: 20),
-            _buildInfoRow(
-              context,
-              Icons.credit_card_outlined,
-              context.l10n.translate('card_number'),
-              userInfo.cardNumber!,
-              textColor,
-              textSecondaryColor,
-            ),
-          ],
-          if (userInfo.personalNumber != null && userInfo.personalNumber!.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            _buildDivider(),
-            const SizedBox(height: 20),
-            _buildInfoRow(
-              context,
-              Icons.assignment_ind_outlined,
-              context.l10n.translate('personal_number'),
-              userInfo.personalNumber!,
-              textColor,
-              textSecondaryColor,
-            ),
-          ],
-          if (userInfo.location != null && userInfo.location!.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            _buildDivider(),
-            const SizedBox(height: 20),
-            _buildInfoRow(
-              context,
-              Icons.location_on_outlined,
-              context.l10n.translate('location'),
-              userInfo.location!,
-              textColor,
-              textSecondaryColor,
-            ),
-          ],
+          const SizedBox(height: 20),
+          _buildDivider(),
+          const SizedBox(height: 20),
+          _buildInfoRow(
+            context,
+            Icons.assignment_ind_outlined,
+            context.l10n.translate('personal_number'),
+            (userInfo.personalNumber != null && userInfo.personalNumber!.isNotEmpty) 
+                ? userInfo.personalNumber! 
+                : context.l10n.translate('not_specified'),
+            textColor,
+            textSecondaryColor,
+          ),
+          const SizedBox(height: 20),
+          _buildDivider(),
+          const SizedBox(height: 20),
+          _buildInfoRow(
+            context,
+            Icons.credit_card_outlined,
+            context.l10n.translate('card_number'),
+            (userInfo.cardNumber != null && userInfo.cardNumber!.isNotEmpty) 
+                ? userInfo.cardNumber! 
+                : context.l10n.translate('not_specified'),
+            textColor,
+            textSecondaryColor,
+          ),
+          const SizedBox(height: 20),
+          _buildDivider(),
+          const SizedBox(height: 20),
+          _buildInfoRow(
+            context,
+            Icons.location_on_outlined,
+            context.l10n.translate('location'),
+            (userInfo.location != null && userInfo.location!.isNotEmpty) 
+                ? userInfo.location! 
+                : context.l10n.translate('not_specified'),
+            textColor,
+            textSecondaryColor,
+          ),
         ],
       ),
     );
@@ -429,113 +420,6 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildVerificationSection(
-    BuildContext context,
-    Color cardColor,
-    Color textColor,
-    Color textSecondaryColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.gold.withValues(alpha: 0.15),
-            AppTheme.gold.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.gold.withValues(alpha: 0.4),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.gold.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.gold,
-                  AppTheme.gold.withValues(alpha: 0.8),
-                ],
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.gold.withValues(alpha: 0.5),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.verified,
-              color: Color(0xFF0A0E27),
-              size: 32,
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      context.l10n.translate('verified'),
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.gold,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.check,
-                        color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
-                        size: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.l10n.translate('verified_description'),
-                  style: TextStyle(
-                    color: textSecondaryColor,
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

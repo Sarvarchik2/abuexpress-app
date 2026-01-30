@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../widgets/bottom_navigation_bar.dart';
 import '../widgets/custom_snackbar.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
+import '../models/api/office_address.dart';
+import '../services/api_service.dart';
+import '../providers/user_provider.dart';
 
 class AddressesScreen extends StatefulWidget {
   final int currentIndex;
@@ -21,36 +25,116 @@ class AddressesScreen extends StatefulWidget {
 }
 
 class _AddressesScreenState extends State<AddressesScreen> {
-  String _selectedCountry = 'USA';
+  String _selectedLocation = 'USA';
+  List<OfficeAddress> _allAddresses = [];
+  bool _isLoading = true;
+  String? _error;
 
-  final Map<String, OfficeAddress> _addresses = {
-    'USA': OfficeAddress(
-      country: 'США',
-      state: 'Штат DE',
-      address: 'Room 501, Building A, 123 Huaqiang',
-      id: '107923406',
-      city: 'New York',
-      zip: '10700',
-      phone: '+86 755 1234 5678',
-      workingHours: 'Пн-Сб: 8:00 - 20:00',
-    ),
-    'Turkey': OfficeAddress(
-      country: 'Турция',
-      state: 'Стамбул',
-      address: 'Atatürk Mahallesi, İnönü Caddesi, No: 45',
-      id: '108234567',
-      city: 'Istanbul',
-      zip: '34000',
-      phone: '+90 212 555 1234',
-      workingHours: 'Пн-Сб: 9:00 - 19:00',
-    ),
-  };
+  @override
+  void initState() {
+    super.initState();
+    _loadAddresses();
+  }
+
+  Future<void> _loadAddresses() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+      
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final apiService = ApiService(authToken: userProvider.authToken);
+      final addresses = await apiService.getOfficeAddresses();
+      
+      setState(() {
+        _allAddresses = addresses;
+        // If we have addresses but current selection isn't one of them, pick the first one
+        if (_allAddresses.isNotEmpty) {
+           final hasCurrent = _allAddresses.any((a) => a.location == _selectedLocation);
+           if (!hasCurrent) {
+             _selectedLocation = _allAddresses.first.location;
+           }
+        } else {
+          // If no addresses, maybe keep USA or clear it
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Set<String> get _locations => _allAddresses.map((a) => a.location).toSet();
+
+  List<OfficeAddress> get _currentAddresses => 
+      _allAddresses.where((a) => a.location == _selectedLocation).toList();
+
+  String _getLocationName(String locationCode) {
+    // Map location codes to localized names
+    switch (locationCode.toUpperCase()) {
+      case 'USA':
+      case 'US':
+        return context.l10n.translate('usa');
+      case 'TURKEY':
+      case 'TR':
+        return context.l10n.translate('turkey');
+      case 'CHINA':
+      case 'CN':
+        return context.l10n.translate('china');
+      case 'GERMANY':
+      case 'DE':
+        return 'Germany';
+      case 'KOREA':
+      case 'KR':
+        return 'Korea';
+      case 'UK':
+      case 'GB':
+        return 'UK';
+      default:
+        return locationCode;
+    }
+  }
+
+  String _getFlagEmoji(String locationCode) {
+    switch (locationCode.toUpperCase()) {
+      case 'USA':
+      case 'US':
+        return '🇺🇸';
+      case 'TURKEY':
+      case 'TR':
+        return '🇹🇷';
+      case 'CHINA':
+      case 'CN':
+        return '🇨🇳';
+      case 'GERMANY':
+      case 'DE':
+        return '🇩🇪';
+      case 'KOREA':
+      case 'KR':
+      case 'SOUTH KOREA':
+        return '🇰🇷';
+      case 'UK':
+      case 'GB':
+      case 'UNITED KINGDOM':
+        return '🇬🇧';
+      default:
+        return '🏳️';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final address = _addresses[_selectedCountry]!;
     final backgroundColor = ThemeHelper.getBackgroundColor(context);
     final textColor = ThemeHelper.getTextColor(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    // Use personalNumber as the Suite ID, or fallback to user ID
+    final userSuiteId = userProvider.userInfo?.personalNumber ?? userProvider.userInfo?.id?.toString() ?? '...';
     
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -60,64 +144,110 @@ class _AddressesScreenState extends State<AddressesScreen> {
             child: Column(
               children: [
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header
-                        Text(
-                          context.l10n.translate('office_addresses'),
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                  child: RefreshIndicator(
+                    onRefresh: _loadAddresses,
+                    color: AppTheme.gold,
+                 backgroundColor: ThemeHelper.getCardColor(context),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header
+                          Text(
+                            context.l10n.translate('office_addresses'),
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          context.l10n.translate('use_for_orders'),
-                          style: const TextStyle(
-                            color: AppTheme.gold,
-                            fontSize: 14,
+                          const SizedBox(height: 8),
+                          Text(
+                            context.l10n.translate('use_for_orders'),
+                            style: const TextStyle(
+                              color: AppTheme.gold,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Country selection
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildCountryButton(
-                                'USA',
-                                context.l10n.translate('usa'),
-                                Icons.flag,
-                                _selectedCountry == 'USA',
+                          const SizedBox(height: 24),
+
+                          if (_isLoading)
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.5,
+                              child: const Center(child: CircularProgressIndicator(color: AppTheme.gold)),
+                            )
+                          else if (_error != null)
+                             Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 40),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      _error!,
+                                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    TextButton(
+                                      onPressed: _loadAddresses,
+                                      child: const Text('Retry'),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            )
+                          else if (_allAddresses.isEmpty)
+                             Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 100),
+                                child: Text(
+                                  'No addresses found',
+                                  style: TextStyle(color: textColor),
+                                ),
+                              ),
+                            )
+                          else ...[
+                            // Location tabs (Country selection)
+                            SizedBox(
+                              height: 100,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: _locations.length,
+                                separatorBuilder: (c, i) => const SizedBox(width: 12),
+                                itemBuilder: (context, index) {
+                                  final location = _locations.elementAt(index);
+                                  return SizedBox(
+                                    width: 110, // Fixed smaller width to show more items
+                                    child: _buildCountryButton(
+                                      location,
+                                      _getLocationName(location),
+                                      _selectedLocation == location,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildCountryButton(
-                                'Turkey',
-                                context.l10n.translate('turkey'),
-                                Icons.flag,
-                                _selectedCountry == 'Turkey',
-                              ),
-                            ),
+                            const SizedBox(height: 24),
+                            
+                            // Address cards
+                            ..._currentAddresses.map((address) => Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _buildAddressCard(address, userSuiteId),
+                            )),
                           ],
-                        ),
-                        const SizedBox(height: 24),
-                        // Address card
-                        _buildAddressCard(address),
-                        // Spacer для навигации
-                        const SizedBox(height: 80),
-                      ],
+
+                          // Spacer for navigation
+                          const SizedBox(height: 80),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          // Навигация прикреплена к низу
+          // Bottom Navigation
           Positioned(
             left: 0,
             right: 0,
@@ -133,11 +263,14 @@ class _AddressesScreenState extends State<AddressesScreen> {
   }
 
   Widget _buildCountryButton(
-    String countryCode,
+    String locationCode,
     String countryName,
-    IconData icon,
     bool isSelected,
   ) {
+    // If we only have 2 or fewer items, we want them expanded to fill space? 
+    // The previous implementation used Expanded. I used SizedBox with calc width in ListView.
+    // That's fine for scrollable list.
+    
     final cardColor = ThemeHelper.getCardColor(context);
     final textColor = ThemeHelper.getTextColor(context);
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
@@ -145,7 +278,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedCountry = countryCode;
+          _selectedLocation = locationCode;
         });
       },
       child: Container(
@@ -175,7 +308,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
               ),
               child: Center(
                 child: Text(
-                  countryCode == 'USA' ? '🇺🇸' : '🇹🇷',
+                  _getFlagEmoji(locationCode),
                   style: const TextStyle(fontSize: 28),
                 ),
               ),
@@ -199,7 +332,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
     );
   }
 
-  Widget _buildAddressCard(OfficeAddress address) {
+  Widget _buildAddressCard(OfficeAddress address, String userSuiteId) {
     final cardColor = ThemeHelper.getCardColor(context);
     final textColor = ThemeHelper.getTextColor(context);
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
@@ -223,7 +356,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      address.country,
+                      _getLocationName(address.location),
                       style: TextStyle(
                         color: textColor,
                         fontSize: 24,
@@ -231,13 +364,14 @@ class _AddressesScreenState extends State<AddressesScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      address.state,
-                      style: TextStyle(
-                        color: textSecondaryColor,
-                        fontSize: 14,
+                    if (address.state != null)
+                      Text(
+                        address.state!,
+                        style: TextStyle(
+                          color: textSecondaryColor,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -263,46 +397,52 @@ class _AddressesScreenState extends State<AddressesScreen> {
           ),
           const SizedBox(height: 20),
           // Address line
-          _buildAddressLine(
-            Icons.location_on_outlined,
-            address.address,
-          ),
-          const SizedBox(height: 16),
-          // ID line
-          _buildAddressLine(
-            Icons.location_on_outlined,
-            'ID ${address.id}',
-          ),
-          const SizedBox(height: 16),
-          // City line
-          _buildAddressLine(
-            Icons.business_outlined,
-            '${context.l10n.translate('city')} - ${address.city}',
-          ),
-          const SizedBox(height: 16),
-          // ZIP line
-          _buildAddressLine(
-            Icons.label_outline,
-            'ZIP - ${address.zip}',
-          ),
-          const SizedBox(height: 16),
+          if (address.address != null) ...[
+            _buildAddressLine(
+              Icons.location_on_outlined,
+              address.address!,
+            ),
+            const SizedBox(height: 16),
+          ],
+          // Region line
+          if (address.state != null) ...[
+            _buildAddressLine(
+              Icons.map_outlined,
+              address.state!,
+            ),
+            const SizedBox(height: 16),
+          ],
+          
+          if (address.zip != null) ...[
+             _buildAddressLine(
+              Icons.label_outline,
+              'ZIP - ${address.zip}',
+            ),
+            const SizedBox(height: 16),
+          ],
+          
           Divider(
             height: 1,
             thickness: 1,
             color: textSecondaryColor.withValues(alpha: 0.15),
           ),
           const SizedBox(height: 16),
+          
           // Phone line
-          _buildAddressLine(
-            Icons.phone_outlined,
-            address.phone,
-          ),
-          const SizedBox(height: 16),
+          if (address.phoneNumber != null) ...[
+            _buildAddressLine(
+              Icons.phone_outlined,
+              address.phoneNumber!,
+            ),
+            const SizedBox(height: 16),
+          ],
+          
           // Working hours line
-          _buildAddressLine(
-            Icons.access_time_outlined,
-            address.workingHours,
-          ),
+          if (address.workingHours != null)
+            _buildAddressLine(
+              Icons.access_time_outlined,
+              address.workingHours!,
+            ),
         ],
       ),
     );
@@ -362,26 +502,4 @@ class _AddressesScreenState extends State<AddressesScreen> {
       ],
     );
   }
-}
-
-class OfficeAddress {
-  final String country;
-  final String state;
-  final String address;
-  final String id;
-  final String city;
-  final String zip;
-  final String phone;
-  final String workingHours;
-
-  OfficeAddress({
-    required this.country,
-    required this.state,
-    required this.address,
-    required this.id,
-    required this.city,
-    required this.zip,
-    required this.phone,
-    required this.workingHours,
-  });
 }

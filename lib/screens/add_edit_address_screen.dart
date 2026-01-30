@@ -44,7 +44,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
   // Контактная информация
   final _recipientNameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _passportController = TextEditingController();
+
   
   // Адрес доставки
   final _cityController = TextEditingController();
@@ -96,7 +96,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     _customTypeController.dispose();
     _recipientNameController.dispose();
     _phoneController.dispose();
-    _passportController.dispose();
+
     _cityController.dispose();
     _districtController.dispose();
     _streetController.dispose();
@@ -159,20 +159,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
             : '1';
       }
 
-      // Получаем passportNumber (обязательное поле)
-      final passportNumber = _passportController.text.trim().isNotEmpty 
-          ? _passportController.text.trim() 
-          : (userInfo.personalNumber?.isNotEmpty == true ? userInfo.personalNumber! : '000000000');
-      
-      if (passportNumber.isEmpty) {
-        if (mounted) {
-          CustomSnackBar.error(
-            context: context,
-            message: 'Пожалуйста, укажите номер паспорта',
-          );
-        }
-        return;
-      }
+
 
       // Определяем apartment (обязательное поле, не может быть пустым)
       final apartment = isWorkType 
@@ -183,7 +170,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
       final request = ReceiverCreateRequest(
         firstName: firstName,
         lastName: lastName,
-        passportNumber: passportNumber,
+
         phoneNumber: _phoneController.text.trim(),
         email: userInfo.email,
         apartment: apartment,
@@ -360,13 +347,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
               },
             ),
             const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Паспорт (необязательно)',
-              controller: _passportController,
-              hint: 'AA1234567',
-              textColor: textColor,
-            ),
-            const SizedBox(height: 24),
+
             
             // Адрес доставки
             _buildSectionTitle(context.l10n.translate('delivery_address'), Icons.location_on_outlined, textColor),

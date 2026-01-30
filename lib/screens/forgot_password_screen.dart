@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../utils/theme_helper.dart';
 import '../utils/theme.dart' show AppTheme;
 import '../utils/localization_helper.dart';
+import '../services/api_service.dart';
+import 'email_verification_screen.dart';
+
 import '../widgets/custom_snackbar.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -44,25 +47,41 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isLoading = true;
     });
 
-    // Имитация отправки запроса
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final apiService = ApiService();
+      final email = _emailController.text.trim();
+      await apiService.sendOtp(email);
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-
+      if (!mounted) return;
+      
       CustomSnackBar.success(
         context: context,
-        message: 'Инструкции по восстановлению пароля отправлены на ваш email',
+        message: 'Код подтверждения отправлен',
       );
-
-      // Возвращаемся назад через 2 секунды
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.pop(context);
-        }
-      });
+      
+      // Navigate to verification screen with reset mode
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EmailVerificationScreen(
+            email: email,
+            isResetPassword: true,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        CustomSnackBar.error(
+          context: context,
+          message: e.toString().replaceAll('Exception: ', ''),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

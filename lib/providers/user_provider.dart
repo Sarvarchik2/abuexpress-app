@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/api/user_info.dart';
 
 class UserProvider extends ChangeNotifier {
@@ -21,9 +22,16 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setAuthToken(String? token) {
+  Future<void> setAuthToken(String? token) async {
     _authToken = token;
     notifyListeners();
+    
+    final prefs = await SharedPreferences.getInstance();
+    if (token != null) {
+      await prefs.setString('auth_token', token);
+    } else {
+      await prefs.remove('auth_token');
+    }
   }
 
   void setLoading(bool loading) {
@@ -31,10 +39,25 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearUser() {
+  Future<void> clearUser() async {
     _userInfo = null;
     _authToken = null;
     notifyListeners();
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+  }
+
+  Future<bool> checkAuth() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    
+    if (token != null && token.isNotEmpty) {
+      _authToken = token;
+      notifyListeners();
+      return true;
+    }
+    return false;
   }
 
   String getInitials() {
