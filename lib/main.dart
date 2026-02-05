@@ -9,22 +9,22 @@ import 'utils/theme.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/splash_screen.dart';
 
-import 'package:firebase_core/firebase_core.dart';
-import 'services/notification_service.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Инициализация Firebase
-  try {
-    await Firebase.initializeApp();
-    debugPrint("Firebase initialized successfully");
-    
-    // Инициализация уведомлений
-    await NotificationService().initialize();
-  } catch (e) {
-    debugPrint("Failed to initialize Firebase: $e");
-  }
+  // try {
+  //   await Firebase.initializeApp();
+  //   debugPrint("Firebase initialized successfully");
+  //   
+  //   // Инициализация уведомлений
+  //   await NotificationService().initialize();
+  // } catch (e) {
+  //   debugPrint("Failed to initialize Firebase: $e");
+  // }
 
   // Подавляем предупреждения о клавиатуре в симуляторе
   FlutterError.onError = (FlutterErrorDetails details) {
