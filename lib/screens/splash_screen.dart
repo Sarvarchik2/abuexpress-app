@@ -156,6 +156,9 @@ class _SplashScreenState extends State<SplashScreen> {
       final hasToken = await userProvider.checkAuth();
       
       if (hasToken) {
+         // Передаем токен в ApiService
+         apiService.setAuthToken(userProvider.authToken);
+
          // Refresh user info
          try {
            final userInfo = await apiService.getMe();

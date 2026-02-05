@@ -3,7 +3,8 @@ import '../widgets/onboarding_icon.dart';
 import '../models/onboarding_item.dart';
 import '../utils/localization_helper.dart';
 import 'login_screen.dart';
-import 'registration_choice_screen.dart';
+// import 'registration_choice_screen.dart';
+import 'self_registration_screen.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -138,7 +139,7 @@ class AuthScreen extends StatelessWidget {
         debugPrint('=== REGISTER BUTTON TAPPED ===');
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => const RegistrationChoiceScreen(),
+            builder: (context) => const SelfRegistrationScreen(),
           ),
         );
       },

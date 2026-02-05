@@ -306,6 +306,14 @@ class AppLocalizations {
       'errors': 'Ошибок',
       'failed_to_create_orders': 'Не удалось создать заказы',
       'check_all_fields': 'Проверьте заполнение всех полей',
+      'store_name_hint': 'Amazon, AliExpress и т.д.',
+      'product_name_hint': 'Например: iPhone 15 Pro',
+      'product_link_hint': 'https://...',
+      'cost_hint': '0.00',
+      'weight_hint': '0.0',
+      'color_hint': 'Например: Черный',
+      'size_hint': 'Например: M, 42',
+      'quantity_hint': '1',
     },
     'en': {
       // Common
@@ -600,6 +608,14 @@ class AppLocalizations {
       'errors': 'Errors',
       'failed_to_create_orders': 'Failed to create orders',
       'check_all_fields': 'Check all fields are filled',
+      'store_name_hint': 'Amazon, AliExpress etc.',
+      'product_name_hint': 'Example: iPhone 15 Pro',
+      'product_link_hint': 'https://...',
+      'cost_hint': '0.00',
+      'weight_hint': '0.0',
+      'color_hint': 'Example: Black',
+      'size_hint': 'Example: M, 42',
+      'quantity_hint': '1',
     },
     'uz': {
       // Umumiy
@@ -894,6 +910,14 @@ class AppLocalizations {
       'errors': 'Xatolar',
       'failed_to_create_orders': 'Buyurtmalar yaratib bo\'lmadi',
       'check_all_fields': 'Barcha maydonlar to\'ldirilganligini tekshiring',
+      'store_name_hint': 'Amazon, AliExpress va h.k.',
+      'product_name_hint': 'Masalan: iPhone 15 Pro',
+      'product_link_hint': 'https://...',
+      'cost_hint': '0.00',
+      'weight_hint': '0.0',
+      'color_hint': 'Masalan: Qora',
+      'size_hint': 'Masalan: M, 42',
+      'quantity_hint': '1',
     },
   };
 

@@ -4,6 +4,10 @@ import '../models/shipping_calculator.dart';
 import '../utils/theme_helper.dart';
 import '../utils/localization_helper.dart';
 import '../utils/theme.dart' show AppTheme;
+import 'package:provider/provider.dart';
+import '../models/api/office_address.dart';
+import '../providers/user_provider.dart';
+import '../services/api_service.dart';
 import '../widgets/custom_snackbar.dart';
 import 'select_delivery_address_screen.dart';
 import 'shipping_calculator_screen.dart';
@@ -20,6 +24,8 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
   final List<ParcelItem> _items = [];
   final Map<int, bool> _expandedItems = {}; // Для отслеживания развернутых товаров
   
+  List<OfficeAddress> _officeAddresses = [];
+  bool _isLoadingCountries = true;
   String? _selectedCountry;
   String? _selectedAddressId;
   ShippingCost? _shippingCost;
@@ -31,8 +37,8 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
   final _storeNameController = TextEditingController();
   final _productNameController = TextEditingController();
   final _productLinkController = TextEditingController();
-  final _costController = TextEditingController(text: '100.00');
-  final _weightController = TextEditingController(text: '1.5');
+  final _costController = TextEditingController();
+  final _weightController = TextEditingController();
   final _colorController = TextEditingController();
   final _sizeController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
@@ -41,26 +47,61 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
   @override
   void initState() {
     super.initState();
+    _loadCountries();
     // Отслеживаем изменения в полях
     _trackNumberController.addListener(_onFieldChanged);
     _storeNameController.addListener(_onFieldChanged);
     _productNameController.addListener(_onFieldChanged);
+    _productLinkController.addListener(_onFieldChanged);
     _costController.addListener(_onFieldChanged);
     _weightController.addListener(_onFieldChanged);
+    _colorController.addListener(_onFieldChanged);
     _quantityController.addListener(_onFieldChanged);
+  }
+
+  Future<void> _loadCountries() async {
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final apiService = ApiService(authToken: userProvider.authToken);
+      final addresses = await apiService.getOfficeAddresses();
+      
+      if (mounted) {
+        setState(() {
+          _officeAddresses = addresses;
+          _isLoadingCountries = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading countries: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingCountries = false;
+          // Fallback to default countries if API fails, or just show empty
+        });
+        CustomSnackBar.error(
+          context: context,
+          message: 'Не удалось загрузить список стран: $e',
+        );
+      }
+    }
   }
 
   void _onFieldChanged() {
     // Проверяем, начал ли пользователь вводить данные
     final hasInput = _productNameController.text.trim().isNotEmpty ||
                      _trackNumberController.text.trim().isNotEmpty ||
-                     _storeNameController.text.trim().isNotEmpty;
+                     _storeNameController.text.trim().isNotEmpty ||
+                     _productLinkController.text.trim().isNotEmpty ||
+                     _colorController.text.trim().isNotEmpty ||
+                     (double.tryParse(_costController.text.trim()) ?? 0.0) > 0 ||
+                     (double.tryParse(_weightController.text.trim()) ?? 0.0) > 0 ||
+                     (int.tryParse(_quantityController.text.trim()) ?? 0) > 0;
     
-    if (hasInput != _hasUserInput) {
-      setState(() {
-        _hasUserInput = hasInput;
-      });
-    }
+    // Всегда обновляем состояние, чтобы пересчитать _canAddItem, 
+    // так как оно зависит от текста в контроллерах
+    setState(() {
+      _hasUserInput = hasInput;
+    });
   }
 
   @override
@@ -68,8 +109,10 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
     _trackNumberController.removeListener(_onFieldChanged);
     _storeNameController.removeListener(_onFieldChanged);
     _productNameController.removeListener(_onFieldChanged);
+    _productLinkController.removeListener(_onFieldChanged);
     _costController.removeListener(_onFieldChanged);
     _weightController.removeListener(_onFieldChanged);
+    _colorController.removeListener(_onFieldChanged);
     _quantityController.removeListener(_onFieldChanged);
     
     _trackNumberController.dispose();
@@ -87,11 +130,15 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
 
   bool get _canAddItem {
     // Проверяем, что все обязательные поля заполнены пользователем
+    // API требует: track_number, market_name, url_product, product_name, product_price, product_quantity, product_color
     final productName = _productNameController.text.trim();
     final trackNumber = _trackNumberController.text.trim();
     final storeName = _storeNameController.text.trim();
+    final productLink = _productLinkController.text.trim();
+    final color = _colorController.text.trim();
     final cost = double.tryParse(_costController.text.trim()) ?? 0.0;
-    final weight = double.tryParse(_weightController.text.trim()) ?? 0.0;
+    // product_weight в API может быть null, но для калькулятора доставки он нужен
+    final weight = double.tryParse(_weightController.text.trim()) ?? 0.0; 
     final quantity = int.tryParse(_quantityController.text.trim()) ?? 0;
     
     // Кнопки появляются только когда:
@@ -101,6 +148,8 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
            productName.isNotEmpty &&
            trackNumber.isNotEmpty &&
            storeName.isNotEmpty &&
+           productLink.isNotEmpty &&
+           color.isNotEmpty &&
            cost > 0 &&
            weight > 0 &&
            quantity > 0;
@@ -120,12 +169,14 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
       productName: _productNameController.text.isEmpty
           ? context.l10n.translate('item')
           : _productNameController.text,
-      productLink: _productLinkController.text.isEmpty
-          ? null
-          : _productLinkController.text,
+      productLink: _productLinkController.text.isNotEmpty // Обязательное поле
+          ? _productLinkController.text
+          : 'https://example.com', // Fallback, но валидация не должна пускать
       cost: double.tryParse(_costController.text) ?? 0.0,
       weight: double.tryParse(_weightController.text) ?? 0.0,
-      color: _colorController.text.isEmpty ? null : _colorController.text,
+      color: _colorController.text.isNotEmpty 
+          ? _colorController.text 
+          : 'Multi', // Обязательное поле, fallback
       size: _sizeController.text.isEmpty ? null : _sizeController.text,
       quantity: int.tryParse(_quantityController.text) ?? 1,
       comment: _commentController.text.isEmpty
@@ -150,8 +201,8 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
     _storeNameController.clear();
     _productNameController.clear();
     _productLinkController.clear();
-    _costController.text = '100.00';
-    _weightController.text = '1.5';
+    _costController.clear();
+    _weightController.clear();
     _colorController.clear();
     _sizeController.clear();
     _quantityController.text = '1';
@@ -358,50 +409,126 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                     controller: _trackNumberController,
                     hint: '${context.l10n.translate('for_example')} 1Z999AA10123456784',
                     icon: Icons.inbox_outlined,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return context.l10n.translate('fill_required_fields');
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     label: context.l10n.translate('store_name'),
                     controller: _storeNameController,
-                    hint: 'Amazon, AliExpress и т.д.',
+                    hint: context.l10n.translate('store_name_hint'),
                     icon: Icons.local_offer_outlined,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return context.l10n.translate('fill_required_fields');
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     label: context.l10n.translate('product_name'),
                     controller: _productNameController,
+                    hint: context.l10n.translate('product_name_hint'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return context.l10n.translate('fill_required_fields');
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     label: context.l10n.translate('product_link'),
                     controller: _productLinkController,
+                    hint: context.l10n.translate('product_link_hint'),
+                    keyboardType: TextInputType.url,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return context.l10n.translate('fill_required_fields');
+                      }
+                      if (!value.startsWith('http')) {
+                        return 'URL must start with http/https';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     label: context.l10n.translate('cost'),
                     controller: _costController,
+                    hint: context.l10n.translate('cost_hint'),
                     icon: Icons.attach_money,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return context.l10n.translate('fill_required_fields');
+                      }
+                      final cost = double.tryParse(value);
+                      if (cost == null || cost <= 0) {
+                        return 'Enter valid cost';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     label: context.l10n.translate('weight'),
                     controller: _weightController,
+                    hint: context.l10n.translate('weight_hint'),
                     icon: Icons.shopping_bag_outlined,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    validator: (value) {
+                      // Вес не обязателен для API (может быть null), но мы требуем его для калькулятора
+                      // Если поле пустое - ошибка
+                      if (value == null || value.trim().isEmpty) {
+                         return context.l10n.translate('fill_required_fields');
+                      }
+                      final weight = double.tryParse(value);
+                      if (weight == null || weight <= 0) {
+                        return 'Enter valid weight';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     label: context.l10n.translate('color'),
                     controller: _colorController,
+                    hint: context.l10n.translate('color_hint'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return context.l10n.translate('fill_required_fields');
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     label: context.l10n.translate('size'),
                     controller: _sizeController,
+                    hint: context.l10n.translate('size_hint'),
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     label: context.l10n.translate('quantity'),
                     controller: _quantityController,
+                    hint: context.l10n.translate('quantity_hint'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return context.l10n.translate('fill_required_fields');
+                      }
+                      final qty = int.tryParse(value);
+                      if (qty == null || qty <= 0) {
+                        return 'Enter valid quantity';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
@@ -422,7 +549,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                 color: backgroundColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -606,18 +733,46 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
     final textColor = ThemeHelper.getTextColor(context);
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
     final cardColor = ThemeHelper.getCardColor(context);
-    final countries = ShippingCalculator.availableCountries;
-    final countryNames = {
-      'USA': context.l10n.translate('usa'),
-      'Turkey': context.l10n.translate('turkey'),
-      'China': context.l10n.translate('china'),
-      'UAE': context.l10n.translate('uae'),
-    };
-    final countryFlags = {
+    
+    if (_isLoadingCountries) {
+      return SizedBox(
+        height: 140,
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.gold),
+          ),
+        ),
+      );
+    }
+    
+    final uniqueLocations = _officeAddresses.map((e) => e.location).toSet().toList();
+    
+    // Если список пустой, показываем заглушку, но пытаемся использовать стандартные, если API упало?
+    // Нет, если API вернуло пустоту, значит стран нет. Но если ошибка, список пустой.
+    // Если список пустой - показываем сообщение
+    if (uniqueLocations.isEmpty) {
+      return SizedBox(
+        height: 140,
+        child: Center(
+          child: Text(
+            context.l10n.translate('no_countries_available'),
+            style: TextStyle(color: textSecondaryColor),
+          ),
+        ),
+      );
+    }
+    
+    final Map<String, String> countryFlags = {
       'USA': '🇺🇸',
+      'TURKEY': '🇹🇷',
       'Turkey': '🇹🇷',
+      'CHINA': '🇨🇳',
       'China': '🇨🇳',
       'UAE': '🇦🇪',
+      'GERMANY': '🇩🇪',
+      'Germany': '🇩🇪',
+      'RUSSIA': '🇷🇺',
+      'Russia': '🇷🇺',
     };
 
     return SizedBox(
@@ -625,29 +780,40 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 4),
-        itemCount: countries.length,
+        itemCount: uniqueLocations.length,
         itemBuilder: (context, index) {
-          final country = countries[index];
-        final isSelected = _selectedCountry == country;
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedCountry = country;
-            });
-          },
-          child: Container(
+          final country = uniqueLocations[index];
+          final isSelected = _selectedCountry == country;
+          
+          // Пытаемся найти флаг, если нет - используем глобус
+          String flag = '🌍';
+          // Ищем совпадение без учета регистра
+          for (var key in countryFlags.keys) {
+            if (key.toUpperCase() == country.toUpperCase()) {
+              flag = countryFlags[key]!;
+              break;
+            }
+          }
+          
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedCountry = country;
+              });
+            },
+            child: Container(
               width: 110,
               margin: const EdgeInsets.symmetric(horizontal: 8),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
                 color: isSelected 
                     ? AppTheme.gold.withValues(alpha: 0.2)
                     : cardColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected ? AppTheme.gold : Colors.transparent,
-                width: 2,
-              ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? AppTheme.gold : Colors.transparent,
+                  width: 2,
+                ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
@@ -657,31 +823,31 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                         ),
                       ]
                     : null,
-            ),
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Флаг
-                Container(
+                children: [
+                  // Флаг
+                  Container(
                     width: 56,
                     height: 56,
-                  decoration: BoxDecoration(
+                    decoration: BoxDecoration(
                       color: isSelected
                           ? AppTheme.gold.withValues(alpha: 0.15)
                           : textSecondaryColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      countryFlags[country] ?? '🏳️',
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        flag,
                         style: const TextStyle(fontSize: 32),
+                      ),
                     ),
                   ),
-                ),
                   const SizedBox(height: 12),
-                // Название страны
+                  // Название страны
                   Text(
-                    countryNames[country] ?? country,
+                    country, // Используем название как есть из API, или можно переводить если совпадают ключи
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -689,21 +855,21 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                       color: isSelected ? AppTheme.gold : textColor,
                       fontSize: 14,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    ),
                   ),
-                ),
-                // Иконка выбора
+                  // Иконка выбора
                   if (isSelected) ...[
                     const SizedBox(height: 8),
-                  const Icon(
-                    Icons.check_circle,
-                    color: AppTheme.gold,
+                    const Icon(
+                      Icons.check_circle,
+                      color: AppTheme.gold,
                       size: 20,
-                  ),
+                    ),
                   ],
-              ],
+                ],
+              ),
             ),
-          ),
-        );
+          );
         },
       ),
     );
@@ -896,6 +1062,8 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
     String? hint,
     IconData? icon,
     int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
   }) {
     final textColor = ThemeHelper.getTextColor(context);
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
@@ -917,11 +1085,14 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
           controller: controller,
           style: TextStyle(color: textColor),
           maxLines: maxLines,
-          onChanged: (_) => setState(() {}), // Обновляем состояние для активации кнопки
+          keyboardType: keyboardType,
+          onChanged: (_) => _onFieldChanged(), // Используем общий метод
+          validator: validator,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: textSecondaryColor,
+              color: textSecondaryColor.withValues(alpha: 0.5),
               fontSize: 14,
             ),
             prefixIcon: icon != null
@@ -937,9 +1108,29 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppTheme.gold, width: 1),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+            ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
+            ),
+            errorStyle: const TextStyle(
+              color: Colors.redAccent,
+              fontSize: 12,
             ),
           ),
         ),

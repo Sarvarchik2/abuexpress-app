@@ -8,7 +8,8 @@ import '../services/api_service.dart';
 import '../models/api/login_request.dart';
 import '../providers/user_provider.dart';
 import 'main_screen.dart';
-import 'registration_choice_screen.dart';
+// import 'registration_choice_screen.dart';
+import 'self_registration_screen.dart';
 import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -139,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (context) => const RegistrationChoiceScreen(),
+                                builder: (context) => const SelfRegistrationScreen(),
                               ),
                             );
                           },

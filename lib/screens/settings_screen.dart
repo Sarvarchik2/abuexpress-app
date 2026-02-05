@@ -11,6 +11,7 @@ import '../widgets/custom_dialog.dart';
 import '../widgets/custom_snackbar.dart';
 import 'delivery_addresses_screen.dart';
 import 'login_screen.dart';
+import 'auth_screen.dart';
 import 'profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -574,7 +575,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           text: context.l10n.translate('cancel'),
           onPressed: () => Navigator.pop(context),
         ),
-        const SizedBox(width: 8),
         CustomDialogActions.primaryButton(
           context: context,
           text: context.l10n.translate('logout'),
@@ -619,7 +619,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Перенаправляем на экран логина, удаляя все предыдущие экраны
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
+            builder: (context) => const AuthScreen(),
           ),
           (route) => false,
         );
