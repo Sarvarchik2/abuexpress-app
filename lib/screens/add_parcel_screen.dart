@@ -303,6 +303,20 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
       itemCount: _items.length,
     );
 
+    String locationId = 'USA'; // Default backup
+    try {
+      if (_officeAddresses.isNotEmpty) {
+        // Пытаемся найти точное совпадение или совпадение без учета регистра
+        final office = _officeAddresses.firstWhere(
+          (element) => element.location.toLowerCase() == _selectedCountry?.toLowerCase(),
+          orElse: () => _officeAddresses.first,
+        );
+        locationId = office.location;
+      }
+    } catch (e) {
+      debugPrint('Error finding location ID: $e');
+    }
+
     final confirmed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -313,6 +327,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
           itemCount: _items.length,
           items: _items,
           selectedAddressId: _selectedAddressId,
+          locationId: locationId,
         ),
       ),
     );
@@ -693,7 +708,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 32),
                   ],
                   if (_items.isNotEmpty || _canAddItem)
                     SizedBox(

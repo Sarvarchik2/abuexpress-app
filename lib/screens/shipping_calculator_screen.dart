@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http; // Added import
+import '../config/api_config.dart'; // Added import
 import '../models/shipping_calculator.dart';
 import '../models/parcel_item.dart';
 import '../models/api/order_own_create_request.dart';
@@ -17,6 +19,7 @@ class ShippingCalculatorScreen extends StatefulWidget {
   final int itemCount;
   final List<ParcelItem> items;
   final String? selectedAddressId;
+  final String? locationId;
 
   const ShippingCalculatorScreen({
     super.key,
@@ -26,6 +29,7 @@ class ShippingCalculatorScreen extends StatefulWidget {
     required this.itemCount,
     required this.items,
     this.selectedAddressId,
+    this.locationId,
   });
 
   @override
@@ -61,7 +65,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
   }
 
   Future<void> _handleCheckout() async {
-    if (_isProcessing) return;
+    if (_isProcessing) return; // ... (rest of the method)
 
     if (widget.selectedAddressId == null) {
       CustomSnackBar.error(
@@ -127,6 +131,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
       debugPrint('=== CREATING ORDERS ===');
       debugPrint('Items count: ${widget.items.length}');
       debugPrint('Address ID: $addressId');
+      debugPrint('Location ID: ${widget.locationId}');
 
       // Создаем заказ для каждого товара
       int successCount = 0;
@@ -160,6 +165,8 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
             productSize: item.size?.trim().isNotEmpty == true ? item.size!.trim() : null,
             comment: item.comment?.trim().isNotEmpty == true ? item.comment!.trim() : null,
             receiverAddress: addressId,
+            location: widget.locationId ?? 'USA',
+            invoiceNumber: DateTime.now().millisecondsSinceEpoch ~/ 1000, 
           );
 
           debugPrint('=== CREATING ORDER FOR ITEM ===');

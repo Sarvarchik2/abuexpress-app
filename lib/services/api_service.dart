@@ -1405,5 +1405,41 @@ class ApiService {
       throw Exception('Неизвестная ошибка: $e');
     }
   }
+
+  /// Отправка FCM токена на сервер
+  Future<void> updateFcmToken(String token) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.fcmToken}');
+      
+      final requestBody = {'fcm_token': token, 'type': 'android'}; // TODO: Определять платформу
+      
+      debugPrint('=== UPDATE FCM TOKEN REQUEST ===');
+      debugPrint('URL: $url');
+      debugPrint('Body: $requestBody');
+
+      // Проверяем авторизацию перед отправкой
+      if (_authToken == null) {
+        debugPrint('Skip sending FCM token: No auth token');
+        return;
+      }
+
+      final response = await client.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(requestBody),
+      );
+
+      debugPrint('=== UPDATE FCM TOKEN RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('=== FCM TOKEN UPDATED SUCCESSFULLY ===');
+      } else {
+        debugPrint('=== FAILED TO UPDATE FCM TOKEN ===');
+      }
+    } catch (e) {
+      debugPrint('=== ERROR UPDATING FCM TOKEN: $e ===');
+    }
+  }
 }
 

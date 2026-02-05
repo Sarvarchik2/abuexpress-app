@@ -1,5 +1,7 @@
 class OrderOwnCreateRequest {
   final String? invoiceId;
+  final int? invoiceNumber;
+  final String? location;   // Changed to String for debugging/flexibility
   final String trackNumber;
   final String marketName;
   final String urlProduct;
@@ -19,6 +21,8 @@ class OrderOwnCreateRequest {
 
   OrderOwnCreateRequest({
     this.invoiceId,
+    this.invoiceNumber,
+    this.location,
     required this.trackNumber,
     required this.marketName,
     required this.urlProduct,
@@ -51,6 +55,12 @@ class OrderOwnCreateRequest {
 
     if (invoiceId != null) {
       json['invoice_id'] = invoiceId;
+    }
+    if (invoiceNumber != null) {
+      json['invoice_number'] = invoiceNumber;
+    }
+    if (location != null) {
+      json['location'] = location;
     }
     if (productWeight != null) {
       json['product_weight'] = productWeight;

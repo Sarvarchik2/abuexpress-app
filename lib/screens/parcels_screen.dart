@@ -195,23 +195,36 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
   }
 
   String _getStatusLabelFromKey(String statusKey) {
-    switch (statusKey) {
+    // Если ключ уже на русском (legacy), возвращаем как есть
+    if (statusKey == 'Доставлено' || statusKey == 'На складе' || statusKey == 'В пути') {
+      return statusKey;
+    }
+
+    // Перевод статусов через локализацию
+    switch (statusKey.toLowerCase()) {
       case 'delivered':
-        return 'Доставлено';
+      case 'is_delivered':
+        return context.l10n.translate('delivered');
       case 'in_warehouse':
-        return 'На складе';
+      case 'is_in_warehouse':
+        return context.l10n.translate('in_warehouse');
       case 'in_transit':
-        return 'В пути';
+      case 'is_shipped':
+        return context.l10n.translate('in_transit');
       case 'at_customs':
-        return 'На таможне';
+        return context.l10n.translate('at_customs');
       case 'rejected':
-        return 'Отклонено';
+      case 'is_rejected':
+        return context.l10n.translate('rejected'); // Need to ensure this key exists or use hardcoded 'Отклонено'
       case 'accepted':
-        return 'Принято';
+      case 'is_accepted':
+        return 'Принято'; // context.l10n.translate('accepted');
       case 'pending':
-        return 'Ожидает';
+      case 'is_waiting':
+        return 'Ожидает'; // context.l10n.translate('pending');
       default:
-        return 'Ожидает';
+        // Если статус неизвестен, пытаемся перевести или возвращаем как есть
+        return statusKey;
     }
   }
 
@@ -939,6 +952,12 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
         return context.l10n.translate('at_customs');
       case 'delivered':
         return context.l10n.translate('delivered');
+      case 'accepted':
+        return 'Принято';
+      case 'pending':
+        return 'Ожидает';
+      case 'rejected':
+        return 'Отклонено';
       default:
         return key;
     }
