@@ -11,6 +11,7 @@ import '../models/api/receiver.dart';
 import '../models/api/receiver_create_request.dart';
 import '../models/api/office_address.dart';
 import '../models/api/user_registration.dart';
+import '../models/api/departure_time.dart';
 
 class ApiService {
   final String baseUrl;
@@ -1439,6 +1440,45 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('=== ERROR UPDATING FCM TOKEN: $e ===');
+    }
+  }
+
+  /// Получает информацию о времени отправки посылок
+  Future<List<DepartureTime>> getDepartureTimes() async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.dateTime}');
+      debugPrint('=== GET DEPARTURE TIMES REQUEST ===');
+      debugPrint('URL: $url');
+
+      final response = await client.get(
+        url,
+        headers: _getHeaders(),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== GET DEPARTURE TIMES TIMEOUT ===');
+          throw Exception('Время ожидания истекло');
+        },
+      );
+
+      debugPrint('=== GET DEPARTURE TIMES RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = jsonDecode(response.body);
+        final departureTimes = jsonList.map((json) => DepartureTime.fromJson(json)).toList();
+        debugPrint('=== GET DEPARTURE TIMES SUCCESS ===');
+        debugPrint('Found ${departureTimes.length} times');
+        return departureTimes;
+      } else {
+        debugPrint('=== GET DEPARTURE TIMES ERROR ===');
+        throw Exception('Ошибка загрузки времени отправки');
+      }
+    } catch (e) {
+      debugPrint('=== GET DEPARTURE TIMES EXCEPTION ===');
+      debugPrint('Error: $e');
+      throw Exception('Ошибка подключения: $e');
     }
   }
 }

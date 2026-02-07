@@ -14,6 +14,8 @@ import '../utils/theme_helper.dart';
 import '../utils/localization_helper.dart';
 import '../utils/theme.dart';
 import '../providers/user_provider.dart';
+import '../models/api/departure_time.dart';
+import '../widgets/departure_timer_card.dart';
 
 class ParcelsScreen extends StatefulWidget {
   final int currentIndex;
@@ -32,6 +34,7 @@ class ParcelsScreen extends StatefulWidget {
 class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserver {
   String _selectedFilterKey = 'all';
   final List<Parcel> _parcels = [];
+  List<DepartureTime> _departureTimes = [];
   late final ApiService _apiService;
   bool _isLoading = false;
   DateTime? _lastUpdateTime;
@@ -45,6 +48,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
     final token = userProvider.authToken;
     _apiService = ApiService(authToken: token);
     _loadParcels();
+    _loadDepartureTimes();
   }
 
   @override
@@ -167,6 +171,19 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadDepartureTimes() async {
+    try {
+      final times = await _apiService.getDepartureTimes();
+      if (mounted) {
+        setState(() {
+          _departureTimes = times;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading departure times: $e');
     }
   }
 
@@ -343,6 +360,22 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
               children: [
                 // Header with user profile
                 _buildHeader(),
+                const SizedBox(height: 20),
+                // Departure Timer
+                DepartureTimerCard(
+                  departureTimes: _departureTimes,
+                  onSendTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddParcelScreen(),
+                      ),
+                    );
+                    if (result != null || mounted) {
+                      await _loadParcels();
+                    }
+                  },
+                ),
                 const SizedBox(height: 20),
                 // Filter buttons
                 _buildFilters(),

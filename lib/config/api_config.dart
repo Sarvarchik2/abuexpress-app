@@ -11,6 +11,7 @@ class ApiConfig {
   static const String orderOwn = '/order-own/';
   static const String addresses = '/addresses/';
   static const String officeAddresses = '/office-address/';
+  static const String dateTime = '/date-time/';
   static const String fcmToken = '/fcm-token/';
   
   // Helper methods for endpoints with IDs

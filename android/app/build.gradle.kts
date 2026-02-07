@@ -18,7 +18,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.link.abuexpress"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    // ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -56,6 +56,9 @@ android {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
         }
     }
 
@@ -63,6 +66,10 @@ android {
         jniLibs {
             keepDebugSymbols.add("**/*.so")
         }
+    }
+    
+    aaptOptions {
+        noCompress("mp4")
     }
 }
 
