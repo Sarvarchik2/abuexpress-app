@@ -14,8 +14,6 @@ import '../utils/theme_helper.dart';
 import '../utils/localization_helper.dart';
 import '../utils/theme.dart';
 import '../providers/user_provider.dart';
-import '../models/api/departure_time.dart';
-import '../widgets/departure_timer_card.dart';
 
 class ParcelsScreen extends StatefulWidget {
   final int currentIndex;
@@ -34,7 +32,6 @@ class ParcelsScreen extends StatefulWidget {
 class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserver {
   String _selectedFilterKey = 'all';
   final List<Parcel> _parcels = [];
-  List<DepartureTime> _departureTimes = [];
   late final ApiService _apiService;
   bool _isLoading = false;
   DateTime? _lastUpdateTime;
@@ -48,7 +45,6 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
     final token = userProvider.authToken;
     _apiService = ApiService(authToken: token);
     _loadParcels();
-    _loadDepartureTimes();
   }
 
   @override
@@ -125,9 +121,8 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
           );
         }).toList();
 
-        // Определяем статус на основе первого заказа
+        // Используем ключ статуса напрямую
         String statusKey = firstOrder.status;
-        String statusLabel = _getStatusLabelFromKey(statusKey);
 
         // Определяем страну отправления на основе названия магазина
         String? originCountry = _determineOriginCountry(firstOrder.marketName);
@@ -135,7 +130,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
         parcels.add(Parcel(
           id: firstOrder.id.toString(),
           items: items,
-          status: statusLabel,
+          status: statusKey, // Сохраняем ключ вместо переведенной строки
           dateAdded: firstOrder.dateAdded,
           deliveryAddressId: firstOrder.receiverAddress.toString(),
           originCountry: originCountry,
@@ -145,6 +140,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
           isShipped: firstOrder.isShipped,
           isArrived: firstOrder.isArrived,
           isDelivered: firstOrder.isDelivered,
+          isWaiting: firstOrder.isWaiting,
         ));
       }
 
@@ -174,19 +170,6 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
     }
   }
 
-  Future<void> _loadDepartureTimes() async {
-    try {
-      final times = await _apiService.getDepartureTimes();
-      if (mounted) {
-        setState(() {
-          _departureTimes = times;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading departure times: $e');
-    }
-  }
-
   String? _determineOriginCountry(String marketName) {
     final marketNameLower = marketName.toLowerCase();
     
@@ -212,11 +195,6 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
   }
 
   String _getStatusLabelFromKey(String statusKey) {
-    // Если ключ уже на русском (legacy), возвращаем как есть
-    if (statusKey == 'Доставлено' || statusKey == 'На складе' || statusKey == 'В пути') {
-      return statusKey;
-    }
-
     // Перевод статусов через локализацию
     switch (statusKey.toLowerCase()) {
       case 'delivered':
@@ -232,15 +210,14 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
         return context.l10n.translate('at_customs');
       case 'rejected':
       case 'is_rejected':
-        return context.l10n.translate('rejected'); // Need to ensure this key exists or use hardcoded 'Отклонено'
+        return context.l10n.translate('rejected');
       case 'accepted':
       case 'is_accepted':
-        return 'Принято'; // context.l10n.translate('accepted');
+        return context.l10n.translate('accepted');
       case 'pending':
       case 'is_waiting':
-        return 'Ожидает'; // context.l10n.translate('pending');
+        return context.l10n.translate('pending');
       default:
-        // Если статус неизвестен, пытаемся перевести или возвращаем как есть
         return statusKey;
     }
   }
@@ -266,51 +243,51 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
     }
   }
 
-  final List<NotificationItem> _notifications = [
+  List<NotificationItem> get _notifications => [
     NotificationItem(
       id: '1',
-      title: 'Посылка прибыла на склад',
-      description: 'Ваша посылка ABU123456 успешно прибыла на склад',
+      title: context.l10n.translate('parcel_arrived'),
+      description: '${context.l10n.translate('parcel_arrived')} ABU123456',
       dateTime: DateTime.now().subtract(const Duration(hours: 2)),
       type: NotificationType.parcelArrived,
       isRead: false,
     ),
     NotificationItem(
       id: '2',
-      title: 'Посылка в пути',
-      description: 'Посылка ABU789012 находится в пути',
+      title: context.l10n.translate('parcel_in_transit'),
+      description: '${context.l10n.translate('parcel_in_transit')} ABU789012',
       dateTime: DateTime.now().subtract(const Duration(hours: 5)),
       type: NotificationType.parcelInTransit,
       isRead: false,
     ),
     NotificationItem(
       id: '3',
-      title: 'Специальное предложение!',
-      description: 'Скидка 20% на доставку из США до конца месяца',
+      title: context.l10n.translate('special_offer'),
+      description: context.l10n.translate('special_offer'),
       dateTime: DateTime.now().subtract(const Duration(days: 1)),
       type: NotificationType.specialOffer,
       isRead: true,
     ),
     NotificationItem(
       id: '4',
-      title: 'Обновление приложения',
-      description: 'Доступна новая версия приложения с улучшенным интерфейсом',
+      title: context.l10n.translate('app_update'),
+      description: context.l10n.translate('app_update'),
       dateTime: DateTime.now().subtract(const Duration(days: 2)),
       type: NotificationType.appUpdate,
       isRead: true,
     ),
     NotificationItem(
       id: '5',
-      title: 'Посылка доставлена',
-      description: 'Посылка ABU345678 успешно доставлена в офис',
+      title: context.l10n.translate('parcel_delivered'),
+      description: '${context.l10n.translate('parcel_delivered')} ABU345678',
       dateTime: DateTime.now().subtract(const Duration(days: 3)),
       type: NotificationType.parcelDelivered,
       isRead: true,
     ),
     NotificationItem(
       id: '6',
-      title: 'Новые товары в магазине',
-      description: 'Более 100 новых товаров от популярных брендов теперь доступны',
+      title: context.l10n.translate('new_products'),
+      description: context.l10n.translate('new_products'),
       dateTime: DateTime.now().subtract(const Duration(days: 4)),
       type: NotificationType.newProducts,
       isRead: true,
@@ -360,23 +337,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
               children: [
                 // Header with user profile
                 _buildHeader(),
-                const SizedBox(height: 20),
-                // Departure Timer
-                DepartureTimerCard(
-                  departureTimes: _departureTimes,
-                  onSendTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddParcelScreen(),
-                      ),
-                    );
-                    if (result != null || mounted) {
-                      await _loadParcels();
-                    }
-                  },
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 // Filter buttons
                 _buildFilters(),
                 const SizedBox(height: 24),
@@ -773,14 +734,19 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
     final filteredParcels = _selectedFilterKey == 'all'
         ? _parcels
         : _parcels.where((p) {
-            final statusMap = {
-              'in_warehouse': ['На складе'],
-              'in_transit': ['В пути'],
-              'at_customs': ['На таможне'],
-              'delivered': ['Доставлено', 'Доставлен'],
-            };
-            final allowedStatuses = statusMap[_selectedFilterKey] ?? [];
-            return allowedStatuses.contains(p.status);
+            switch (_selectedFilterKey) {
+              case 'in_warehouse':
+                return p.isArrived && !p.isDelivered;
+              case 'in_transit':
+                return p.isShipped && !p.isArrived;
+              case 'delivered':
+                return p.isDelivered;
+              case 'at_customs':
+                // Пока нет отдельного флага для таможни, используем in_transit как временное решение или возвращаем false
+                return false;
+              default:
+                return true;
+            }
           }).toList();
 
     return ListView.builder(
@@ -800,36 +766,27 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
     
     Color statusColor;
     Color statusTextColor;
-    
-    switch (parcel.status) {
-      case 'На складе':
-        statusColor = const Color(0xFF3B82F6); // Синий
-        statusTextColor = Colors.white;
-        break;
-      case 'В пути':
-        statusColor = AppTheme.gold; // Желтый
-        statusTextColor = ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121);
-        break;
-      case 'Доставлено':
-      case 'Доставлен':
-        statusColor = const Color(0xFF10B981); // Зеленый
-        statusTextColor = Colors.white;
-        break;
-      case 'Отклонено':
-        statusColor = const Color(0xFFEF4444); // Красный
-        statusTextColor = Colors.white;
-        break;
-      case 'Принято':
-        statusColor = const Color(0xFF3B82F6); // Синий
-        statusTextColor = Colors.white;
-        break;
-      case 'Ожидает':
-        statusColor = const Color(0xFF6B7280); // Серый
-        statusTextColor = Colors.white;
-        break;
-      default:
-        statusColor = cardColor;
-        statusTextColor = textColor;
+
+    debugPrint('Parcel ${parcel.trackNumber}: status=${parcel.status}, shipped=${parcel.isShipped}, arrived=${parcel.isArrived}, delivered=${parcel.isDelivered}, accepted=${parcel.isAccepted}, waiting=${parcel.isWaiting}');
+
+    if (parcel.isDelivered) {
+      statusColor = const Color(0xFF10B981); // Зеленый
+      statusTextColor = Colors.white;
+    } else if (parcel.isArrived) {
+      statusColor = const Color(0xFF3B82F6); // Синий
+      statusTextColor = Colors.white;
+    } else if (parcel.isShipped) {
+      statusColor = AppTheme.gold; // Желтый
+      statusTextColor = ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121);
+    } else if (parcel.isRejected) {
+      statusColor = const Color(0xFFEF4444); // Красный
+      statusTextColor = Colors.white;
+    } else if (parcel.isAccepted) {
+      statusColor = const Color(0xFF3B82F6); // Синий
+      statusTextColor = Colors.white;
+    } else {
+      statusColor = const Color(0xFF6B7280); // Серый
+      statusTextColor = Colors.white;
     }
 
     return GestureDetector(
@@ -932,7 +889,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              _getStatusLabel(_getStatusKey(parcel.status), context),
+              _getStatusLabelFromKey(parcel.status),
               style: TextStyle(
                 color: statusTextColor,
                 fontSize: 12,
@@ -953,48 +910,8 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
     );
   }
 
-  String _getStatusKey(String status) {
-    switch (status) {
-      case 'На складе':
-        return 'in_warehouse';
-      case 'В пути':
-        return 'in_transit';
-      case 'На таможне':
-        return 'at_customs';
-      case 'Доставлено':
-      case 'Доставлен':
-        return 'delivered';
-      case 'Отклонено':
-        return 'rejected';
-      case 'Принято':
-        return 'accepted';
-      case 'Ожидает':
-        return 'pending';
-      default:
-        return 'pending';
-    }
-  }
-
-  String _getStatusLabel(String key, BuildContext context) {
-    switch (key) {
-      case 'in_warehouse':
-        return context.l10n.translate('in_warehouse');
-      case 'in_transit':
-        return context.l10n.translate('in_transit');
-      case 'at_customs':
-        return context.l10n.translate('at_customs');
-      case 'delivered':
-        return context.l10n.translate('delivered');
-      case 'accepted':
-        return 'Принято';
-      case 'pending':
-        return 'Ожидает';
-      case 'rejected':
-        return 'Отклонено';
-      default:
-        return key;
-    }
-  }
+  // Методы _getStatusKey и _getStatusLabel больше не нужны, 
+  // так как используется консолидированный метод _getStatusLabelFromKey
 }
 
 

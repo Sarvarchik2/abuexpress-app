@@ -3,15 +3,18 @@ import 'package:flutter/material.dart';
 import '../models/api/departure_time.dart';
 import '../utils/theme.dart';
 import '../utils/theme_helper.dart'; // For AppTheme
+import '../utils/localization_helper.dart';
 
 class DepartureTimerCard extends StatefulWidget {
   final List<DepartureTime> departureTimes;
   final VoidCallback onSendTap;
+  final EdgeInsetsGeometry? margin;
 
   const DepartureTimerCard({
     super.key,
     required this.departureTimes,
     required this.onSendTap,
+    this.margin,
   });
 
   @override
@@ -52,7 +55,7 @@ class _DepartureTimerCardState extends State<DepartureTimerCard> {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      margin: widget.margin ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFF0A0C10), // Dark background like screenshot
         borderRadius: BorderRadius.circular(24),
@@ -88,10 +91,10 @@ class _DepartureTimerCardState extends State<DepartureTimerCard> {
             padding: const EdgeInsets.all(24.0),
             child: Column(
               children: [
-                const Text(
-                  "Posilkalarni jo'natish vaqti",
+                Text(
+                  context.l10n.translate('delivery_departure_time'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -99,7 +102,7 @@ class _DepartureTimerCardState extends State<DepartureTimerCard> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Tezroq yetkazib berish uchun buyurtma berishga ulguring",
+                  context.l10n.translate('delivery_departure_subtitle'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.grey[400],
@@ -139,13 +142,13 @@ class _DepartureTimerCardState extends State<DepartureTimerCard> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              _buildTimeItem(timeLeft.inDays, "KUN"),
+                              _buildTimeItem(timeLeft.inDays, context.l10n.translate('days_short')),
                               _buildDivider(),
-                              _buildTimeItem(timeLeft.inHours % 24, "SOAT"),
+                              _buildTimeItem(timeLeft.inHours % 24, context.l10n.translate('hours_short')),
                               _buildDivider(),
-                              _buildTimeItem(timeLeft.inMinutes % 60, "DAQIQA"),
+                              _buildTimeItem(timeLeft.inMinutes % 60, context.l10n.translate('minutes_short')),
                               _buildDivider(),
-                              _buildTimeItem(timeLeft.inSeconds % 60, "SONIYA"),
+                              _buildTimeItem(timeLeft.inSeconds % 60, context.l10n.translate('seconds_short')),
                             ],
                           ),
                         ],
@@ -190,9 +193,9 @@ class _DepartureTimerCardState extends State<DepartureTimerCard> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      "Posilkani jo'natish",
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.translate('send_parcel_button'),
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -222,10 +225,12 @@ class _DepartureTimerCardState extends State<DepartureTimerCard> {
         Text(
           label,
           style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
+            color: Colors.white70,
+            fontSize: 8,
+            fontWeight: FontWeight.w500,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -235,8 +240,8 @@ class _DepartureTimerCardState extends State<DepartureTimerCard> {
     return Container(
       height: 40,
       width: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      color: AppTheme.gold,
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      color: AppTheme.gold.withOpacity(0.5),
     );
   }
 }

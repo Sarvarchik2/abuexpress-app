@@ -219,7 +219,7 @@ class ParcelDetailsScreen extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(parcel.status),
+                        color: _getStatusColor(parcel),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -267,7 +267,7 @@ class ParcelDetailsScreen extends StatelessWidget {
                 child: _buildDetailItem(
                   Icons.inbox_outlined,
                   context.l10n.translate('dimensions'),
-                  parcel.dimensions,
+                  parcel.dimensions == 'not_specified' ? context.l10n.translate('not_specified') : parcel.dimensions,
                   textColor,
                   textSecondaryColor,
                 ),
@@ -304,7 +304,7 @@ class ParcelDetailsScreen extends StatelessWidget {
                 child: _buildDetailItem(
                   Icons.location_on_outlined,
                   context.l10n.translate('from'),
-                  parcel.origin,
+                  parcel.origin == 'not_specified' ? context.l10n.translate('not_specified') : context.l10n.translate(parcel.origin.toLowerCase()),
                   textColor,
                   textSecondaryColor,
                 ),
@@ -485,23 +485,19 @@ class ParcelDetailsScreen extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'На складе':
-        return const Color(0xFF3B82F6); // Синий
-      case 'В пути':
-        return AppTheme.gold; // Желтый
-      case 'Доставлено':
-      case 'Доставлен':
-        return const Color(0xFF10B981); // Зеленый
-      case 'Отклонено':
-        return const Color(0xFFEF4444); // Красный
-      case 'Принято':
-        return const Color(0xFF3B82F6); // Синий
-      case 'Ожидает':
-        return const Color(0xFF6B7280); // Серый
-      default:
-        return const Color(0xFF6B7280); // Серый
+  Color _getStatusColor(Parcel parcel) {
+    if (parcel.isDelivered) {
+      return const Color(0xFF10B981); // Зеленый
+    } else if (parcel.isArrived) {
+      return const Color(0xFF3B82F6); // Синий
+    } else if (parcel.isShipped) {
+      return AppTheme.gold; // Желтый
+    } else if (parcel.isRejected) {
+      return const Color(0xFFEF4444); // Красный
+    } else if (parcel.isAccepted) {
+      return const Color(0xFF3B82F6); // Синий
+    } else {
+      return const Color(0xFF6B7280); // Серый
     }
   }
 

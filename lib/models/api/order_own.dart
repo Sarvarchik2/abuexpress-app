@@ -16,6 +16,8 @@ class OrderOwn {
   final bool isShipped;
   final bool isArrived;
   final bool isDelivered;
+  final bool isWaiting;
+  final DateTime? createdAt;
   final int receiverAddress;
 
   OrderOwn({
@@ -36,6 +38,8 @@ class OrderOwn {
     required this.isShipped,
     required this.isArrived,
     required this.isDelivered,
+    this.isWaiting = false,
+    this.createdAt,
     required this.receiverAddress,
   });
 
@@ -83,13 +87,23 @@ class OrderOwn {
       productColor: json['product_color']?.toString() ?? '',
       productSize: json['product_size']?.toString(),
       comment: json['comment']?.toString(),
-      isAccepted: json['is_accepted'] as bool? ?? false,
-      isRejected: json['is_rejected'] as bool? ?? false,
-      isShipped: json['is_shipped'] as bool? ?? false,
-      isArrived: json['is_arrived'] as bool? ?? false,
-      isDelivered: json['is_delivered'] as bool? ?? false,
+      isAccepted: _parseBool(json['is_accepted']),
+      isRejected: _parseBool(json['is_rejected']),
+      isShipped: _parseBool(json['is_shipped']),
+      isArrived: _parseBool(json['is_arrived']) || _parseBool(json['is_in_warehouse']),
+      isDelivered: _parseBool(json['is_delivered']),
+      isWaiting: _parseBool(json['is_waiting']),
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
       receiverAddress: _parseReceiverAddress(json['receiver_address']),
     );
+  }
+
+  static bool _parseBool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) return value.toLowerCase() == 'true' || value == '1';
+    return false;
   }
 
   Map<String, dynamic> toJson() {
@@ -111,6 +125,7 @@ class OrderOwn {
       'is_shipped': isShipped,
       'is_arrived': isArrived,
       'is_delivered': isDelivered,
+      'is_waiting': isWaiting,
       'receiver_address': receiverAddress,
     };
   }
@@ -122,10 +137,11 @@ class OrderOwn {
     if (isShipped) return 'in_transit';
     if (isRejected) return 'rejected';
     if (isAccepted) return 'accepted';
+    if (isWaiting) return 'pending';
     return 'pending';
   }
 
-  // Геттер для даты (если есть в API, иначе используем текущую)
-  DateTime get dateAdded => DateTime.now(); // TODO: добавить поле даты из API если есть
+  // Геттер для даты
+  DateTime get dateAdded => createdAt ?? DateTime.now();
 }
 

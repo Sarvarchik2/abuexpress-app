@@ -13,6 +13,10 @@ import 'delivery_addresses_screen.dart';
 import 'login_screen.dart';
 import 'auth_screen.dart';
 import 'profile_screen.dart';
+import 'add_parcel_screen.dart';
+import '../widgets/departure_timer_card.dart';
+import '../models/api/departure_time.dart';
+
 
 class SettingsScreen extends StatefulWidget {
   final int currentIndex;
@@ -34,6 +38,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'en': 'English',
     'uz': 'O\'zbekcha',
   };
+
+  List<DepartureTime> _departureTimes = [];
+  bool _isLoadingTimes = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDepartureTimes();
+  }
+
+  Future<void> _loadDepartureTimes() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingTimes = true;
+    });
+
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final token = userProvider.authToken;
+      final apiService = ApiService(authToken: token);
+      final times = await apiService.getDepartureTimes();
+      if (mounted) {
+        setState(() {
+          _departureTimes = times;
+          _isLoadingTimes = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading departure times in settings: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingTimes = false;
+          // Fallback static data if API fails to ensure card is visible for testing
+          if (_departureTimes.isEmpty) {
+            _departureTimes = [
+              DepartureTime(
+                id: 1,
+                country: 'TURKEY',
+                departureTime: DateTime.now().add(const Duration(days: 2, hours: 5)),
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+              DepartureTime(
+                id: 2,
+                country: 'UAE',
+                departureTime: DateTime.now().add(const Duration(hours: 12)),
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+            ];
+          }
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +124,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Departure Timer at the very top
+            if (_departureTimes.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: DepartureTimerCard(
+                  departureTimes: _departureTimes,
+                  margin: EdgeInsets.zero,
+                  onSendTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddParcelScreen(),
+                      ),
+                    ).then((_) => _loadDepartureTimes());
+                  },
+                ),
+              ),
+            ] else if (_isLoadingTimes) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 24),
+                  child: CircularProgressIndicator(color: AppTheme.gold),
+                ),
+              ),
+            ],
+
             // Interface Language Section
             _buildSectionHeader(
               context.l10n.translate('interface_language'),

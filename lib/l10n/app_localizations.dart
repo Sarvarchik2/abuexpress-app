@@ -58,6 +58,7 @@ class AppLocalizations {
       'favorites': 'Избранное',
       'favorites_empty': 'Нет избранных товаров',
       'addresses': 'Адреса',
+      'pending': 'Ожидает',
       
       // Parcels
       'my_parcels': 'Мои посылки',
@@ -314,6 +315,15 @@ class AppLocalizations {
       'color_hint': 'Например: Черный',
       'size_hint': 'Например: M, 42',
       'quantity_hint': '1',
+      
+      // Departure Timer
+      'delivery_departure_time': 'Время отправки посылок',
+      'delivery_departure_subtitle': 'Успейте заказать, чтобы получить быстрее',
+      'days_short': 'ДН',
+      'hours_short': 'ЧАС',
+      'minutes_short': 'МИН',
+      'seconds_short': 'СЕК',
+      'send_parcel_button': 'Отправить посылку',
     },
     'en': {
       // Common
@@ -360,6 +370,7 @@ class AppLocalizations {
       'shop': 'Shop',
       'favorites': 'Favorites',
       'addresses': 'Addresses',
+      'pending': 'Pending',
       
       // Parcels
       'my_parcels': 'My Parcels',
@@ -616,6 +627,15 @@ class AppLocalizations {
       'color_hint': 'Example: Black',
       'size_hint': 'Example: M, 42',
       'quantity_hint': '1',
+      
+      // Departure Timer
+      'delivery_departure_time': 'Cargo Departure Time',
+      'delivery_departure_subtitle': 'Order now for faster delivery',
+      'days_short': 'DAY',
+      'hours_short': 'HRS',
+      'minutes_short': 'MIN',
+      'seconds_short': 'SEC',
+      'send_parcel_button': 'Send Parcel',
     },
     'uz': {
       // Umumiy
@@ -662,6 +682,7 @@ class AppLocalizations {
       'shop': 'Do\'kon',
       'favorites': 'Sevimlilar',
       'addresses': 'Manzillar',
+      'pending': 'Kutilmoqda',
       
       // Parcels
       'my_parcels': 'Mening yuklarim',
@@ -918,6 +939,15 @@ class AppLocalizations {
       'color_hint': 'Masalan: Qora',
       'size_hint': 'Masalan: M, 42',
       'quantity_hint': '1',
+
+      // Departure Timer
+      'delivery_departure_time': 'Posilkalarni jo\'natish vaqti',
+      'delivery_departure_subtitle': 'Tezroq yetkazib berish uchun buyurtma berishga ulguring',
+      'days_short': 'KUN',
+      'hours_short': 'SOAT',
+      'minutes_short': 'DAQIQA',
+      'seconds_short': 'SONIYA',
+      'send_parcel_button': 'Posilkani jo\'natish',
     },
   };
 

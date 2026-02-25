@@ -17,6 +17,7 @@ class Parcel {
   final bool isShipped;
   final bool isArrived;
   final bool isDelivered;
+  final bool isWaiting;
 
   Parcel({
     required this.id,
@@ -32,6 +33,7 @@ class Parcel {
     this.isShipped = false,
     this.isArrived = false,
     this.isDelivered = false,
+    this.isWaiting = false,
   });
 
   // Геттеры для обратной совместимости
@@ -59,7 +61,7 @@ class Parcel {
 
   // Дополнительные геттеры для детального экрана
   String get dimensions {
-    if (items.isEmpty) return 'Не указано';
+    if (items.isEmpty) return 'not_specified';
     // Примерные размеры на основе веса
     final baseSize = weight * 10; // Примерный расчет
     return '${(baseSize * 1.2).toStringAsFixed(0)}x${(baseSize * 1.0).toStringAsFixed(0)}x${(baseSize * 0.8).toStringAsFixed(0)} см';
@@ -68,17 +70,17 @@ class Parcel {
   String get origin {
     if (originCountry != null) {
       final countryNames = {
-        'USA': 'Нью-Йорк, США',
-        'US': 'Нью-Йорк, США',
-        'Turkey': 'Стамбул, Турция',
-        'TR': 'Стамбул, Турция',
-        'China': 'Пекин, Китай',
-        'CN': 'Пекин, Китай',
-        'UAE': 'Дубай, ОАЭ',
-        'AE': 'Дубай, ОАЭ',
-        'amazon': 'Нью-Йорк, США',
-        'aliexpress': 'Пекин, Китай',
-        'ebay': 'Нью-Йорк, США',
+        'USA': 'USA',
+        'US': 'USA',
+        'Turkey': 'Turkey',
+        'TR': 'Turkey',
+        'China': 'China',
+        'CN': 'China',
+        'UAE': 'UAE',
+        'AE': 'UAE',
+        'amazon': 'USA',
+        'aliexpress': 'China',
+        'ebay': 'USA',
       };
       return countryNames[originCountry] ?? originCountry!;
     }
@@ -86,14 +88,14 @@ class Parcel {
     // Пытаемся определить по названию магазина
     final storeNameLower = storeName.toLowerCase();
     if (storeNameLower.contains('amazon') || storeNameLower.contains('ebay')) {
-      return 'Нью-Йорк, США';
+      return 'USA';
     } else if (storeNameLower.contains('aliexpress') || storeNameLower.contains('taobao')) {
-      return 'Пекин, Китай';
+      return 'China';
     } else if (storeNameLower.contains('trendyol') || storeNameLower.contains('hepsiburada')) {
-      return 'Стамбул, Турция';
+      return 'Turkey';
     }
     
-    return 'Не указано';
+    return 'not_specified';
   }
 
   DateTime get estimatedDelivery {
