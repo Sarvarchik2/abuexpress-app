@@ -84,7 +84,7 @@ class ParcelDetailsScreen extends StatelessWidget {
                   if (context.mounted) {
                     CustomSnackBar.error(
                       context: context,
-                      message: 'Не удалось совершить звонок',
+                      message: context.l10n.translate('call_failed'),
                     );
                   }
                 }
@@ -195,7 +195,7 @@ class ParcelDetailsScreen extends StatelessWidget {
                     Text(
                       parcel.items.length == 1
                           ? parcel.items.first.productName
-                          : '${parcel.items.length} товаров',
+                          : '${parcel.items.length} ${context.l10n.translate('items_plural')}',
                       style: TextStyle(
                         color: textColor,
                         fontSize: 18,
@@ -556,12 +556,12 @@ class ParcelDetailsScreen extends StatelessWidget {
     }
 
     // 4. Отправлено - всегда показываем
-    final airportName = parcel.origin.contains('США') || parcel.origin.contains('USA')
-        ? 'JFK Airport, Нью-Йорк'
-        : parcel.origin.contains('Китай') || parcel.origin.contains('China')
-            ? 'Аэропорт Пекина'
-            : parcel.origin.contains('Турция') || parcel.origin.contains('Turkey')
-                ? 'Аэропорт Стамбула'
+    final airportName = parcel.origin.toLowerCase().contains('usa')
+        ? l10n.translate('airport_ny')
+        : parcel.origin.toLowerCase().contains('china')
+            ? l10n.translate('airport_beijing')
+            : parcel.origin.toLowerCase().contains('turkey')
+                ? l10n.translate('airport_istanbul')
                 : l10n.translate('airport');
     
     history.add(ParcelHistoryItem(
@@ -580,7 +580,7 @@ class ParcelDetailsScreen extends StatelessWidget {
     history.add(ParcelHistoryItem(
       id: '5',
       status: isArrived ? l10n.translate('at_warehouse') : l10n.translate('in_transit'),
-      location: isArrived ? '${l10n.translate('warehouse_location')}, Ташкент' : l10n.translate('in_transit'),
+      location: isArrived ? '${l10n.translate('warehouse_location')}, ${l10n.translate('tashkent')}' : l10n.translate('in_transit'),
       description: isArrived
           ? l10n.translate('at_warehouse_description')
           : l10n.translate('in_transit_description'),

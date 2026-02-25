@@ -201,7 +201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () {
                 CustomSnackBar.info(
                   context: context,
-                  message: 'Функция в разработке',
+                  message: context.l10n.translate('function_in_development'),
                 );
               },
             ),

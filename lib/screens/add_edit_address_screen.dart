@@ -136,7 +136,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
         if (mounted) {
           CustomSnackBar.error(
             context: context,
-            message: 'Пользователь не авторизован',
+            message: context.l10n.translate('user_not_authorized'),
           );
         }
         return;
@@ -244,19 +244,19 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
       
       if (mounted) {
         String errorMessage = widget.address == null 
-            ? 'Не удалось добавить адрес'
-            : 'Не удалось обновить адрес';
+            ? context.l10n.translate('failed_to_add_address')
+            : context.l10n.translate('failed_to_update_address');
         
         if (e.toString().contains('400') || e.toString().contains('неверн')) {
-          errorMessage = 'Проверьте правильность заполнения всех полей';
+          errorMessage = context.l10n.translate('check_fields_correctness');
         } else if (e.toString().contains('401') || e.toString().contains('авторизац')) {
-          errorMessage = 'Требуется авторизация. Пожалуйста, войдите снова';
+          errorMessage = context.l10n.translate('auth_required');
         } else if (e.toString().contains('403') || e.toString().contains('запрещен')) {
-          errorMessage = 'Доступ запрещен';
+          errorMessage = context.l10n.translate('access_denied');
         } else if (e.toString().contains('500') || e.toString().contains('сервер')) {
-          errorMessage = 'Ошибка сервера. Попробуйте позже';
+          errorMessage = context.l10n.translate('server_error');
         } else if (e.toString().contains('подключен') || e.toString().contains('timeout')) {
-          errorMessage = 'Проблема с подключением. Проверьте интернет';
+          errorMessage = context.l10n.translate('connection_error');
         } else {
           errorMessage = e.toString().replaceAll('Exception: ', '');
         }
@@ -420,7 +420,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
             ),
             const SizedBox(height: 16),
             _buildTextField(
-              label: 'Почтовый индекс (необязательно)',
+              label: context.l10n.translate('postal_code_optional'),
               controller: _postalCodeController,
               hint: '100000',
               textColor: textColor,
@@ -468,7 +468,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                   ),
             label: Text(
               _isLoading
-                  ? 'Сохранение...'
+                  ? context.l10n.translate('saving')
                   : (widget.address == null 
                       ? context.l10n.translate('add_address') 
                       : context.l10n.translate('save_changes')),

@@ -130,7 +130,7 @@ class _DepartureTimerCardState extends State<DepartureTimerCard> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            item.country,
+                            context.l10n.translate(item.country.toLowerCase()),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,

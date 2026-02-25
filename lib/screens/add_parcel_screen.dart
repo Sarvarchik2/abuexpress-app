@@ -80,7 +80,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
         });
         CustomSnackBar.error(
           context: context,
-          message: 'Не удалось загрузить список стран: $e',
+          message: '${context.l10n.translate('error_loading_countries')}: $e',
         );
       }
     }
@@ -467,7 +467,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                         return context.l10n.translate('fill_required_fields');
                       }
                       if (!value.startsWith('http')) {
-                        return 'URL must start with http/https';
+                        return context.l10n.translate('invalid_url');
                       }
                       return null;
                     },
@@ -485,7 +485,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                       }
                       final cost = double.tryParse(value);
                       if (cost == null || cost <= 0) {
-                        return 'Enter valid cost';
+                        return context.l10n.translate('invalid_cost');
                       }
                       return null;
                     },
@@ -505,7 +505,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                       }
                       final weight = double.tryParse(value);
                       if (weight == null || weight <= 0) {
-                        return 'Enter valid weight';
+                        return context.l10n.translate('invalid_weight');
                       }
                       return null;
                     },
@@ -540,7 +540,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                       }
                       final qty = int.tryParse(value);
                       if (qty == null || qty <= 0) {
-                        return 'Enter valid quantity';
+                        return context.l10n.translate('invalid_quantity');
                       }
                       return null;
                     },

@@ -50,7 +50,7 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
       if (currentUser == null) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Пользователь не авторизован';
+          _errorMessage = context.l10n.translate('user_not_authorized');
         });
         return;
       }
@@ -84,17 +84,17 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
       debugPrint('Stack Trace: $stackTrace');
       
       if (mounted) {
-        String userFriendlyMessage = 'Не удалось загрузить адреса';
+        String userFriendlyMessage = context.l10n.translate('failed_to_load_addresses');
         
         // Более понятные сообщения об ошибках
         if (e.toString().contains('401') || e.toString().contains('авторизац')) {
-          userFriendlyMessage = 'Требуется авторизация. Пожалуйста, войдите снова';
+          userFriendlyMessage = context.l10n.translate('auth_required');
         } else if (e.toString().contains('403') || e.toString().contains('запрещен')) {
-          userFriendlyMessage = 'Доступ запрещен';
+          userFriendlyMessage = context.l10n.translate('access_denied');
         } else if (e.toString().contains('500') || e.toString().contains('сервер')) {
-          userFriendlyMessage = 'Ошибка сервера. Попробуйте позже';
+          userFriendlyMessage = context.l10n.translate('server_error');
         } else if (e.toString().contains('подключен') || e.toString().contains('timeout')) {
-          userFriendlyMessage = 'Проблема с подключением. Проверьте интернет';
+          userFriendlyMessage = context.l10n.translate('connection_error');
         }
         
         setState(() {
@@ -113,7 +113,7 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
   DeliveryAddress _receiverToDeliveryAddress(Receiver receiver) {
     // Определяем тип адреса по officeNumber
     final hasOffice = receiver.officeNumber != null && receiver.officeNumber!.isNotEmpty;
-    final type = hasOffice ? 'Работа' : 'Дом';
+    final type = hasOffice ? context.l10n.translate('work') : context.l10n.translate('home');
     final icon = hasOffice ? Icons.business : Icons.home;
     
     // Формируем полный адрес
@@ -122,15 +122,15 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
       addressParts.add(receiver.address);
     }
     if (receiver.apartment.isNotEmpty) {
-      addressParts.add('кв. ${receiver.apartment}');
+      addressParts.add('${context.l10n.translate('apartment_short')} ${receiver.apartment}');
     } else if (receiver.officeNumber != null && receiver.officeNumber!.isNotEmpty) {
-      addressParts.add('офис ${receiver.officeNumber}');
+      addressParts.add('${context.l10n.translate('office_short')} ${receiver.officeNumber}');
     }
     if (receiver.district.isNotEmpty) {
       addressParts.add(receiver.district);
     }
     if (receiver.city.isNotEmpty) {
-      addressParts.add('г. ${receiver.city}');
+      addressParts.add('${context.l10n.translate('city_short')} ${receiver.city}');
     }
     
     final fullAddress = addressParts.isNotEmpty 
@@ -203,7 +203,7 @@ class _DeliveryAddressesScreenState extends State<DeliveryAddressesScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _loadAddresses,
-                    child: const Text('Повторить'),
+                    child: Text(context.l10n.translate('retry')),
                   ),
                 ],
               ),

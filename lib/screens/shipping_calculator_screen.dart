@@ -70,7 +70,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
     if (widget.selectedAddressId == null) {
       CustomSnackBar.error(
         context: context,
-        message: 'Адрес доставки не выбран',
+        message: context.l10n.translate('please_select_address'),
       );
       return;
     }
@@ -125,7 +125,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
 
       final addressId = int.tryParse(widget.selectedAddressId!) ?? 0;
       if (addressId == 0) {
-        throw Exception('Неверный ID адреса');
+        throw Exception(context.l10n.translate('invalid_address_id'));
       }
 
       debugPrint('=== CREATING ORDERS ===');
@@ -150,7 +150,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
               item.quantity <= 0 ||
               item.color == null ||
               item.color!.trim().isEmpty) {
-            throw Exception('Не все обязательные поля заполнены');
+            throw Exception(context.l10n.translate('fill_required_fields'));
           }
 
           final request = OrderOwnCreateRequest(
@@ -240,7 +240,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
 
       CustomSnackBar.error(
         context: context,
-        message: 'Ошибка при оформлении заказа: $e',
+        message: '${context.l10n.translate('order_creation_error')}: $e',
       );
     }
   }
@@ -412,9 +412,9 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                 ),
                 const SizedBox(height: 12),
                 _buildCostRow(
-                  'Таможенные сборы',
+                  context.l10n.translate('customs_fees'),
                   widget.shippingCost.formattedCustoms,
-                  '15% от стоимости товара',
+                  context.l10n.translate('customs_fees_description'),
                   textColor,
                   textSecondaryColor,
                   cardColor,
@@ -542,7 +542,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    'Оформление...',
+                                    context.l10n.translate('processing'),
                                     style: TextStyle(
                                       color: ThemeHelper.isDark(context)
                                           ? const Color(0xFF0A0E27)
