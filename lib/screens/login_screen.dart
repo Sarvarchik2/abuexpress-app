@@ -11,6 +11,7 @@ import 'main_screen.dart';
 // import 'registration_choice_screen.dart';
 import 'self_registration_screen.dart';
 import 'forgot_password_screen.dart';
+import '../services/notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -410,6 +411,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
       debugPrint('=== NAVIGATING TO MAIN SCREEN ===');
       
+      // Синхронизируем FCM Token с бэкендом (убрали await, чтобы не задерживать переход в приложение!)
+      try {
+        debugPrint('=== SYNCING FCM TOKEN ===');
+        NotificationService().syncToken();
+      } catch (e) {
+        debugPrint('Error syncing token: $e');
+      }
+
       // Переходим на главный экран без задержки
       if (!mounted) {
         debugPrint('Widget not mounted, cannot navigate');

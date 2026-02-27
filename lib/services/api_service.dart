@@ -1481,5 +1481,62 @@ class ApiService {
       throw Exception('Ошибка подключения: $e');
     }
   }
+
+  /// Регистрирует устройство для уведомлений (FCM)
+  Future<void> addDevice({
+    required String fcmToken,
+    required String deviceType,
+    required String languageType,
+  }) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.addDevice}');
+      
+      final requestBody = {
+        'fcm_token': fcmToken,
+        'device_type': deviceType,
+        'language_type': languageType,
+      };
+
+      debugPrint('=== ADD DEVICE REQUEST ===');
+      debugPrint('URL: $url');
+      debugPrint('Body: ${jsonEncode(requestBody)}');
+
+      final response = await client.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== ADD DEVICE TIMEOUT ===');
+          throw Exception('Время ожидания истекло');
+        },
+      );
+
+      debugPrint('=== ADD DEVICE RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('=== ADD DEVICE SUCCESS ===');
+        return;
+      } else {
+        String errorMessage = 'Ошибка регистрации устройства';
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['message'] as String? ?? 
+                        errorData['detail'] as String? ??
+                        errorMessage;
+        } catch (e) {
+           // ignore
+        }
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      debugPrint('=== ADD DEVICE EXCEPTION ===');
+      debugPrint('Error: $e');
+      throw Exception('Ошибка подключения: $e');
+    }
+  }
 }
 

@@ -13,6 +13,7 @@ class ApiConfig {
   static const String officeAddresses = '/office-address/';
   static const String dateTime = '/date-time/';
   static const String fcmToken = '/fcm-token/';
+  static const String addDevice = '/add-device/';
   
   // Helper methods for endpoints with IDs
   static String addressById(int addressId) => '/addresses/$addressId/';

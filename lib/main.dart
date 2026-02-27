@@ -9,38 +9,47 @@ import 'utils/theme.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/splash_screen.dart';
 
-// import 'package:firebase_core/firebase_core.dart';
-// import 'services/notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'services/notification_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Инициализация Firebase
-  // try {
-  //   await Firebase.initializeApp();
-  //   debugPrint("Firebase initialized successfully");
-  //   
-  //   // Инициализация уведомлений
-  //   await NotificationService().initialize();
-  // } catch (e) {
-  //   debugPrint("Failed to initialize Firebase: $e");
-  // }
-
-  // Подавляем предупреждения о клавиатуре в симуляторе
-  FlutterError.onError = (FlutterErrorDetails details) {
-    // Игнорируем предупреждения о KeyUpEvent в симуляторе
-    final exceptionString = details.exception.toString();
-    if (exceptionString.contains('KeyUpEvent') ||
-        exceptionString.contains('HardwareKeyboard') ||
-        exceptionString.contains('KeyDownEvent') ||
-        exceptionString.contains('_pressedKeys.containsKey')) {
-      return; // Игнорируем эти предупреждения
-    }
-    FlutterError.presentError(details);
-  };
-
   // Перехватываем ошибки из зоны выполнения
-  runZonedGuarded(() {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // Инициализация Firebase
+    try {
+      debugPrint("Starting Firebase.initializeApp()...");
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      }
+      debugPrint("Firebase initialized successfully: ${Firebase.apps.length} apps");
+      
+      debugPrint("Starting NotificationService().initialize()...");
+      // Убрали await, чтобы приложение не висело на белом экране при проблемах с сетью/симулятором
+      NotificationService().initialize(); 
+      debugPrint("NotificationService initialization started in background");
+    } catch (e, stack) {
+      debugPrint("Failed to initialize Firebase: $e");
+      debugPrint("Stack trace: $stack");
+    }
+
+    // Подавляем предупреждения о клавиатуре в симуляторе
+    FlutterError.onError = (FlutterErrorDetails details) {
+      // Игнорируем предупреждения о KeyUpEvent в симуляторе
+      final exceptionString = details.exception.toString();
+      if (exceptionString.contains('KeyUpEvent') ||
+          exceptionString.contains('HardwareKeyboard') ||
+          exceptionString.contains('KeyDownEvent') ||
+          exceptionString.contains('_pressedKeys.containsKey')) {
+        return; // Игнорируем эти предупреждения
+      }
+      FlutterError.presentError(details);
+    };
+
     runApp(const AbuExpressApp());
   }, (error, stack) {
     // Игнорируем ошибки клавиатуры из services library
