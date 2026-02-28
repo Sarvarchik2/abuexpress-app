@@ -12,6 +12,7 @@ import '../models/api/login_request.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import 'email_verification_screen.dart';
+import '../services/notification_service.dart';
 
 class SelfRegistrationScreen extends StatefulWidget {
   const SelfRegistrationScreen({super.key});
@@ -511,11 +512,14 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
       // If registration returns a token, we can auto-login
       if (response.accessToken != null) {
          final userProvider = Provider.of<UserProvider>(context, listen: false);
-         userProvider.setAuthToken(response.accessToken!); // Saves to prefs
+         await userProvider.setAuthToken(response.accessToken!); // Saves to prefs
          
          // Fetch user info
          final userInfo = await apiService.getMe();
          userProvider.setUserInfo(userInfo);
+
+         // Sync FCM token
+         NotificationService().syncToken();
 
          if (!mounted) return;
          
@@ -533,11 +537,14 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
            
            if (loginResponse.accessToken != null) {
              final userProvider = Provider.of<UserProvider>(context, listen: false);
-             userProvider.setAuthToken(loginResponse.accessToken!);
+             await userProvider.setAuthToken(loginResponse.accessToken!);
              
              apiService.setAuthToken(loginResponse.accessToken);
              final userInfo = await apiService.getMe();
              userProvider.setUserInfo(userInfo);
+
+             // Sync FCM token
+             NotificationService().syncToken();
 
              if (!mounted) return;
              

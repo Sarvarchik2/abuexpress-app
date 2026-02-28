@@ -10,6 +10,7 @@ import '../providers/user_provider.dart';
 import '../models/api/login_request.dart';
 import '../models/api/user_registration.dart';
 import 'login_screen.dart';
+import '../services/notification_service.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
@@ -239,7 +240,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   Future<void> _handleSuccessfulLogin(String token) async {
       if (!mounted) return;
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      userProvider.setAuthToken(token);
+      await userProvider.setAuthToken(token);
       _apiService.setAuthToken(token);
       
       try {
@@ -248,6 +249,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       } catch (e) {
         debugPrint('Error loading user info: $e');
       }
+
+      // Синхронизируем токен для пуш уведомлений после успешной регистрации
+      NotificationService().syncToken();
 
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(

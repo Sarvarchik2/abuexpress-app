@@ -33,10 +33,10 @@ class NotificationService {
     // 3. Настройка обработчика сообщений в фоне
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    // 4. Получение токена (и отправка на сервер) — мы теперь сделаем это в отдельном методе
-    // который можно вызвать после логина. Но на всякий случай попробуем и здесь,
-    // если пользователь уже залогинен.
-    _syncToken();
+    // 4. Получение токена (и отправка на сервер) — ТЕПЕРЬ ТОЛЬКО ПОСЛЕ ЛОГИНА!
+    // Мы убрали вызов _syncToken() отсюда по просьбе пользователя.
+    // Этот процесс теперь будет запускаться только вручную из LoginScreen.
+    // _syncToken();
 
     // Слушаем обновление токена
     _messaging.onTokenRefresh.listen((newToken) {
@@ -129,8 +129,14 @@ class NotificationService {
     }
   }
 
+  // Состояние, чтобы не запускать несколько процессов получения токена параллельно
+  bool _isFetchingApns = false;
+
   // Фоновый метод, который будет долбиться пока не получит токен
   Future<void> _waitForAPNSTokenAndRegister() async {
+    if (_isFetchingApns) return; // Уже ищем токен, не запускаем дубликат
+    _isFetchingApns = true;
+    
     String? apnsToken;
     int attempts = 0;
     
@@ -155,6 +161,8 @@ class NotificationService {
       await Future.delayed(const Duration(seconds: 2));
     }
     
+    _isFetchingApns = false;
+
     if (apnsToken == null) {
       debugPrint("❌ Failed to get APNS token after 30 attempts.");
     }
@@ -162,11 +170,18 @@ class NotificationService {
 
   Future<void> _sendTokenToServer(String token) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastSentToken = prefs.getString('last_sent_fcm_token');
+      
+      if (lastSentToken == token) {
+        debugPrint('FCM Token already sent & saved on this device. Skipping duplicate.');
+        return; 
+      }
+
       debugPrint('Sending FCM token to server...');
       final apiService = ApiService();
       
       // Get saved auth token if available
-      final prefs = await SharedPreferences.getInstance();
       final authToken = prefs.getString('auth_token');
       if (authToken != null) {
         apiService.setAuthToken(authToken);
@@ -184,7 +199,9 @@ class NotificationService {
         languageType: languageType,
       );
       
-      debugPrint('FCM Token successfully sent to server');
+      // Сохраняем в память самого телефона, чтобы при следующих входах не отправлять повторно
+      await prefs.setString('last_sent_fcm_token', token);
+      debugPrint('FCM Token successfully sent to server and cached on device.');
     } catch (e) {
       debugPrint('Error sending FCM token to server: $e');
     }
