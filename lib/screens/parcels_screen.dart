@@ -14,6 +14,7 @@ import '../utils/theme_helper.dart';
 import '../utils/localization_helper.dart';
 import '../utils/theme.dart';
 import '../providers/user_provider.dart';
+import '../services/notification_service.dart';
 
 class ParcelsScreen extends StatefulWidget {
   final int currentIndex;
@@ -243,58 +244,7 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
     }
   }
 
-  List<NotificationItem> get _notifications => [
-    NotificationItem(
-      id: '1',
-      title: context.l10n.translate('parcel_arrived'),
-      description: '${context.l10n.translate('parcel_arrived')} ABU123456',
-      dateTime: DateTime.now().subtract(const Duration(hours: 2)),
-      type: NotificationType.parcelArrived,
-      isRead: false,
-    ),
-    NotificationItem(
-      id: '2',
-      title: context.l10n.translate('parcel_in_transit'),
-      description: '${context.l10n.translate('parcel_in_transit')} ABU789012',
-      dateTime: DateTime.now().subtract(const Duration(hours: 5)),
-      type: NotificationType.parcelInTransit,
-      isRead: false,
-    ),
-    NotificationItem(
-      id: '3',
-      title: context.l10n.translate('special_offer'),
-      description: context.l10n.translate('special_offer'),
-      dateTime: DateTime.now().subtract(const Duration(days: 1)),
-      type: NotificationType.specialOffer,
-      isRead: true,
-    ),
-    NotificationItem(
-      id: '4',
-      title: context.l10n.translate('app_update'),
-      description: context.l10n.translate('app_update'),
-      dateTime: DateTime.now().subtract(const Duration(days: 2)),
-      type: NotificationType.appUpdate,
-      isRead: true,
-    ),
-    NotificationItem(
-      id: '5',
-      title: context.l10n.translate('parcel_delivered'),
-      description: '${context.l10n.translate('parcel_delivered')} ABU345678',
-      dateTime: DateTime.now().subtract(const Duration(days: 3)),
-      type: NotificationType.parcelDelivered,
-      isRead: true,
-    ),
-    NotificationItem(
-      id: '6',
-      title: context.l10n.translate('new_products'),
-      description: context.l10n.translate('new_products'),
-      dateTime: DateTime.now().subtract(const Duration(days: 4)),
-      type: NotificationType.newProducts,
-      isRead: true,
-    ),
-  ];
 
-  int get _unreadNotificationsCount => _notifications.where((n) => !n.isRead).length;
 
   void _showNotificationsBottomSheet() {
     showModalBottomSheet(
@@ -305,23 +255,35 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
         initialChildSize: 0.75,
         minChildSize: 0.5,
         maxChildSize: 0.95,
-        builder: (context, scrollController) => NotificationsBottomSheet(
-          notifications: _notifications,
-          scrollController: scrollController,
-          onNotificationTap: (notificationId) {
-            // Обновляем состояние для обновления счетчика
-            if (mounted) {
-              setState(() {});
-            }
-          },
+        builder: (context, scrollController) => ValueListenableBuilder<List<NotificationItem>>(
+          valueListenable: NotificationService().notificationsNotifier,
+          builder: (context, notifs, _) => NotificationsBottomSheet(
+            notifications: notifs,
+            scrollController: scrollController,
+            onNotificationTap: (notificationId) {
+              NotificationService().markAsRead(notificationId);
+              try {
+                final tappedNotif = notifs.firstWhere((n) => n.id == notificationId);
+                if (tappedNotif.orderId != null) {
+                  // Ищем посылку по orderId
+                  final parcel = _parcels.firstWhere((p) => p.items.any((item) => item.id == tappedNotif.orderId));
+                  
+                  Navigator.pop(context); // закрываем bottom sheet
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ParcelDetailsScreen(parcel: parcel),
+                    ),
+                  );
+                }
+              } catch (e) {
+                debugPrint('Parcel for notification not found: $e');
+              }
+            },
+          ),
         ),
       ),
-    ).then((_) {
-      // Обновляем счетчик после закрытия bottom sheet
-      if (mounted) {
-        setState(() {});
-      }
-    });
+    );
   }
 
   @override
@@ -503,38 +465,44 @@ class _ParcelsScreenState extends State<ParcelsScreen> with WidgetsBindingObserv
                 _showNotificationsBottomSheet();
               },
               borderRadius: BorderRadius.circular(20),
-            child: Stack(
-              children: [
-                Icon(
-                  Icons.notifications_outlined,
-                  color: textColor,
-                  size: 28,
-                ),
-                if (_unreadNotificationsCount > 0)
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.gold,
-                        shape: BoxShape.circle,
+              child: ValueListenableBuilder<List<NotificationItem>>(
+                valueListenable: NotificationService().notificationsNotifier,
+                builder: (context, notifications, _) {
+                  final _unreadNotificationsCount = notifications.where((n) => !n.isRead).length;
+                  return Stack(
+                    children: [
+                      Icon(
+                        Icons.notifications_outlined,
+                        color: textColor,
+                        size: 28,
                       ),
-                      child: Center(
-                        child: Text(
-                          _unreadNotificationsCount > 9 ? '9+' : _unreadNotificationsCount.toString(),
-                          style: TextStyle(
-                            color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                      if (_unreadNotificationsCount > 0)
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.gold,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                _unreadNotificationsCount > 9 ? '9+' : _unreadNotificationsCount.toString(),
+                                style: TextStyle(
+                                  color: ThemeHelper.isDark(context) ? const Color(0xFF0A0E27) : const Color(0xFF212121),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/notification.dart';
 import '../utils/theme_helper.dart';
+import '../utils/localization_helper.dart';
 import '../utils/theme.dart' show AppTheme;
 
 class NotificationsBottomSheet extends StatefulWidget {
@@ -181,7 +182,7 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    notification.title,
+                    _getLocalizedTitle(notification, context),
                     style: TextStyle(
                       color: textColor,
                       fontSize: 16,
@@ -192,7 +193,7 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    notification.description,
+                    _getLocalizedDescription(notification, context),
                     style: TextStyle(
                       color: textSecondaryColor,
                       fontSize: 14,
@@ -202,7 +203,7 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    notification.timeAgo,
+                    _getTimeAgo(notification.dateTime, context),
                     style: TextStyle(
                       color: textSecondaryColor,
                       fontSize: 12,
@@ -226,6 +227,44 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
         ),
       ),
     );
+  }
+
+  String _getLocalizedTitle(NotificationItem notification, BuildContext context) {
+    if (notification.type == NotificationType.parcelArrived) return context.l10n.translate('parcel_arrived');
+    if (notification.type == NotificationType.parcelInTransit) return context.l10n.translate('parcel_in_transit');
+    if (notification.type == NotificationType.parcelDelivered) return context.l10n.translate('parcel_delivered');
+    if (notification.type == NotificationType.appUpdate) return context.l10n.translate('app_update');
+    // Если ничего не подошло, возвращаем как было
+    return notification.title;
+  }
+
+  String _getLocalizedDescription(NotificationItem notification, BuildContext context) {
+    if (notification.orderId != null) {
+      if (notification.type == NotificationType.parcelDelivered) {
+        return '${context.l10n.translate('parcel_delivered')} (#${notification.orderId})';
+      } else if (notification.type == NotificationType.parcelArrived) {
+         return '${context.l10n.translate('parcel_arrived')} (#${notification.orderId})';
+      } else if (notification.type == NotificationType.parcelInTransit) {
+         return '${context.l10n.translate('parcel_in_transit')} (#${notification.orderId})';
+      }
+    }
+    return notification.description;
+  }
+
+  String _getTimeAgo(DateTime dateTime, BuildContext context) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays} ${context.l10n.translate('days_short')}';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} ${context.l10n.translate('hours_short')}';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} ${context.l10n.translate('minutes_short')}';
+    } else {
+       // "Только что" - можно пока просто '0 MIN' или без локализации, т.к. "Только что" нет в списке переводов, но можно и захардкодить:
+      return '1 ${context.l10n.translate('minutes_short')}';
+    }
   }
 }
 

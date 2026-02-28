@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
+import '../models/notification.dart';
 
 // Функция для обработки уведомлений в фоне (должна быть top-level)
 @pragma('vm:entry-point')
@@ -22,9 +24,93 @@ class NotificationService {
   NotificationService._internal();
 
   late final FirebaseMessaging _messaging;
+  
+  // Локальное состояние уведомлений
+  final ValueNotifier<List<NotificationItem>> notificationsNotifier = ValueNotifier([]);
+
+  Future<void> _loadNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsJson = prefs.getString('saved_notifications');
+    if (notificationsJson != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(notificationsJson);
+        final notifications = decoded.map((e) => NotificationItem.fromJson(e)).toList();
+        notificationsNotifier.value = notifications;
+      } catch (e) {
+        debugPrint('Error loading saved notifications: $e');
+      }
+    }
+  }
+
+  Future<void> _saveNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = notificationsNotifier.value.map((e) => e.toJson()).toList();
+    await prefs.setString('saved_notifications', jsonEncode(jsonList));
+  }
+
+  void markAsRead(String id) {
+    bool changed = false;
+    for (var n in notificationsNotifier.value) {
+      if (n.id == id && !n.isRead) {
+        n.isRead = true;
+        changed = true;
+      }
+    }
+    if (changed) {
+      // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+      notificationsNotifier.notifyListeners();
+      _saveNotifications();
+    }
+  }
+
+  void _addNewNotification(RemoteMessage message) {
+    final id = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
+    
+    // Исключаем дубликаты
+    if (notificationsNotifier.value.any((n) => n.id == id)) return;
+
+    final typeStr = message.data['status']?.toString().toLowerCase() ?? '';
+    final String? orderId = message.data['order_id']?.toString();
+    
+    NotificationType type = NotificationType.appUpdate;
+    if (typeStr.contains('transit') || typeStr.contains('shipped')) {
+      type = NotificationType.parcelInTransit;
+    } else if (typeStr.contains('arrived') || typeStr.contains('warehouse')) {
+      type = NotificationType.parcelArrived;
+    } else if (typeStr.contains('delivered')) {
+      type = NotificationType.parcelDelivered;
+    }
+
+    final String title = message.notification?.title ?? "Abuexpress";
+    String body = message.notification?.body ?? "Новое уведомление";
+
+    // Улучшаем локальное отображение, если бэкенд прислал скупой текст:
+    if (orderId != null && body == 'Update: delivered') {
+      body = 'Ваша посылка (Заказ #$orderId) доставлена';
+    } else if (orderId != null && body.startsWith('Update:')) {
+       body = 'Статус заказа #$orderId изменился на: $typeStr';
+    }
+
+    final newItem = NotificationItem(
+      id: id,
+      title: title,
+      description: body,
+      dateTime: DateTime.now(),
+      type: type,
+      orderId: orderId,
+      isRead: false,
+    );
+    
+    notificationsNotifier.value = [newItem, ...notificationsNotifier.value];
+    _saveNotifications();
+  }
 
   Future<void> initialize() async {
     _messaging = FirebaseMessaging.instance;
+    
+    // Загружаем сохраненные уведомления
+    await _loadNotifications();
+
     // 1. Инициализация Firebase (если еще не инициализирован, лучше вызывать в main)
     
     // 2. Запрос разрешений
@@ -32,11 +118,6 @@ class NotificationService {
 
     // 3. Настройка обработчика сообщений в фоне
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-    // 4. Получение токена (и отправка на сервер) — ТЕПЕРЬ ТОЛЬКО ПОСЛЕ ЛОГИНА!
-    // Мы убрали вызов _syncToken() отсюда по просьбе пользователя.
-    // Этот процесс теперь будет запускаться только вручную из LoginScreen.
-    // _syncToken();
 
     // Слушаем обновление токена
     _messaging.onTokenRefresh.listen((newToken) {
@@ -59,8 +140,9 @@ class NotificationService {
       if (message.notification != null) {
         debugPrint('Заголовок: ${message.notification?.title}');
         debugPrint('Текст: ${message.notification?.body}');
-        // Если вы добавите пакет flutter_local_notifications, здесь можно
-        // показать красивый всплывающий Снекбар (SnackBar) внутри приложения.
+        
+        // Сохраняем уведомление в локальный список
+        _addNewNotification(message);
       }
     });
     
@@ -69,10 +151,8 @@ class NotificationService {
        debugPrint('👆 Пользователь нажал на уведомление!');
        debugPrint('Данные (Payload) для перехода: ${message.data}');
        
-       // Пример: если с бэкенда пришел ключ "order_id", можно сразу перейти на экран заказа
-       // if (message.data.containsKey('order_id')) {
-       //   Navigator.pushNamed(context, '/order_details', arguments: message.data['order_id']);
-       // }
+       // Сохраняем уведомление
+       _addNewNotification(message);
     });
 
     // 7. Обработка клика по уведомлению, если приложение было ПОЛНОСТЬЮ закрыто (Terminated)
@@ -80,7 +160,9 @@ class NotificationService {
     if (initialMessage != null) {
       debugPrint('🚀 Приложение было запущено кликом по уведомлению!');
       debugPrint('Данные (Payload): ${initialMessage.data}');
-      // Здесь тоже можно сохранить данные и сделать навигацию сразу после старта
+      
+      // Сохраняем уведомление
+      _addNewNotification(initialMessage);
     }
   }
 

@@ -4,6 +4,7 @@ class NotificationItem {
   final String description;
   final DateTime dateTime;
   final NotificationType type;
+  final String? orderId;
   bool isRead;
 
   NotificationItem({
@@ -12,41 +13,29 @@ class NotificationItem {
     required this.description,
     required this.dateTime,
     required this.type,
+    this.orderId,
     this.isRead = false,
   });
 
-  String get timeAgo {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'dateTime': dateTime.toIso8601String(),
+    'type': type.index,
+    'orderId': orderId,
+    'isRead': isRead,
+  };
 
-    if (difference.inDays > 0) {
-      return '${difference.inDays} ${_getDayWord(difference.inDays)} назад';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours} ${_getHourWord(difference.inHours)} назад';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} ${_getMinuteWord(difference.inMinutes)} назад';
-    } else {
-      return 'Только что';
-    }
-  }
-
-  String _getDayWord(int days) {
-    if (days == 1) return 'день';
-    if (days >= 2 && days <= 4) return 'дня';
-    return 'дней';
-  }
-
-  String _getHourWord(int hours) {
-    if (hours == 1) return 'час';
-    if (hours >= 2 && hours <= 4) return 'часа';
-    return 'часов';
-  }
-
-  String _getMinuteWord(int minutes) {
-    if (minutes == 1) return 'минуту';
-    if (minutes >= 2 && minutes <= 4) return 'минуты';
-    return 'минут';
-  }
+  factory NotificationItem.fromJson(Map<String, dynamic> json) => NotificationItem(
+    id: json['id'],
+    title: json['title'],
+    description: json['description'],
+    dateTime: DateTime.parse(json['dateTime']),
+    type: NotificationType.values[json['type']],
+    orderId: json['orderId'],
+    isRead: json['isRead'] ?? false,
+  );
 }
 
 enum NotificationType {
