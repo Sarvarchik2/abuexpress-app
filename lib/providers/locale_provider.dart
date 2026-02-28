@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/notification_service.dart';
 
 class LocaleProvider extends ChangeNotifier {
   Locale _locale = const Locale('ru'); // По умолчанию русский
@@ -28,13 +29,16 @@ class LocaleProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> setLocale(Locale locale) async {
-    if (_locale == locale) return;
+  Future<void> setLocale(Locale newLocale) async {
+    if (_locale == newLocale) return;
     
-    _locale = locale;
+    _locale = newLocale;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language_code', locale.languageCode);
+    await prefs.setString('language_code', newLocale.languageCode);
     notifyListeners();
+    
+    // Как только пользователь меняет язык, сразу обновляем его на сервере (для пуш-уведомлений)
+    NotificationService().syncToken();
   }
 
   void setLanguage(String languageCode) {

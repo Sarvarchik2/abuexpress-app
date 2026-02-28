@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'api_service.dart';
 import '../models/notification.dart';
 
@@ -36,6 +37,7 @@ class NotificationService {
         final List<dynamic> decoded = jsonDecode(notificationsJson);
         final notifications = decoded.map((e) => NotificationItem.fromJson(e)).toList();
         notificationsNotifier.value = notifications;
+        _updateAppBadge();
       } catch (e) {
         debugPrint('Error loading saved notifications: $e');
       }
@@ -46,6 +48,21 @@ class NotificationService {
     final prefs = await SharedPreferences.getInstance();
     final jsonList = notificationsNotifier.value.map((e) => e.toJson()).toList();
     await prefs.setString('saved_notifications', jsonEncode(jsonList));
+  }
+
+  void _updateAppBadge() async {
+    try {
+      if (await FlutterAppBadger.isAppBadgeSupported()) {
+        final unreadCount = notificationsNotifier.value.where((n) => !n.isRead).length;
+        if (unreadCount > 0) {
+          FlutterAppBadger.updateBadgeCount(unreadCount);
+        } else {
+          FlutterAppBadger.removeBadge();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error updating app badge: $e');
+    }
   }
 
   void markAsRead(String id) {
@@ -60,6 +77,7 @@ class NotificationService {
       // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
       notificationsNotifier.notifyListeners();
       _saveNotifications();
+      _updateAppBadge();
     }
   }
 
@@ -103,6 +121,7 @@ class NotificationService {
     
     notificationsNotifier.value = [newItem, ...notificationsNotifier.value];
     _saveNotifications();
+    _updateAppBadge();
   }
 
   Future<void> initialize() async {
@@ -254,9 +273,11 @@ class NotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final lastSentToken = prefs.getString('last_sent_fcm_token');
+      final lastSentLang = prefs.getString('last_sent_fcm_lang');
+      final languageType = prefs.getString('language_code') ?? 'ru';
       
-      if (lastSentToken == token) {
-        debugPrint('FCM Token already sent & saved on this device. Skipping duplicate.');
+      if (lastSentToken == token && lastSentLang == languageType) {
+        debugPrint('FCM Token & language already synced on this device. Skipping duplicate.');
         return; 
       }
 
@@ -269,9 +290,6 @@ class NotificationService {
         apiService.setAuthToken(authToken);
       }
 
-      // Detect language
-      String languageType = prefs.getString('language_code') ?? 'ru';
-
       // Device type - use strings as requested
       String deviceType = Platform.isIOS ? 'ios' : 'android';
       
@@ -283,6 +301,7 @@ class NotificationService {
       
       // Сохраняем в память самого телефона, чтобы при следующих входах не отправлять повторно
       await prefs.setString('last_sent_fcm_token', token);
+      await prefs.setString('last_sent_fcm_lang', languageType);
       debugPrint('FCM Token successfully sent to server and cached on device.');
     } catch (e) {
       debugPrint('Error sending FCM token to server: $e');
