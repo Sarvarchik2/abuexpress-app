@@ -1581,6 +1581,7 @@ class ApiService {
     } catch (e) {
       debugPrint('=== UPDATE DEVICE EXCEPTION ===');
       debugPrint('Error: $e');
+      rethrow;
     }
   }
 
@@ -1615,6 +1616,7 @@ class ApiService {
     } catch (e) {
       debugPrint('=== DELETE DEVICE EXCEPTION ===');
       debugPrint('Error: $e');
+      rethrow;
     }
   }
 }
