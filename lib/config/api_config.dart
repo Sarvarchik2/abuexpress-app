@@ -18,5 +18,6 @@ class ApiConfig {
   // Helper methods for endpoints with IDs
   static String addressById(int addressId) => '/addresses/$addressId/';
   static String orderOwnById(int id) => '/order-own/$id/';
+  static String deviceById(String fcmToken) => '/device/$fcmToken/';
 }
 

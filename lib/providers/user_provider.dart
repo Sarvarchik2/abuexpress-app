@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/api/user_info.dart';
+import '../services/notification_service.dart';
 
 class UserProvider extends ChangeNotifier {
   UserInfo? _userInfo;
@@ -40,6 +41,9 @@ class UserProvider extends ChangeNotifier {
   }
 
   Future<void> clearUser() async {
+    // Удаляем токен с сервера перед выходом из аккаунта
+    await NotificationService().deleteToken();
+    
     _userInfo = null;
     _authToken = null;
     notifyListeners();

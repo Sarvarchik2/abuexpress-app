@@ -218,14 +218,19 @@ class NotificationService {
   Future<String?> _getToken() async {
     try {
       if (!kIsWeb && Platform.isIOS) {
-        debugPrint("Waiting for APNS token in background...");
-        // Запускаем асинхронный процесс без блокировки метода
-        _waitForAPNSTokenAndRegister();
-        return null; // Возвращаем null сразу, чтобы не блокировать UI. Настоящий токен уйдет позже из _waitForAPNSTokenAndRegister
+        String? apnsLoc = await _messaging.getAPNSToken();
+        if (apnsLoc == null) {
+          debugPrint("Waiting for APNS token in background...");
+          // Запускаем асинхронный процесс без блокировки метода
+          _waitForAPNSTokenAndRegister();
+          return null; // Возвращаем null сразу, чтобы не блокировать UI.
+        } else {
+           debugPrint("APNS token already available: $apnsLoc");
+        }
       }
 
       String? token = await _messaging.getToken();
-      debugPrint('FCM Token (Android): $token');
+      debugPrint('FCM Token: $token');
       return token;
     } catch (e) {
       debugPrint('Error getting initial FCM token: $e');
@@ -278,36 +283,68 @@ class NotificationService {
       final lastSentToken = prefs.getString('last_sent_fcm_token');
       final lastSentLang = prefs.getString('last_sent_fcm_lang');
       final languageType = prefs.getString('language_code') ?? 'ru';
-      
-      if (lastSentToken == token && lastSentLang == languageType) {
-        debugPrint('FCM Token & language already synced on this device. Skipping duplicate.');
-        return; 
-      }
 
-      debugPrint('Sending FCM token to server...');
       final apiService = ApiService();
-      
-      // Get saved auth token if available
       final authToken = prefs.getString('auth_token');
       if (authToken != null) {
         apiService.setAuthToken(authToken);
       }
-
-      // Device type - use strings as requested
+      
       String deviceType = Platform.isIOS ? 'ios' : 'android';
-      
-      await apiService.addDevice(
-        fcmToken: token,
-        deviceType: deviceType,
-        languageType: languageType,
-      );
-      
-      // Сохраняем в память самого телефона, чтобы при следующих входах не отправлять повторно
-      await prefs.setString('last_sent_fcm_token', token);
-      await prefs.setString('last_sent_fcm_lang', languageType);
-      debugPrint('FCM Token successfully sent to server and cached on device.');
+
+      if (lastSentToken == token) {
+        if (lastSentLang != languageType) {
+          debugPrint('FCM token exists, but language changed. Sending PATCH request...');
+          await apiService.updateDevice(
+            fcmToken: token,
+            languageType: languageType,
+          );
+          await prefs.setString('last_sent_fcm_lang', languageType);
+          debugPrint('FCM language successfully updated on server.');
+        } else {
+          debugPrint('FCM token and language are already synced. Skipping duplicate POST.');
+        }
+      } else {
+        debugPrint('Sending new FCM token (POST) to server...');
+        await apiService.addDevice(
+          fcmToken: token,
+          deviceType: deviceType,
+          languageType: languageType,
+        );
+        
+        await prefs.setString('last_sent_fcm_token', token);
+        await prefs.setString('last_sent_fcm_lang', languageType);
+        debugPrint('FCM Token successfully added to server and cached on device.');
+      }
     } catch (e) {
       debugPrint('Error sending FCM token to server: $e');
+    }
+  }
+
+  /// Отвязывает токен от сервера (используется при выходе из аккаунта)
+  Future<void> deleteToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('last_sent_fcm_token');
+    
+    if (token != null) {
+      final apiService = ApiService();
+      final authToken = prefs.getString('auth_token');
+      
+      if (authToken != null) {
+        apiService.setAuthToken(authToken);
+        try {
+          debugPrint('Deleting FCM token (DELETE) from server...');
+          await apiService.deleteDevice(token);
+          debugPrint('FCM Token successfully deleted from server.');
+        } catch (e) {
+          debugPrint('Error deleting FCM token: $e');
+        }
+      }
+      
+      // Очищаем кэш токена независимо от успеха сервера, 
+      // чтобы при следующем входе токен отправился заново
+      await prefs.remove('last_sent_fcm_token');
+      await prefs.remove('last_sent_fcm_lang');
     }
   }
 }

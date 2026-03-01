@@ -1538,5 +1538,84 @@ class ApiService {
       throw Exception('Ошибка подключения: $e');
     }
   }
+
+  /// Обновляет данные устройства (например, при смене языка)
+  Future<void> updateDevice({
+    required String fcmToken,
+    String? languageType,
+  }) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.deviceById(fcmToken)}');
+      
+      final requestBody = <String, dynamic>{};
+      if (languageType != null) {
+        requestBody['language_type'] = languageType;
+      }
+
+      debugPrint('=== UPDATE DEVICE REQUEST ===');
+      debugPrint('URL: $url');
+      debugPrint('Body: ${jsonEncode(requestBody)}');
+
+      final response = await client.patch(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== UPDATE DEVICE TIMEOUT ===');
+          throw Exception('Время ожидания истекло');
+        },
+      );
+
+      debugPrint('=== UPDATE DEVICE RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 204 || response.statusCode == 201) {
+        debugPrint('=== UPDATE DEVICE SUCCESS ===');
+        return;
+      } else {
+        throw Exception('Ошибка обновления устройства: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('=== UPDATE DEVICE EXCEPTION ===');
+      debugPrint('Error: $e');
+    }
+  }
+
+  /// Удаляет устройство (отвязывает токен)
+  Future<void> deleteDevice(String fcmToken) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.deviceById(fcmToken)}');
+      
+      debugPrint('=== DELETE DEVICE REQUEST ===');
+      debugPrint('URL: $url');
+
+      final response = await client.delete(
+        url,
+        headers: _getHeaders(),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== DELETE DEVICE TIMEOUT ===');
+          throw Exception('Время ожидания истекло');
+        },
+      );
+
+      debugPrint('=== DELETE DEVICE RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        debugPrint('=== DELETE DEVICE SUCCESS ===');
+        return;
+      } else {
+        throw Exception('Ошибка удаления устройства: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('=== DELETE DEVICE EXCEPTION ===');
+      debugPrint('Error: $e');
+    }
+  }
 }
 
