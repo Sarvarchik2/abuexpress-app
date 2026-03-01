@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyDONVT0bplCvvCBqIKT5_7GpKJ78jxDGq4</string>
+	<string>AIzaSyBwOXc1qshVhotpNhG5jMmJwYjx8DhkZJg</string>
 	<key>GCM_SENDER_ID</key>
-	<string>134653869519</string>
+	<string>157470227918</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.link.abuexpress</string>
+	<string>com.link.abuexpres</string>
 	<key>PROJECT_ID</key>
-	<string>abuexpress-3b0a0</string>
+	<string>abuexpress-99938</string>
 	<key>STORAGE_BUCKET</key>
-	<string>abuexpress-3b0a0.firebasestorage.app</string>
+	<string>abuexpress-99938.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:134653869519:ios:0e66220cf0039f34fe26ba</string>
+	<string>1:157470227918:ios:a3fc24a4fa47924c937f9f</string>
 </dict>
 </plist>
