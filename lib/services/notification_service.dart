@@ -135,6 +135,9 @@ class NotificationService {
     // 2. Запрос разрешений
     await _requestPermission();
 
+    // >>> Обязательно вызываем получение токена при старте, чтобы iOS успел передать APNs токен в FCM
+    _syncToken();
+
     // 3. Настройка обработчика сообщений в фоне
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
