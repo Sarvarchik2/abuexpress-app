@@ -24,7 +24,10 @@ class NotificationService {
 
   NotificationService._internal();
 
-  late final FirebaseMessaging _messaging;
+  FirebaseMessaging get _messaging => FirebaseMessaging.instance;
+  
+  // Флаг инициализации
+  bool _isInitialized = false;
   
   // Локальное состояние уведомлений
   final ValueNotifier<List<NotificationItem>> notificationsNotifier = ValueNotifier([]);
@@ -125,12 +128,22 @@ class NotificationService {
   }
 
   Future<void> initialize() async {
-    _messaging = FirebaseMessaging.instance;
+    if (_isInitialized) return;
+    
+    debugPrint("NotificationService initialization started...");
     
     // Загружаем сохраненные уведомления
     await _loadNotifications();
 
-    // 1. Инициализация Firebase (если еще не инициализирован, лучше вызывать в main)
+    // Гарантируем, что Firebase инициализирован перед использованием
+    if (Firebase.apps.isEmpty) {
+      debugPrint("Warning: Firebase not initialized before NotificationService. Falling back to default init.");
+      try {
+        await Firebase.initializeApp();
+      } catch (e) {
+        debugPrint("Error in fallback initialization: $e");
+      }
+    }
     
     // 2. Запрос разрешений
     await _requestPermission();
@@ -186,6 +199,9 @@ class NotificationService {
       // Сохраняем уведомление
       _addNewNotification(initialMessage);
     }
+    
+    _isInitialized = true;
+    debugPrint("NotificationService initialized successfully.");
   }
 
   // Метод для ручного триггера отправки токена (например, после успешного логина)

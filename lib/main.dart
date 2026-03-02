@@ -21,20 +21,31 @@ void main() async {
     // Инициализация Firebase
     try {
       debugPrint("Starting Firebase.initializeApp()...");
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      ).catchError((e) {
+        if (e.toString().contains('duplicate-app')) {
+           debugPrint("Firebase already initialized (duplicate-app ignored)");
+           return Firebase.app();
+        }
+        throw e;
+      });
+      debugPrint("Firebase initialized successfully");
+    } catch (e) {
+      if (e.toString().contains('duplicate-app')) {
+         debugPrint("Firebase already initialized (duplicate-app caught)");
+      } else {
+         debugPrint("Failed to initialize Firebase: $e");
       }
-      debugPrint("Firebase initialized successfully: ${Firebase.apps.length} apps");
-      
+    }
+
+    // Инициализируем уведомления ВНЕ зависимости от того, была ли ошибка "уже инициализирован"
+    try {
       debugPrint("Starting NotificationService().initialize()...");
-      // Убрали await, чтобы приложение не висело на белом экране при проблемах с сетью/симулятором
-      NotificationService().initialize(); 
-      debugPrint("NotificationService initialization started in background");
-    } catch (e, stack) {
-      debugPrint("Failed to initialize Firebase: $e");
-      debugPrint("Stack trace: $stack");
+      await NotificationService().initialize(); 
+      debugPrint("NotificationService initialized successfully from main");
+    } catch (e) {
+      debugPrint("Error initializing NotificationService: $e");
     }
 
     // Подавляем предупреждения о клавиатуре в симуляторе
