@@ -408,8 +408,9 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                   ],
                   
                   // Форма для нового товара
-                  Text(
-                    _items.isEmpty 
+                  if (_items.isEmpty) ...[
+                    Text(
+                      _items.isEmpty 
                         ? context.l10n.translate('product_info')
                         : context.l10n.translate('add_more_items'),
                     style: TextStyle(
@@ -554,6 +555,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                     maxLines: 3,
                   ),
                   const SizedBox(height: 32),
+                  ],
                 ],
               ),
             ),
@@ -574,6 +576,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Кнопка добавления товара (всегда показывается если есть данные)
+                  /*
                   if (_canAddItem && _selectedCountry != null) ...[
                     // Кнопка отмены показывается если уже есть хотя бы 1 товар
                     if (_items.isNotEmpty)
@@ -710,6 +713,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                     ),
                     const SizedBox(height: 32),
                   ],
+                  */
                   if (_items.isNotEmpty || _canAddItem)
                     SizedBox(
                       width: double.infinity,
@@ -751,7 +755,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
     
     if (_isLoadingCountries) {
       return SizedBox(
-        height: 140,
+        height: 165,
         child: Center(
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(AppTheme.gold),
@@ -767,7 +771,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
     // Если список пустой - показываем сообщение
     if (uniqueLocations.isEmpty) {
       return SizedBox(
-        height: 140,
+        height: 165,
         child: Center(
           child: Text(
             context.l10n.translate('no_countries_available'),
@@ -788,10 +792,25 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
       'Germany': '🇩🇪',
       'RUSSIA': '🇷🇺',
       'Russia': '🇷🇺',
+      'KOREA': '🇰🇷',
+      'Korea': '🇰🇷',
+      'UK': '🇬🇧',
+      'Xitoy (avia)': '🇨🇳',
+      'Xitoy (fura)': '🇨🇳',
+      'XITOY (AVIA)': '🇨🇳',
+      'XITOY (FURA)': '🇨🇳',
+      'Xitoy': '🇨🇳',
+      'XITOY': '🇨🇳',
+      'Avstralya': '🇦🇺',
+      'AVSTRALYA': '🇦🇺',
+      'Italiya': '🇮🇹',
+      'ITALIYA': '🇮🇹',
+      'Polsha': '🇵🇱',
+      'POLSHA': '🇵🇱',
     };
 
     return SizedBox(
-      height: 140,
+      height: 165,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -898,6 +917,15 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
       'Turkey': context.l10n.translate('turkey'),
       'China': context.l10n.translate('china'),
       'UAE': context.l10n.translate('uae'),
+      'Germany': context.l10n.translate('germany'),
+      'Korea': context.l10n.translate('korea'),
+      'UK': context.l10n.translate('uk'),
+      'Xitoy (avia)': context.l10n.translate('xitoy_avia'),
+      'Xitoy (fura)': context.l10n.translate('xitoy_fura'),
+      'XITOY': context.l10n.translate('xitoy'),
+      'Avstralya': context.l10n.translate('avstralya'),
+      'Italiya': context.l10n.translate('italiya'),
+      'Polsha': context.l10n.translate('polsha'),
     };
 
     return Container(

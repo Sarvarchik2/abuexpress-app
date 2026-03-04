@@ -5,6 +5,15 @@ class ShippingCalculator {
     'Turkey': 12.0,   // $12 за кг из Турции
     'China': 8.0,    // $8 за кг из Китая
     'UAE': 10.0,     // $10 за кг из ОАЭ
+    'Germany': 15.0,
+    'Korea': 15.0,
+    'UK': 15.0,
+    'Xitoy (avia)': 8.0,
+    'Xitoy (fura)': 8.0,
+    'XITOY': 8.0,
+    'Avstralya': 15.0,
+    'Italiya': 15.0,
+    'Polsha': 15.0,
   };
 
   // Минимальная стоимость доставки

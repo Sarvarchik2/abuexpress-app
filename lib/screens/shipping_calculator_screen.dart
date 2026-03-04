@@ -262,7 +262,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
           onPressed: () => Navigator.pop(context, false),
         ),
         title: Text(
-          context.l10n.translate('shipping_calculation'),
+          context.l10n.translate('parcel_details'),
           style: TextStyle(color: textColor),
         ),
         centerTitle: true,
@@ -273,154 +273,6 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                // Итоговая стоимость - красивое оформление
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppTheme.gold.withValues(alpha: 0.2),
-                        AppTheme.gold.withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: AppTheme.gold.withValues(alpha: 0.5),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.gold.withValues(alpha: 0.2),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                        spreadRadius: -4,
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.gold.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.receipt_long_rounded,
-                              color: AppTheme.gold,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                      Text(
-                              context.l10n.translate('total_to_pay'),
-                        style: TextStyle(
-                                color: textColor,
-                          fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Text(
-                            '\$',
-                        style: TextStyle(
-                              color: AppTheme.gold.withValues(alpha: 0.7),
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              height: 1,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.shippingCost.total.toStringAsFixed(2).split('.')[0],
-                            style: const TextStyle(
-                          color: AppTheme.gold,
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -1.5,
-                              height: 1,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              '.${widget.shippingCost.total.toStringAsFixed(2).split('.')[1]}',
-                              style: TextStyle(
-                                color: AppTheme.gold.withValues(alpha: 0.8),
-                                fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                                height: 1,
-                              ),
-                            ),
-                        ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
-                
-                // Детали расчета
-                Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: AppTheme.gold,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                Text(
-                      context.l10n.translate('calculation_details'),
-                  style: TextStyle(
-                    color: textColor,
-                        fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                        letterSpacing: 0.3,
-                      ),
-                  ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                
-                _buildCostRow(
-                  context.l10n.translate('shipping'),
-                  widget.shippingCost.formattedBaseShipping,
-                  '${widget.totalWeight.toStringAsFixed(1)} ${context.l10n.translate('kg')} × ${_getPricePerKg(widget.shippingCost.country)} \$/${context.l10n.translate('kg')}',
-                  textColor,
-                  textSecondaryColor,
-                  cardColor,
-                ),
-                const SizedBox(height: 12),
-                _buildCostRow(
-                  context.l10n.translate('customs_fees'),
-                  widget.shippingCost.formattedCustoms,
-                  context.l10n.translate('customs_fees_description'),
-                  textColor,
-                  textSecondaryColor,
-                  cardColor,
-                ),
-                const SizedBox(height: 24),
-                
                 // Информация о посылке
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -588,74 +440,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
     );
   }
 
-  Widget _buildCostRow(
-    String label,
-    String value,
-    String description,
-    Color textColor,
-    Color textSecondaryColor,
-    Color cardColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppTheme.gold.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: TextStyle(
-                    color: textSecondaryColor,
-                    fontSize: 13,
-                    height: 1.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.gold.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-            value,
-              style: const TextStyle(
-              color: AppTheme.gold,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildInfoRow(
     IconData icon,
@@ -701,14 +486,5 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
     );
   }
 
-  String _getPricePerKg(String country) {
-    final prices = {
-      'USA': '15.00',
-      'Turkey': '12.00',
-      'China': '8.00',
-      'UAE': '10.00',
-    };
-    return prices[country] ?? '15.00';
-  }
 }
 

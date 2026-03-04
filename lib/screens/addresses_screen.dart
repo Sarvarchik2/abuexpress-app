@@ -89,13 +89,25 @@ class _AddressesScreenState extends State<AddressesScreen> {
         return context.l10n.translate('china');
       case 'GERMANY':
       case 'DE':
-        return 'Germany';
+        return context.l10n.translate('germany');
       case 'KOREA':
       case 'KR':
-        return 'Korea';
+        return context.l10n.translate('korea');
       case 'UK':
       case 'GB':
-        return 'UK';
+        return context.l10n.translate('uk');
+      case 'XITOY (AVIA)':
+        return context.l10n.translate('xitoy_avia');
+      case 'XITOY (FURA)':
+        return context.l10n.translate('xitoy_fura');
+      case 'XITOY':
+        return context.l10n.translate('xitoy');
+      case 'AVSTRALYA':
+        return context.l10n.translate('avstralya');
+      case 'ITALIYA':
+        return context.l10n.translate('italiya');
+      case 'POLSHA':
+        return context.l10n.translate('polsha');
       default:
         return locationCode;
     }
@@ -123,6 +135,19 @@ class _AddressesScreenState extends State<AddressesScreen> {
       case 'GB':
       case 'UNITED KINGDOM':
         return '🇬🇧';
+      case 'XITOY (AVIA)':
+      case 'XITOY (FURA)':
+      case 'XITOY':
+        return '🇨🇳';
+      case 'AVSTRALYA':
+      case 'AUSTRALIA':
+        return '🇦🇺';
+      case 'ITALIYA':
+      case 'ITALY':
+        return '🇮🇹';
+      case 'POLSHA':
+      case 'POLAND':
+        return '🇵🇱';
       default:
         return '🏳️';
     }
