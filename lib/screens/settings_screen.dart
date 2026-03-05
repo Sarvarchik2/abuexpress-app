@@ -216,6 +216,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 40),
             // Logout Button
             _buildLogoutButton(),
+            const SizedBox(height: 16),
+            // Delete Account Button
+            _buildDeleteAccountButton(),
             const SizedBox(height: 20),
           ],
         ),
@@ -717,6 +720,114 @@ class _SettingsScreenState extends State<SettingsScreen> {
         CustomSnackBar.error(
           context: context,
           message: 'Ошибка при выходе из аккаунта',
+        );
+      }
+    }
+  }
+
+  Widget _buildDeleteAccountButton() {
+    const redColor = Color(0xFFDC3545);
+    
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: () {
+          _showDeleteAccountDialog();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent, 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: redColor.withValues(alpha: 0.5), 
+              width: 1,
+            ),
+          ),
+          elevation: 0,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.delete_forever_rounded, 
+              color: redColor, 
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.translate('delete_account'),
+              style: const TextStyle(
+                color: redColor, 
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog() {
+    CustomDialog.show(
+      context: context,
+      title: context.l10n.translate('delete_account_confirm'),
+      message: context.l10n.translate('delete_account_confirm_message'),
+      icon: Icons.warning_amber_rounded,
+      iconColor: const Color(0xFFDC3545),
+      actions: [
+        CustomDialogActions.secondaryButton(
+          context: context,
+          text: context.l10n.translate('cancel'),
+          onPressed: () => Navigator.pop(context),
+        ),
+        CustomDialogActions.primaryButton(
+          context: context,
+          text: context.l10n.translate('delete'),
+          onPressed: () {
+            Navigator.pop(context);
+            _handleDeleteAccount();
+          },
+          backgroundColor: const Color(0xFFDC3545),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final apiService = ApiService(authToken: userProvider.authToken);
+      
+      await apiService.deleteAccount();
+
+      if (!mounted) return;
+
+      // Успешно удалено -> очищаем локальные данные
+      userProvider.clearUser();
+      apiService.setAuthToken(null);
+
+      CustomSnackBar.success(
+        context: context,
+        message: context.l10n.translate('account_deleted'),
+      );
+
+      // Перенаправляем на начальный экран
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const AuthScreen(),
+          ),
+          (route) => false,
+        );
+      });
+    } catch (e) {
+      if (mounted) {
+        CustomSnackBar.error(
+          context: context,
+          message: e.toString().replaceAll('Exception: ', ''),
         );
       }
     }

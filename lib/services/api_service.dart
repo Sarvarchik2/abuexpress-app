@@ -380,6 +380,57 @@ class ApiService {
     }
   }
 
+  /// Отправка OTP кода для сброса пароля (забыл пароль)
+  Future<void> sendResetOtp(String email) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.resetOtp}');
+      
+      final requestBody = {'email': email};
+
+      debugPrint('=== SEND RESET OTP REQUEST ===');
+      debugPrint('URL: $url');
+      debugPrint('Body: ${jsonEncode(requestBody)}');
+
+      final response = await client.post(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== SEND RESET OTP TIMEOUT ===');
+          throw Exception('Время ожидания истекло. Проверьте подключение к интернету.');
+        },
+      );
+
+      debugPrint('=== SEND RESET OTP RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('=== SEND RESET OTP SUCCESS ===');
+        return;
+      } else {
+        String errorMessage = 'Ошибка отправки кода';
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['message'] as String? ?? 
+                        errorData['error'] as String? ??
+                        errorData['detail'] as String? ??
+                        errorMessage;
+        } catch (e) {
+           // ignore parsing error
+        }
+        throw Exception(errorMessage);
+      }
+    } on http.ClientException catch (e) {
+      throw Exception('Ошибка подключения: ${e.message}');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Неизвестная ошибка: $e');
+    }
+  }
+
   /// Проверка OTP кода
   Future<void> verifyOtp(String email, String code) async {
     try {
@@ -434,14 +485,13 @@ class ApiService {
     }
   }
 
-  /// Сброс пароля
-  Future<void> resetPassword(String email, String otp, String newPassword) async {
+  /// Сброс пароля (завершение)
+  Future<void> resetPassword(String email, String newPassword) async {
     try {
       final url = Uri.parse('$baseUrl${ApiConfig.resetPassword}');
       
       final requestBody = {
         'email': email,
-        'otp': otp,
         'new_password': newPassword,
       };
 
@@ -469,19 +519,72 @@ class ApiService {
         debugPrint('=== RESET PASSWORD SUCCESS ===');
         return;
       } else {
+        // Упрощенная обработка ошибок для сброса пароля
         String errorMessage = 'Ошибка сброса пароля';
-        if (response.statusCode == 404) {
-           errorMessage = 'Функция сброса пароля временно недоступна (404)';
-        } else {
-           try {
-            final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        if (response.statusCode >= 500) {
+           throw Exception('Ошибка сервера (500). Пожалуйста, попробуйте позже.');
+        }
+
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          if (errorData.containsKey('non_field_errors')) {
+            errorMessage = (errorData['non_field_errors'] as List).join(', ');
+          } else {
             errorMessage = errorData['message'] as String? ?? 
                           errorData['error'] as String? ??
                           errorData['detail'] as String? ??
                           errorMessage;
-          } catch (e) {
-             // ignore
           }
+        } catch (e) {
+           // ignore parse errors for non-JSON answers
+        }
+        
+        throw Exception(errorMessage);
+      }
+    } on http.ClientException catch (e) {
+      throw Exception('Ошибка подключения: ${e.message}');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Неизвестная ошибка: $e');
+    }
+  }
+
+  /// Удаление аккаунта
+  Future<void> deleteAccount() async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiConfig.deleteAccount}');
+      
+      debugPrint('=== DELETE ACCOUNT REQUEST ===');
+      debugPrint('URL: $url');
+
+      final response = await client.delete(
+        url,
+        headers: _getHeaders(),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('=== DELETE ACCOUNT TIMEOUT ===');
+          throw Exception('Время ожидания истекло.');
+        },
+      );
+
+      debugPrint('=== DELETE ACCOUNT RESPONSE ===');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        debugPrint('=== DELETE ACCOUNT SUCCESS ===');
+        return;
+      } else {
+        String errorMessage = 'Ошибка удаления аккаунта';
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['message'] as String? ?? 
+                        errorData['error'] as String? ??
+                        errorData['detail'] as String? ??
+                        errorMessage;
+        } catch (e) {
+           // ignore parsing error
         }
         throw Exception(errorMessage);
       }

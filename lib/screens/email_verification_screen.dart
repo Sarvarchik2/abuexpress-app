@@ -67,10 +67,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     });
 
     try {
-      await _apiService.sendOtp(widget.email);
+      if (widget.isResetPassword) {
+        await _apiService.sendResetOtp(widget.email);
+      } else {
+        await _apiService.sendOtp(widget.email);
+      }
       CustomSnackBar.success(
         context: context,
-        message: 'Код отправлен повторно',
+        message: context.l10n.translate('code_resent'),
       );
       setState(() {
         _secondsRemaining = 60;
@@ -105,21 +109,17 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       // This handles the "User already exists (unverified)" case where verifyOtp doesn't update password.
       if (widget.registrationData != null) {
          try {
-            debugPrint('=== ATTEMPTING PASS-THROUGH VERIFICATION (RESET) ===');
-            await _apiService.resetPassword(
-              widget.email, 
-              _otpController.text, 
-              widget.registrationData!.password
-            );
-            
-            // If successful, the email is verified AND password is set.
-            debugPrint('Pass-through verification success');
-            
-            // Proceed directly to login
-            await _performAutoLogin(widget.registrationData!.password);
+            debugPrint('=== ATTEMPTING VERIFICATION FOR REGISTRATION RETRY ===');
+            await _apiService.verifyOtp(widget.email, _otpController.text);
+            // OTP is correct! Now we do the actual registration using standard endpoint.
+            debugPrint('Verification success, now retrying registration');
+            final regResponse = await _apiService.register(widget.registrationData!);
+            if (regResponse.accessToken != null) {
+              await _performAutoLogin(widget.registrationData!.password);
+            }
             return;
          } catch (e) {
-            debugPrint('Pass-through verification failed: $e');
+            debugPrint('Verification for registration failed: $e');
             // If the error is NOT 404 (endpoint missing), it might be "Invalid OTP".
             // If it is 404, we fall back to standard verifyOtp.
             if (!e.toString().contains('404') && !e.toString().contains('Функция сброса пароля временно недоступна')) {
@@ -134,7 +134,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       
       CustomSnackBar.success(
         context: context,
-        message: 'Email успешно подтвержден',
+        message: context.l10n.translate('email_verified'),
       );
       
       // Если это сброс пароля, показываем диалог ввода нового пароля
@@ -165,10 +165,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             debugPrint('Registration retry failed: $e');
             
             if (e.toString().contains('Email already exists') || e.toString().contains('already exists')) {
-               CustomSnackBar.info(context: context, message: 'Email уже зарегистрирован. Пробуем войти...');
+               CustomSnackBar.info(context: context, message: context.l10n.translate('email_already_registered'));
                // Proceed to auto-login below
             } else if (e.toString().contains('500')) {
-                 CustomSnackBar.error(context: context, message: 'Ошибка регистрации: ${e.toString().replaceAll('Exception: ', '')}');
+                 CustomSnackBar.error(context: context, message: '${context.l10n.translate('registration_error')}: ${e.toString().replaceAll('Exception: ', '')}');
                   _isLoading = false;
                   return;
             }
@@ -183,7 +183,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       
       // Default success navigation
       if (!mounted) return;
-      CustomSnackBar.success(context: context, message: 'Email подтвержден. Пожалуйста, войдите.');
+      CustomSnackBar.success(context: context, message: context.l10n.translate('email_verified_login'));
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
         (route) => false,
@@ -223,12 +223,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         
         String errorMessage = e.toString().replaceAll('Exception: ', '');
         if (errorMessage.contains('Invalid credentials') || errorMessage.contains('Неверный email или пароль')) {
-           errorMessage = 'Аккаунт существует, но пароль не подходит. Пожалуйста, восстановите пароль или используйте другой Email.';
+           errorMessage = context.l10n.translate('account_exists_wrong_password');
         }
         
         CustomSnackBar.error(
           context: context,
-          message: 'Войти не удалось: $errorMessage',
+          message: '${context.l10n.translate('login_failed')}: $errorMessage',
         );
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -288,7 +288,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Новый пароль',
+                  context.l10n.translate('new_password'),
                   style: TextStyle(
                     fontSize: 20, 
                     fontWeight: FontWeight.bold,
@@ -301,7 +301,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   controller: passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Введите новый пароль',
+                    labelText: context.l10n.translate('enter_new_password'),
                     filled: true,
                     fillColor: ThemeHelper.getCardColor(context),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -312,7 +312,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   controller: confirmController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Повторите пароль',
+                    labelText: context.l10n.translate('repeat_password'),
                     filled: true,
                     fillColor: ThemeHelper.getCardColor(context),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -324,20 +324,21 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   child: ElevatedButton(
                     onPressed: isLoading ? null : () async {
                       if (passwordController.text != confirmController.text) {
-                        CustomSnackBar.error(context: context, message: 'Пароли не совпадают');
+                        CustomSnackBar.error(context: context, message: context.l10n.translate('passwords_dont_match_error'));
                         return;
                       }
                       if (passwordController.text.length < 6) {
-                        CustomSnackBar.error(context: context, message: 'Пароль должен быть не менее 6 символов');
+                        CustomSnackBar.error(context: context, message: context.l10n.translate('password_length_error'));
                         return;
                       }
 
                       setModalState(() => isLoading = true);
                       
                       try {
+                        // OTP is already verified at this point (_verifyCode)
+                        // then reset password
                         await _apiService.resetPassword(
                           widget.email, 
-                          _otpController.text, // Use the verified OTP
                           passwordController.text
                         );
                         
@@ -345,7 +346,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                         
                         Navigator.pop(context); // Close sheet
                         
-                        CustomSnackBar.success(context: context, message: 'Пароль успешно изменен');
+                        CustomSnackBar.success(context: context, message: context.l10n.translate('password_changed_successfully'));
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(builder: (context) => const LoginScreen()),
                           (route) => false,
@@ -364,7 +365,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     ),
                     child: isLoading 
                        ? const CircularProgressIndicator()
-                       : const Text('Сохранить', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                       : Text(context.l10n.translate('save'), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -405,7 +406,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               ),
               const SizedBox(height: 32),
               Text(
-                'Подтверждение Email',
+                context.l10n.translate('email_verification'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: textColor,
@@ -415,7 +416,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Мы отправили код подтверждения на\n${widget.email}',
+                '${context.l10n.translate('code_sent_to')}\n${widget.email}',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: textSecondaryColor,
@@ -477,9 +478,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                           height: 24,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text(
-                          'Подтвердить',
-                          style: TextStyle(
+                      : Text(
+                          context.l10n.translate('verify'),
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: Colors.black, // Assuming default button text color
@@ -494,9 +495,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 child: _canResend
                     ? TextButton(
                         onPressed: _resendCode,
-                        child: const Text(
-                          'Отправить код повторно',
-                          style: TextStyle(
+                        child: Text(
+                          context.l10n.translate('resend_code'),
+                          style: const TextStyle(
                             color: AppTheme.gold,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -504,7 +505,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                         ),
                       )
                     : Text(
-                        'Отправить код повторно через $_secondsRemaining сек',
+                        '${context.l10n.translate('resend_code_in')} $_secondsRemaining ${context.l10n.translate('sec')}',
                         style: TextStyle(
                           color: textSecondaryColor,
                           fontSize: 14,

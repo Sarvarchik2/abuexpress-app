@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../utils/theme_helper.dart';
@@ -141,15 +142,27 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
               children: [
                 // Full Name field
                 _buildTextField(
-                  label: context.l10n.translate('recipient_name'),
+                  label: '${context.l10n.translate('recipient_name')} *',
                   controller: _fullNameController,
                   icon: Icons.person_outlined,
                   hint: context.l10n.translate('enter_full_name'),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny(RegExp(r'[а-яА-ЯёЁ]')),
+                  ],
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return context.l10n.translate('please_enter_name');
+                    }
+                    if (RegExp(r'[а-яА-ЯёЁ]').hasMatch(value)) {
+                      return context.l10n.translate('only_latin_letters_allowed') ?? 'Только латинские буквы';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 20),
                 // Email field
                 _buildTextField(
-                  label: context.l10n.translate('email'),
+                  label: '${context.l10n.translate('email')} *',
                   controller: _emailController,
                   icon: Icons.email_outlined,
                   hint: 'example@email.com',
@@ -158,7 +171,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 const SizedBox(height: 20),
                 // Phone field
                 _buildTextField(
-                  label: context.l10n.translate('phone_number'),
+                  label: '${context.l10n.translate('phone_number')} *',
                   controller: _phoneController,
                   icon: Icons.phone_outlined,
                   hint: '+998 90 123 45 67',
@@ -166,18 +179,21 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 ),
                 const SizedBox(height: 20),
                 // Passport Series & Number
+                // Passport Series & Number
                 _buildTextField(
-                  label: 'Серия и номер паспорта',
+                  label: '${context.l10n.translate('passport_series_number')} ${context.l10n.translate('optional_suffix')}',
                   controller: _passportSeriesController,
                   icon: Icons.credit_card_outlined,
                   hint: 'AA1234567',
                   textCapitalization: TextCapitalization.characters,
                   maxLength: 9,
+                  inputFormatters: [PassportTextInputFormatter()],
                 ),
                 const SizedBox(height: 20),
                 // PINFL
+                // PINFL
                 _buildTextField(
-                  label: 'ПИНФЛ (14 цифр)',
+                  label: '${context.l10n.translate('pinfl_14')} ${context.l10n.translate('optional_suffix')}',
                   controller: _passportNumberController,
                   icon: Icons.pin_outlined,
                   hint: '12345678901234',
@@ -187,21 +203,21 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 const SizedBox(height: 24),
                 // Passport Front Image
                 _buildImageUpload(
-                  label: context.l10n.translate('passport_front'),
+                  label: '${context.l10n.translate('passport_front')} ${context.l10n.translate('optional_suffix')}',
                   image: _frontPassportImage,
                   onTap: () => _pickImage(true),
                 ),
                 const SizedBox(height: 16),
                 // Passport Back Image
                 _buildImageUpload(
-                  label: context.l10n.translate('passport_back'),
+                  label: '${context.l10n.translate('passport_back')} ${context.l10n.translate('optional_suffix')}',
                   image: _backPassportImage,
                   onTap: () => _pickImage(false),
                 ),
                 const SizedBox(height: 20),
                 // Password field
                 _buildPasswordField(
-                  label: context.l10n.translate('password'),
+                  label: '${context.l10n.translate('password')} *',
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -209,7 +225,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 const SizedBox(height: 20),
                 // Confirm Password field
                 _buildPasswordField(
-                  label: context.l10n.translate('confirm_password'),
+                  label: '${context.l10n.translate('confirm_password')} *',
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
@@ -234,6 +250,8 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
     TextInputType? keyboardType,
     TextCapitalization textCapitalization = TextCapitalization.none,
     int? maxLength,
+    List<TextInputFormatter>? inputFormatters,
+    String? Function(String?)? validator,
   }) {
     final textColor = ThemeHelper.getTextColor(context);
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
@@ -256,6 +274,8 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
           keyboardType: keyboardType,
           textCapitalization: textCapitalization,
           maxLength: maxLength,
+          inputFormatters: inputFormatters,
+          validator: validator,
           style: TextStyle(color: textColor),
           decoration: InputDecoration(
             hintText: hint,
@@ -438,7 +458,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
             child: TextButton(
               onPressed: () {
                 setState(() {
-                  if (label.contains('лицевая')) {
+                  if (label.contains(context.l10n.translate('passport_front'))) {
                     _frontPassportImage = null;
                   } else {
                     _backPassportImage = null;
@@ -449,7 +469,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 context.l10n.translate('delete_photo'),
                 style: const TextStyle(
                   color: Colors.red,
-                  fontSize: 12,
+                  fontSize: 14,
                 ),
               ),
             ),
@@ -476,8 +496,8 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
         password: _passwordController.text,
         fullName: _fullNameController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
-        personalNumber: personalNumber, // PINFL
-        // cardNumber: _passportSeriesController.text.trim(), // ВРЕМЕННО ОТКЛЮЧЕНО: Вызывает сбой на сервере (500)
+        personalNumber: personalNumber.isNotEmpty ? personalNumber : null, // PINFL
+        cardNumber: _passportSeriesController.text.trim().isNotEmpty ? _passportSeriesController.text.trim() : null, // Passport Series
       );
 
       // USER REQUEST: Verify email first, then register.
@@ -560,7 +580,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
         
         CustomSnackBar.success(
           context: context,
-          message: 'Регистрация успешна! Пожалуйста, войдите.',
+          message: context.l10n.translate('registration_successful'),
         );
         Navigator.pop(context); 
       }
@@ -577,7 +597,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
         
         CustomSnackBar.info(
           context: context,
-          message: 'Требуется подтверждение Email',
+          message: context.l10n.translate('email_verification_required'),
         );
         
         // Send OTP first
@@ -596,7 +616,8 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                        password: _passwordController.text,
                        fullName: _fullNameController.text.trim(),
                        phoneNumber: _phoneController.text.trim(), // Keep formatting
-                       personalNumber: _passportNumberController.text.trim(), // PINFL
+                       personalNumber: _passportNumberController.text.trim().isNotEmpty ? _passportNumberController.text.trim() : null, // PINFL
+                       cardNumber: _passportSeriesController.text.trim().isNotEmpty ? _passportSeriesController.text.trim() : null, // Passport
                   ),
                 ),
               ),
@@ -630,13 +651,6 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
             ? null
             : () {
                 if (_formKey.currentState!.validate()) {
-                    if (_frontPassportImage == null || _backPassportImage == null) {
-                    CustomSnackBar.error(
-                      context: context,
-                      message: context.l10n.translate('upload_both_sides'),
-                    );
-                    return;
-                  }
                   if (_passwordController.text != _confirmPasswordController.text) {
                     CustomSnackBar.error(
                       context: context,
@@ -674,6 +688,42 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                 ),
               ),
       ),
+    );
+  }
+}
+
+class PassportTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) return newValue;
+
+    String text = newValue.text.toUpperCase();
+    StringBuffer newText = StringBuffer();
+    int selectionIndex = newValue.selection.end;
+
+    for (int i = 0; i < text.length; i++) {
+      if (i < 2) {
+        if (RegExp(r'[A-ZА-ЯЁ]').hasMatch(text[i])) {
+          newText.write(text[i]);
+        } else {
+          if (i < selectionIndex) selectionIndex--;
+        }
+      } else if (i < 9) {
+        if (RegExp(r'[0-9]').hasMatch(text[i])) {
+          newText.write(text[i]);
+        } else {
+          if (i < selectionIndex) selectionIndex--;
+        }
+      } else {
+         if (i < selectionIndex) selectionIndex--;
+      }
+    }
+
+    return TextEditingValue(
+      text: newText.toString(),
+      selection: TextSelection.collapsed(
+          offset: selectionIndex.clamp(0, newText.length)),
     );
   }
 }

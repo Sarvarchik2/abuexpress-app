@@ -28,7 +28,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (_emailController.text.trim().isEmpty) {
       CustomSnackBar.error(
         context: context,
-        message: 'Введите email адрес',
+        message: context.l10n.translate('enter_email_address'),
       );
       return;
     }
@@ -38,7 +38,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!emailRegex.hasMatch(_emailController.text.trim())) {
       CustomSnackBar.error(
         context: context,
-        message: 'Введите корректный email адрес',
+        message: context.l10n.translate('enter_valid_email'),
       );
       return;
     }
@@ -50,13 +50,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       final apiService = ApiService();
       final email = _emailController.text.trim();
-      await apiService.sendOtp(email);
+      await apiService.sendResetOtp(email);
 
       if (!mounted) return;
       
       CustomSnackBar.success(
         context: context,
-        message: 'Код подтверждения отправлен',
+        message: context.l10n.translate('verification_code_sent'),
       );
       
       // Navigate to verification screen with reset mode
@@ -133,7 +133,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 32),
               // Заголовок
               Text(
-                'Восстановление пароля',
+                context.l10n.translate('password_recovery'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: textColor,
@@ -144,7 +144,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 12),
               // Описание
               Text(
-                'Введите ваш email адрес, и мы отправим вам инструкции по восстановлению пароля',
+                context.l10n.translate('password_recovery_desc'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: textSecondaryColor,
@@ -205,7 +205,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                         )
                       : Text(
-                          'Отправить',
+                          context.l10n.translate('send'),
                           style: TextStyle(
                             color: ThemeHelper.isDark(context)
                                 ? const Color(0xFF0A0E27)

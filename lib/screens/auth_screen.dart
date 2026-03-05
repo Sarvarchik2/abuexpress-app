@@ -5,6 +5,9 @@ import '../utils/localization_helper.dart';
 import 'login_screen.dart';
 // import 'registration_choice_screen.dart';
 import 'self_registration_screen.dart';
+import 'package:provider/provider.dart';
+import '../providers/locale_provider.dart';
+import '../widgets/language_selector.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -25,12 +28,14 @@ class AuthScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF030712),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 2),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Spacer(flex: 2),
               // Logo
               const OnboardingIcon(iconType: OnboardingIconType.airplane),
               const SizedBox(height: 40),
@@ -67,9 +72,16 @@ class AuthScreen extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              const Spacer(flex: 1),
-            ],
-          ),
+                  const Spacer(flex: 1),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 16,
+              right: 24,
+              child: const LanguageSelector(),
+            ),
+          ],
         ),
       ),
     );

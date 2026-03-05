@@ -6,8 +6,10 @@ class ApiConfig {
   static const String register = '/register/';
   static const String sendOtp = '/send-otp/';
   static const String verifyOtp = '/verify-otp/';
+  static const String resetOtp = '/reset-otp/';
   static const String resetPassword = '/reset-password/';
   static const String getMe = '/get-me/';
+  static const String deleteAccount = '/delete/';
   static const String orderOwn = '/order-own/';
   static const String addresses = '/addresses/';
   static const String officeAddresses = '/office-address/';
