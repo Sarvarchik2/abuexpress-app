@@ -115,6 +115,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             debugPrint('Verification success, now retrying registration');
             final regResponse = await _apiService.register(widget.registrationData!);
             if (regResponse.accessToken != null) {
+              await _handleSuccessfulLogin(regResponse.accessToken!);
+            } else {
               await _performAutoLogin(widget.registrationData!.password);
             }
             return;
