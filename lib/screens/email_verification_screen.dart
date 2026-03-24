@@ -382,21 +382,24 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     final textColor = ThemeHelper.getTextColor(context);
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
     
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: textColor),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
               Icon(
@@ -515,7 +518,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             ],
           ),
         ),
+       ),
       ),
+     ),
     );
   }
 }

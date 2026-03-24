@@ -92,16 +92,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final textSecondaryColor = ThemeHelper.getTextSecondaryColor(context);
     final cardColor = ThemeHelper.getCardColor(context);
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: textColor),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
           context.l10n.translate('forgot_password'),
           style: TextStyle(color: textColor),
         ),
@@ -220,6 +222,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         ),
       ),
+     ),
     );
   }
 }
