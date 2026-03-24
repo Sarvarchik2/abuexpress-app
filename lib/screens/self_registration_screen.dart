@@ -174,7 +174,7 @@ class _SelfRegistrationScreenState extends State<SelfRegistrationScreen> {
                   label: '${context.l10n.translate('phone_number')} *',
                   controller: _phoneController,
                   icon: Icons.phone_outlined,
-                  hint: '+998 90 123 45 67',
+                  hint: '+998 95 955 05 55',
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 20),

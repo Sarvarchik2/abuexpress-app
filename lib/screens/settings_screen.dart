@@ -514,13 +514,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     return Row(
       children: [
-        // Facebook
+        // Phone
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.facebook,
-            iconColor: const Color(0xFF1877F2),
+            icon: Icons.phone,
+            iconColor: const Color(0xFF34C759),
             backgroundColor: buttonColor,
-            onTap: () => _launchURL('https://www.facebook.com/abuexpress'),
+            onTap: () => _launchURL('tel:+998959550555'),
           ),
         ),
         const SizedBox(width: 12),
@@ -528,10 +528,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Expanded(
           child: _buildSocialButton(
             icon: Icons.camera_alt_rounded,
-            // Use a list of colors for potential gradient or just a brand color
             iconColor: const Color(0xFFE4405F),
             backgroundColor: buttonColor,
-            onTap: () => _launchURL('https://www.instagram.com/abuexpress'),
+            onTap: () => _launchURL('https://www.instagram.com/abu_express_?igsh=MW9hb3JjM3FudGpxcg=='),
           ),
         ),
         const SizedBox(width: 12),
@@ -541,7 +540,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.send_rounded,
             iconColor: const Color(0xFF229ED9),
             backgroundColor: buttonColor,
-            onTap: () => _launchURL('https://t.me/abuexpress'),
+            onTap: () => _launchURL('https://t.me/abuexpress_europe'),
           ),
         ),
       ],

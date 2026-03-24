@@ -336,7 +336,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
             _buildTextField(
               label: context.l10n.translate('phone_number'),
               controller: _phoneController,
-              hint: '+998 90 123 45 67',
+              hint: '+998 95 955 05 55',
               textColor: textColor,
               keyboardType: TextInputType.phone,
               validator: (value) {

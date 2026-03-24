@@ -76,7 +76,7 @@ class ParcelDetailsScreen extends StatelessWidget {
             height: 56,
             child: OutlinedButton.icon(
               onPressed: () async {
-                final phoneNumber = '+998901234567'; // Номер службы поддержки
+                final phoneNumber = '+998959550555'; // Номер службы поддержки
                 final url = Uri.parse('tel:$phoneNumber');
                 if (await canLaunchUrl(url)) {
                   await launchUrl(url);
