@@ -84,9 +84,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
       if (item.storeName.trim().isEmpty) {
         missingFields.add(context.l10n.translate('store_name'));
       }
-      if (item.productLink == null || item.productLink!.trim().isEmpty) {
-        missingFields.add(context.l10n.translate('product_link'));
-      }
+// Link is optional now
       if (item.productName.trim().isEmpty) {
         missingFields.add(context.l10n.translate('product_name'));
       }
@@ -143,8 +141,6 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
           // (валидация уже выполнена выше, но на всякий случай проверяем еще раз)
           if (item.trackNumber.trim().isEmpty ||
               item.storeName.trim().isEmpty ||
-              item.productLink == null ||
-              item.productLink!.trim().isEmpty ||
               item.productName.trim().isEmpty ||
               item.cost <= 0 ||
               item.quantity <= 0 ||
@@ -156,7 +152,9 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
           final request = OrderOwnCreateRequest(
             trackNumber: item.trackNumber.trim(),
             marketName: item.storeName.trim(),
-            urlProduct: item.productLink!.trim(),
+            urlProduct: (item.productLink != null && item.productLink!.trim().isNotEmpty)
+                ? item.productLink!.trim()
+                : 'https://abuexpress.uz/',
             productName: item.productName.trim(),
             productPrice: item.cost,
             productQuantity: item.quantity,

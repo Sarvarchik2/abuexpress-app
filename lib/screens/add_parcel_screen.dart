@@ -147,7 +147,6 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
            productName.isNotEmpty &&
            trackNumber.isNotEmpty &&
            storeName.isNotEmpty &&
-           productLink.isNotEmpty &&
            color.isNotEmpty &&
            cost > 0 &&
            quantity > 0;
@@ -167,9 +166,9 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
       productName: _productNameController.text.isEmpty
           ? context.l10n.translate('item')
           : _productNameController.text,
-      productLink: _productLinkController.text.isNotEmpty // Обязательное поле
-          ? _productLinkController.text
-          : 'https://example.com', // Fallback, но валидация не должна пускать
+      productLink: _productLinkController.text.isNotEmpty
+          ? _productLinkController.text.trim()
+          : 'https://abuexpress.uz/',
       cost: double.tryParse(_costController.text) ?? 0.0,
       weight: 0.0,
       color: _colorController.text.isNotEmpty 
@@ -457,16 +456,15 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
-                    label: context.l10n.translate('product_link'),
+                    label: '${context.l10n.translate('product_link')} ${context.l10n.translate('optional_suffix')}',
                     controller: _productLinkController,
                     hint: context.l10n.translate('product_link_hint'),
                     keyboardType: TextInputType.url,
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return context.l10n.translate('fill_required_fields');
-                      }
-                      if (!value.startsWith('http')) {
-                        return context.l10n.translate('invalid_url');
+                      if (value != null && value.trim().isNotEmpty) {
+                        if (!value.startsWith('http')) {
+                          return context.l10n.translate('invalid_url');
+                        }
                       }
                       return null;
                     },
