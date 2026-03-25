@@ -16,6 +16,8 @@ import 'profile_screen.dart';
 import 'add_parcel_screen.dart';
 import '../widgets/departure_timer_card.dart';
 import '../models/api/departure_time.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'forgot_password_screen.dart';
 
 
 class SettingsScreen extends StatefulWidget {
@@ -199,9 +201,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.lock_outline,
               title: context.l10n.translate('change_password'),
               onTap: () {
-                CustomSnackBar.info(
-                  context: context,
-                  message: context.l10n.translate('function_in_development'),
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                final email = userProvider.userInfo?.email;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ForgotPasswordScreen(email: email),
+                  ),
                 );
               },
             ),
@@ -527,7 +533,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Instagram
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.camera_alt_rounded,
+            icon: FontAwesomeIcons.instagram,
             iconColor: const Color(0xFFE4405F),
             backgroundColor: buttonColor,
             onTap: () => _launchURL('https://www.instagram.com/abu_express_?igsh=MW9hb3JjM3FudGpxcg=='),
@@ -537,7 +543,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Telegram
         Expanded(
           child: _buildSocialButton(
-            icon: Icons.send_rounded,
+            icon: FontAwesomeIcons.telegram,
             iconColor: const Color(0xFF229ED9),
             backgroundColor: buttonColor,
             onTap: () => _launchURL('https://t.me/abuexpress_europe'),
@@ -562,7 +568,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSocialButton({
-    required IconData icon,
+    required dynamic icon,
     required Color iconColor,
     required Color backgroundColor,
     required VoidCallback onTap,
@@ -590,14 +596,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: SizedBox(
             height: 60,
             child: Center(
-              child: Transform.rotate(
-                angle: icon == Icons.send_rounded ? -0.4 : 0, // Rotate telegram icon slightly for official look
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 30,
-                ),
-              ),
+              child: icon is IconData
+                  ? Icon(
+                      icon,
+                      color: iconColor,
+                      size: 30,
+                    )
+                  : FaIcon(
+                      icon,
+                      color: iconColor,
+                      size: 30,
+                    ),
             ),
           ),
         ),

@@ -94,7 +94,6 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                      _productLinkController.text.trim().isNotEmpty ||
                      _colorController.text.trim().isNotEmpty ||
                      (double.tryParse(_costController.text.trim()) ?? 0.0) > 0 ||
-                     (double.tryParse(_weightController.text.trim()) ?? 0.0) > 0 ||
                      (int.tryParse(_quantityController.text.trim()) ?? 0) > 0;
     
     // Всегда обновляем состояние, чтобы пересчитать _canAddItem, 
@@ -138,7 +137,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
     final color = _colorController.text.trim();
     final cost = double.tryParse(_costController.text.trim()) ?? 0.0;
     // product_weight в API может быть null, но для калькулятора доставки он нужен
-    final weight = double.tryParse(_weightController.text.trim()) ?? 0.0; 
+    // final weight = double.tryParse(_weightController.text.trim()) ?? 0.0; 
     final quantity = int.tryParse(_quantityController.text.trim()) ?? 0;
     
     // Кнопки появляются только когда:
@@ -151,7 +150,6 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
            productLink.isNotEmpty &&
            color.isNotEmpty &&
            cost > 0 &&
-           weight > 0 &&
            quantity > 0;
   }
 
@@ -173,7 +171,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
           ? _productLinkController.text
           : 'https://example.com', // Fallback, но валидация не должна пускать
       cost: double.tryParse(_costController.text) ?? 0.0,
-      weight: double.tryParse(_weightController.text) ?? 0.0,
+      weight: 0.0,
       color: _colorController.text.isNotEmpty 
           ? _colorController.text 
           : 'Multi', // Обязательное поле, fallback
@@ -492,25 +490,6 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  _buildTextField(
-                    label: context.l10n.translate('weight'),
-                    controller: _weightController,
-                    hint: context.l10n.translate('weight_hint'),
-                    icon: Icons.shopping_bag_outlined,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    validator: (value) {
-                      // Вес не обязателен для API (может быть null), но мы требуем его для калькулятора
-                      // Если поле пустое - ошибка
-                      if (value == null || value.trim().isEmpty) {
-                         return context.l10n.translate('fill_required_fields');
-                      }
-                      final weight = double.tryParse(value);
-                      if (weight == null || weight <= 0) {
-                        return context.l10n.translate('invalid_weight');
-                      }
-                      return null;
-                    },
-                  ),
                   const SizedBox(height: 20),
                   _buildTextField(
                     label: context.l10n.translate('color'),
@@ -1001,7 +980,7 @@ class _AddParcelScreenState extends State<AddParcelScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${item.storeName} • \$${item.cost.toStringAsFixed(2)} • ${item.weight} кг',
+                          '${item.storeName} • \$${item.cost.toStringAsFixed(2)}',
                           style: TextStyle(
                             color: textSecondaryColor,
                             fontSize: 12,

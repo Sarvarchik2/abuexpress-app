@@ -160,7 +160,7 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
             productName: item.productName.trim(),
             productPrice: item.cost,
             productQuantity: item.quantity,
-            productWeight: item.weight > 0 ? item.weight : null,
+            productWeight: 0,
             productColor: item.color!.trim(),
             productSize: item.size?.trim().isNotEmpty == true ? item.size!.trim() : null,
             comment: item.comment?.trim().isNotEmpty == true ? item.comment!.trim() : null,
@@ -314,13 +314,6 @@ class _ShippingCalculatorScreenState extends State<ShippingCalculatorScreen>
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildInfoRow(
-                        Icons.shopping_bag_outlined,
-                        context.l10n.translate('total_weight'),
-                        '${widget.totalWeight.toStringAsFixed(1)} ${context.l10n.translate('kg')}',
-                        textColor,
-                        textSecondaryColor,
-                      ),
                       const SizedBox(height: 12),
                       _buildInfoRow(
                         Icons.attach_money,

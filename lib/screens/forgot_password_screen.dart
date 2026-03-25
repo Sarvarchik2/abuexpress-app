@@ -8,7 +8,8 @@ import 'email_verification_screen.dart';
 import '../widgets/custom_snackbar.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key});
+  final String? email;
+  const ForgotPasswordScreen({super.key, this.email});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -17,6 +18,12 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.text = widget.email ?? '';
+  }
 
   @override
   void dispose() {
